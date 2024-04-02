@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const UserSchema = new Schema({
-    username: { type: String, required: true },
+    username: { type: String, required: true, unique: true},
     password: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: true, unique: true},
     isAdmin: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     fullName: { type: String },
@@ -15,6 +15,8 @@ const UserSchema = new Schema({
     gender: { type: String, enum: ['male', 'female'] },
     birthday: { type: Date },
     bio: { type: String }
+}, {
+    timestamp: true
 });
 
 const UserModel = mongoose.model('users', UserSchema, 'users');
