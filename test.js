@@ -9,6 +9,6 @@ function test() {
     //     email: "hamster@gmail.com",
     //     birthday: "12-24-2015",
     // }))
-    console.log(singUp())
+    console.log(signUp())
 }
 test();
