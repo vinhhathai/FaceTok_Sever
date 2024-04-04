@@ -16,7 +16,7 @@ const UserSchema = new Schema({
     birthday: { type: Date },
     bio: { type: String }
 }, {
-    timestamp: true
+    timestamps: true
 });
 
 const UserModel = mongoose.model('users', UserSchema, 'users');
