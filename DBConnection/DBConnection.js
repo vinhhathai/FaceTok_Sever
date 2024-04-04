@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+require('dotenv').config()
 
 module.exports = class DBConnection {
    
     async connect() {
         try {
-            let connectionString = 'mongodb://127.0.0.1:27017/faaytok';
+            let connectionString = process.env.DATABASE;
             
             await mongoose.connect(connectionString, {
                 useNewUrlParser: true,
