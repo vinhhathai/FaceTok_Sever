@@ -37,7 +37,7 @@ exports.loginToSystem = async (req, res, next) => {
         }
 
         // Create jwt token
-        const accessToken = jwt.sign({ _id: usernameExist._id }, process.env.SECRET_KEY)
+        const accessToken =  jwt.sign({ _id: usernameExist._id }, process.env.SECRET_KEY, {expiresIn: 15})
         console.log("token: " + accessToken)
 
 
