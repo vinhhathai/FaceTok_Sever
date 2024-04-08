@@ -37,7 +37,7 @@ exports.loginToSystem = async (req, res, next) => {
         }
 
         // Create jwt token
-        const accessToken =  jwt.sign({ _id: usernameExist._id }, process.env.SECRET_KEY, {expiresIn: 15})
+        const accessToken =  jwt.sign({ _id: usernameExist._id }, process.env.SECRET_KEY, {expiresIn: 900})
         console.log("token: " + accessToken)
 
 
@@ -45,7 +45,8 @@ exports.loginToSystem = async (req, res, next) => {
         usernameExist.password = undefined
         return res.status(200).json({
             message: 'Login successfully',
-            user: usernameExist
+            user: usernameExist,
+            token: accessToken
         });
     } catch (error) {
         console.error(error);

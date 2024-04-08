@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config()
 
-module.exports = class DBConnection {
+ class DBConnection {
    
     async connect() {
         try {
@@ -19,3 +19,4 @@ module.exports = class DBConnection {
         }
     }
 }
+module.exports = DBConnection

@@ -4,16 +4,19 @@ const UserController = require('../controllers/UserController')
 const SignUpController = require('../controllers/SignUpController')
 const LoginController = require('../controllers/LoginController')
 
+// import middlewares
+const checkLogin = require('../middlewares/checkLogin')
+
 /* POST LOGIN */
 router.post('/login', LoginController.loginToSystem);
 
 /* POST SIGN UP */
-router.post('/sign-up', SignUpController.signUp );
+router.post('/sign-up', SignUpController.signUp);
 
 /* GET SEARCHING USER */
-router.get('/search-user', UserController.searchUser );
+router.get('/search-user', UserController.searchUser);
 
 /* GET home page. */
-router.get('/', UserController.getAllUsers );
+router.get('/', checkLogin, UserController.getHome);
 
 module.exports = router;

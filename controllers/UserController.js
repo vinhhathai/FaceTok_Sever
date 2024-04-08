@@ -1,21 +1,28 @@
 
 const UserModel = require('../models/UserModel');
-exports.getAllUsers = async (req, res, next) => {
-    try {
-        const data = await UserModel.find({}) // Chờ cho truy vấn hoàn tất
+exports.getHome = async (req, res, next) => {
+    // try {
+    //     const data = await UserModel.find({}) // Chờ cho truy vấn hoàn tất
 
-        res.json({ users: data });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal Server Error' });
+    //     res.json({ users: data });
+    // } catch (err) {
+    //     console.error(err);
+    //     res.status(500).json({ error: 'Internal Server Error' });
+    // }
+    try {
+        return res.status(200).json({
+            status: 'OK Home'
+        })
+    } catch (error) {
+        res.json({ error: 'Internal Server Error' })
     }
 }
 
 //---------------------------------------------------------------------------
 exports.searchUser = async (req, res) => {
- 
+
     const query = req.query.username;
-    
+
     try {
         // Tìm kiếm người dùng dựa trên query
         const users = await UserModel.find({
