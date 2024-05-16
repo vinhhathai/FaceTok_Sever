@@ -26,7 +26,7 @@ exports.loginToSystem = async (req, res, next) => {
                 message: 'Username does not exist'
             })
         }
-
+        
         // Dehash and Check pasword
         const checkPassword = await bcrypt.compare(req.body.password, usernameExist.password)
         console.log(checkPassword)
@@ -37,9 +37,8 @@ exports.loginToSystem = async (req, res, next) => {
         }
 
         // Create jwt token
-        const accessToken =  jwt.sign({ _id: usernameExist._id }, process.env.SECRET_KEY, {expiresIn: 900})
+        const accessToken = jwt.sign({ _id: usernameExist._id }, process.env.SECRET_KEY, { expiresIn: 300 })
         console.log("token: " + accessToken)
-
 
         // If everything is okay, return success message
         usernameExist.password = undefined
@@ -50,6 +49,9 @@ exports.loginToSystem = async (req, res, next) => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: 'Server error' });
+        return res.json({
+            errorName: error.name,
+            errorMessage: error.message
+        });
     }
 };

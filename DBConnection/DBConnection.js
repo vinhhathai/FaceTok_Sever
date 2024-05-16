@@ -14,7 +14,7 @@ require('dotenv').config()
             console.log('Connected to MongoDB');
             return true; // Trả về true nếu kết nối thành công
         } catch (error) {
-            console.error('Error connecting to MongoDB:', error);
+            console.error('Error while connecting to MongoDB:', error);
             return false; // Trả về false nếu có lỗi
         }
     }

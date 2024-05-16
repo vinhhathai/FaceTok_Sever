@@ -14,7 +14,10 @@ exports.getHome = async (req, res, next) => {
             status: 'OK Home'
         })
     } catch (error) {
-        res.json({ error: 'Internal Server Error' })
+        return res.json({
+            errorName: error.name,
+            errorMessage: error.message
+        });
     }
 }
 
@@ -35,7 +38,10 @@ exports.searchUser = async (req, res) => {
         res.json({ users });
     } catch (error) {
         console.error('Error searching users:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        return res.json({
+            errorName: error.name,
+            errorMessage: error.message
+        });
     }
 }
 
