@@ -18,7 +18,7 @@ module.exports = checkLogin = async (req, res, next) => {
         // verify 
         const token = await jwt.verify(accessToken, process.env.SECRET_KEY)
         if (!token) {
-            res.status(403).json({
+           return res.status(403).json({
                 message: "Error verifying access token"
             })
         }

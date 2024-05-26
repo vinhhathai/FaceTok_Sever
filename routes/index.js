@@ -9,7 +9,8 @@ const checkLogin = require('../middlewares/checkLogin')
 //-----------------------------------------------------------------------//
 
 // Reset password
-
+router.post('/change-password', ResetPasswordController.changePassword);
+// router.get('/reset-password', ResetPasswordController.changePassword);
 router.post('/reset-password', ResetPasswordController.resetPassword)
 
 /* POST LOGIN */
