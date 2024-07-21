@@ -1,37 +1,53 @@
-const { json } = require("express")
-const userValidation = require("../validation/userValidation")
+const signUpValidation = require("../validation//signUpValidation")
 const UserModel = require("../models/UserModel")
 const bcrypt = require('bcrypt');
 const moment = require('moment');
+const { errorCode, errorMessage } = require('../common/enum/error')
 
-exports.signUp = async (req, res, next) => {
+exports.signUp = async (req, res) => {
     try {
         // Validation
-        const { error } = userValidation.validate(req.body)
+        const { error } = signUpValidation.validate(req.body)
+        console.log(req.body)
         if (error) {
             return res.status(400).json({
-                message: error.message
+                timestamp: new Date().toISOString(),
+                path: "/auth/sign-up",
+                code: errorCode.VALIDATION_FAILED,
+                error: {
+                    name: error.message,
+                }
+
             })
         }
-
-
 
         // Check email and username in database
         const { email, username } = req.body;
         const emailExist = await UserModel.findOne({ email });
         if (emailExist) {
+            return res.status(409).json({
+                timestamp: new Date().toISOString(),
+                path: "/auth/sign-up",
+                code: errorCode.DATA_CONFLICT,
+                error: {
+                    name: errorMessage.EMAIL_EXISTED,
+                }
 
-            return res.status(400).json({
-                message: "Email already exist"
             });
         }
 
         const usernameExist = await UserModel.findOne({ username });
         if (usernameExist) {
-            return res.status(400).json({
-                message: "Username already exist"
+            return res.status(409).json({
+                timestamp: new Date().toISOString(),
+                path: "/auth/sign-up",
+                code: errorCode.DATA_CONFLICT,
+                error: {
+                    name: errorMessage.USERNAME_EXISTED,
+                }
             });
         }
+
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -46,18 +62,20 @@ exports.signUp = async (req, res, next) => {
             password: hashedPassword,
         })
 
-
         // Response message to client
         newUser.password = undefined;
         return res.status(201).json({
             message: "Account created successfully",
-            user: newUser
         })
 
     } catch (error) {
-        return res.json({
-            errorName: error.name,
-            errorMessage: error.message
+        return res.status(500).json({
+            timestamp: new Date().toISOString(),
+            path: "/auth/sign-up",
+            code: errorCode.ERR_CREATE_ACCOUNT_FAIL,
+            error: {
+                name: errorMessage.UNKNOWN_ERROR,
+            }
         });
     }
 }
