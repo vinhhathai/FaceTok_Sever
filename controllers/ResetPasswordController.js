@@ -103,7 +103,7 @@ exports.changePassword = async (req, res, next) => {
                 message: "Error verifying access token"
             })
         }
-        // check email and change password
+        // check user and change password
         const user = await UserModel.findOne({ email: email })
         if (user) {
             const salt = await bcrypt.genSalt(10);

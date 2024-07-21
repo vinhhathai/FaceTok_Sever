@@ -1,28 +1,13 @@
-var express = require('express');
-var router = express.Router();
-const UserController = require('../controllers/UserController')
-const SignUpController = require('../controllers/SignUpController')
-const LoginController = require('../controllers/LoginController')
-const ResetPasswordController = require('../controllers/ResetPasswordController')
-// import middlewares
-const checkLogin = require('../middlewares/checkLogin')
-//-----------------------------------------------------------------------//
+// routes/index.js
+const express = require('express');
+const router = express.Router();
 
-// Reset password
-router.post('/change-password', ResetPasswordController.changePassword);
-// router.get('/reset-password', ResetPasswordController.changePassword);
-router.post('/reset-password', ResetPasswordController.resetPassword)
+const usersRouter = require('./user/user');
+const authRouter = require('./auth/auth');
+const homeRouter = require('./home/home')
 
-/* POST LOGIN */
-router.post('/login', LoginController.loginToSystem);
-
-/* POST SIGN UP */
-router.post('/sign-up', SignUpController.signUp);
-
-/* GET SEARCHING USER */
-router.get('/search-user', checkLogin, UserController.searchUser);
-
-/* GET home page. */
-router.get('/', checkLogin, UserController.getHome);
+router.use('/auth', authRouter);
+router.use('/home', homeRouter);
+router.use('/user', usersRouter);
 
 module.exports = router;
