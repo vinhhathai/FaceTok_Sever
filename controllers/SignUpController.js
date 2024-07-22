@@ -8,7 +8,6 @@ exports.signUp = async (req, res) => {
     try {
         // Validation
         const { error } = signUpValidation.validate(req.body)
-        console.log(req.body)
         if (error) {
             return res.status(400).json({
                 timestamp: new Date().toISOString(),
@@ -72,7 +71,7 @@ exports.signUp = async (req, res) => {
         return res.status(500).json({
             timestamp: new Date().toISOString(),
             path: "/auth/sign-up",
-            code: errorCode.ERR_CREATE_ACCOUNT_FAIL,
+            code: errorCode.ERR_CREATE_ACCOUNT_FAILED,
             error: {
                 name: errorMessage.UNKNOWN_ERROR,
             }

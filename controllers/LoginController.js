@@ -1,57 +1,88 @@
-const { json } = require("express")
 const loginValidation = require("../validation/loginValidation");
 const UserModel = require("../models/UserModel")
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { errorCode, errorMessage } = require('../common/enum/error')
 require('dotenv').config()
 
-exports.loginToSystem = async (req, res, next) => {
+exports.loginToSystem = async (req, res) => {
 
+    // Validation
     try {
         const { error } = loginValidation.validate(req.body);
 
         if (error) {
-            console.log(error);
-            return res.status(400).json({ error });
+            return res.status(400).json({
+                timestamp: new Date().toISOString(),
+                path: "/auth/login",
+                code: errorCode.VALIDATION_FAILED,
+                error: {
+                    name: error.message,
+                }
+            });
         }
 
-        console.log('ok');
-
-        const { username } = req.body;
         // Check username in database
+        const { username } = req.body;
         const usernameExist = await UserModel.findOne({ username });
 
         if (!usernameExist) {
             return res.status(404).json({
-                message: 'Username does not exist'
-            })
+                timestamp: new Date().toISOString(),
+                path: "/auth/login",
+                code: errorCode.DATA_NOT_FOUND,
+                error: {
+                    name: errorMessage.DATA_NOT_FOUND
+                }
+            });
         }
-        
-        // Dehash and Check pasword
+
+        // Decode and Check pasword
         const checkPassword = await bcrypt.compare(req.body.password, usernameExist.password)
-        console.log(checkPassword)
         if (!checkPassword) {
-            return res.status(400).json({
-                message: 'Password does not match'
-            })
+            return res.status(404).json({
+                timestamp: new Date().toISOString(),
+                path: "/auth/login",
+                code: errorCode.DATA_NOT_FOUND,
+                error: {
+                    name: errorMessage.DATA_NOT_FOUND
+                }
+            });
+        }
+
+        // Check isActive account
+        const isActive = usernameExist.isActive
+        console.log(isActive)
+        if (!isActive) {
+            return res.status(403).json({
+                timestamp: new Date().toISOString(),
+                path: "/auth/login",
+                code: errorCode.ACCOUNT_IS_BANNED,
+                error: {
+                    name: errorMessage.ACCOUNT_IS_BANNED
+                }
+            });
         }
 
         // Create jwt token
-        const accessToken = jwt.sign({ _id: usernameExist._id }, process.env.SECRET_KEY, { expiresIn: 300 })
-        console.log("token: " + accessToken)
+        const accessToken = jwt.sign({ _id: usernameExist._id }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: '5m' }) // 5 minutes
+        const refreshToken = jwt.sign({ _id: usernameExist._id }, process.env.REFRESH_TOKEN_SECRET_KEY, { expiresIn: '7d' }); // 7 days
 
         // If everything is okay, return success message
         usernameExist.password = undefined
         return res.status(200).json({
             message: 'Login successfully',
-            user: usernameExist,
-            token: accessToken
+            accessToken: accessToken,
+            refreshToken: refreshToken
         });
     } catch (error) {
-        console.error(error);
-        return res.json({
-            errorName: error.name,
-            errorMessage: error.message
+        returnres.status(500).json({
+            timestamp: new Date().toISOString(),
+            path: "/auth/login",
+            code: errorCode.ERR_LOGIN_FAILED,
+            error: {
+                name: errorMessage.UNKNOWN_ERROR,
+            }
         });
     }
 };
