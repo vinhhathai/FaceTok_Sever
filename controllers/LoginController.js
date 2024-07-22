@@ -9,7 +9,7 @@ exports.loginToSystem = async (req, res) => {
 
     // Validation
     try {
-        const { error } = loginValidation.validate(req.body);
+        const { error } =  await loginValidation.validate(req.body);
 
         if (error) {
             return res.status(400).json({
