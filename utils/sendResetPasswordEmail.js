@@ -1,18 +1,20 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-async function sendResetPasswordEmail( nameHostEmail, hostMail, passHostMail, receivedEmail, resetLink) {
+async function sendResetPasswordEmail(nameHostEmail, receivedEmail, resetLink) {
+    const hostMail = process.env.HOST_MAIL;
+    const passHostMail = process.env.EMAIL_PASS;
     let transporter = nodemailer.createTransport({
-        service: 'Gmail', // Bạn có thể sử dụng các dịch vụ email khác như Yahoo, Outlook, etc.
+        service: 'Gmail', // Gmail, Yahoo,...
         auth: {
             user: hostMail,
             pass: passHostMail,
         },
     });
-    const hostEmail = process.env.EMAIL_USER;
 
-    let info = await transporter.sendMail({
-        from: `"${nameHostEmail}" <${hostEmail}>`,
+
+    await transporter.sendMail({
+        from: `"${nameHostEmail}" <${hostMail}>`,
         to: receivedEmail,
         subject: 'Reset Password From Facetok',
         html: `
@@ -26,7 +28,6 @@ async function sendResetPasswordEmail( nameHostEmail, hostMail, passHostMail, re
         `,
     });
 
-    console.log('Message sent: %s', info.messageId);
 }
 
 module.exports = sendResetPasswordEmail;

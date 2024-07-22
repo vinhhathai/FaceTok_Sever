@@ -9,8 +9,8 @@ const RefreshTokenController = require('../../controllers/RefreshTokenController
 
 
 // Reset password
-router.post('/change-password', ResetPasswordController.changePassword);
-router.get('/reset-password', ResetPasswordController.changePassword);
+router.put('/change-password', ResetPasswordController.changePassword);
+// router.get('/reset-password', ResetPasswordController.changePassword);
 router.post('/reset-password', ResetPasswordController.resetPassword)
 
 
