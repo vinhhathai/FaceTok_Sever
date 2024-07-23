@@ -1,3 +1,5 @@
+'use strict';
+//----------------------------------------------------------------
 const errorCode = {
     VALIDATION_FAILED: "VALIDATION_FAILED",
     ERR_CREATE_ACCOUNT_FAILED: "ERR_CREATE_ACCOUNT_FAIL",

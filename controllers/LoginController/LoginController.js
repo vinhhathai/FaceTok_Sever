@@ -1,8 +1,10 @@
-const loginValidation = require("../validation/loginValidation");
-const UserModel = require("../models/UserModel")
+'use strict';
+//----------------------------------------------------------------
+const loginValidation = require("../../validation/loginValidation");
+const UserModel = require("../../models/UserModel")
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { errorCode, errorMessage } = require('../common/enum/error')
+const { errorCode, errorMessage } = require('../../common/enum/error')
 require('dotenv').config()
 
 exports.loginToSystem = async (req, res) => {

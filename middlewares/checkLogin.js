@@ -1,9 +1,11 @@
+'use strict';
+//----------------------------------------------------------------
 const UserModel = require('../models/UserModel')
 const jwt = require('jsonwebtoken');
 
 require('dotenv').config()
 
-module.exports = checkLogin = async (req, res, next) => {
+const checkLogin = async (req, res, next) => {
     try {
         // Check login
         const accessToken = req.headers.authorization?.split(' ')[1]
@@ -42,3 +44,5 @@ module.exports = checkLogin = async (req, res, next) => {
         })
     }
 } 
+
+module.exports = checkLogin;

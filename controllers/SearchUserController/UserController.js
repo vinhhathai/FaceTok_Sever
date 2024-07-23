@@ -1,5 +1,6 @@
-
-const UserModel = require('../models/UserModel');
+'use strict';
+//----------------------------------------------------------------
+const UserModel = require('../../models/UserModel');
 exports.getHome = async (req, res, next) => {
     // try {
     //     const data = await UserModel.find({}) // Chờ cho truy vấn hoàn tất

@@ -1,3 +1,6 @@
+'use strict';
+//----------------------------------------------------------------
+
 const Joi = require('joi').extend(require('@joi/date'));;
 
 const emailValidation = Joi.object({
