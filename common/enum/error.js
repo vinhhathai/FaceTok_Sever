@@ -16,7 +16,8 @@ const errorCode = {
     ERR_CREATE_POST_FAILED: "ERR_CREATE_POST_FAILED",
     FILE_IS_NOT_SUPPORTED: "FILE_IS_NOT_SUPPORTED",
     UPLOAD_FILE_FAILED: "UPLOAD_FILE_FAILED",
-    FILE_EXCEEDED_SIZE: "FILE_EXCEEDED_SIZE"
+    FILE_EXCEEDED_SIZE: "FILE_EXCEEDED_SIZE",
+    ERR_DELETE_POST_FAILED: "ERR_DELETE_POST_FAILED"
 };
 
 const errorMessage = {
@@ -37,6 +38,7 @@ const errorMessage = {
     ID_NOT_FOUND: "Id not found",
     FILE_EXCEEDED_SIZE: "File is exceeded (>=50)",
     UPLOAD_FILE_FAILED: "Upload file failed",
+    POST_NOT_FOUND: "Post is not found",
 
 }
 

@@ -11,10 +11,10 @@ exports.createNewPost = async (req, res, next) => {
 
     // Check user_id
     if (!user_id) {
-        return res.status(404).json({
+        return res.status(400).json({
             timestamp: new Date().toISOString(),
             path: "/post/create",
-            code: errorCode.DATA_NOT_FOUND,
+            code: errorCode.VALIDATION_FAILED,
             error: {
                 name: errorMessage.ID_NOT_FOUND
             }
