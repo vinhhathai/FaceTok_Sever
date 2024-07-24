@@ -12,7 +12,11 @@ const errorCode = {
     EMAIL_SERVICE_UNAUTHORIZED: "EMAIL_SERVICE_UNAUTHORIZED",
     EMAIL_NOT_FOUND: "EMAIL_NOT_FOUND",
     ERR_GET_RESET_PASSWORD_LINK_FAILED: "ERR_GET_RESET_PASSWORD_LINK_FAILED",
-    ERR_CHANGE_PASSWORD_FAILED: "ERR_CHANGE_PASSWORD_FAILED"
+    ERR_CHANGE_PASSWORD_FAILED: "ERR_CHANGE_PASSWORD_FAILED",
+    ERR_CREATE_POST_FAILED: "ERR_CREATE_POST_FAILED",
+    FILE_IS_NOT_SUPPORTED: "FILE_IS_NOT_SUPPORTED",
+    UPLOAD_FILE_FAILED: "UPLOAD_FILE_FAILED",
+    FILE_EXCEEDED_SIZE: "FILE_EXCEEDED_SIZE"
 };
 
 const errorMessage = {
@@ -28,7 +32,12 @@ const errorMessage = {
     EMAIL_NOT_FOUND: "EMAIL_NOT_FOUND",
     ERR_GET_RESET_PASSWORD_LINK_FAILED: "Failure (reset password)",
     EXPIRED_TOKEN: "Expired token",
-    ERR_CHANGE_PASSWORD_FAILED: "Failure (change password)"
+    ERR_CHANGE_PASSWORD_FAILED: "Failure (change password)",
+    USER_NOT_FOUND: "User not found",
+    ID_NOT_FOUND: "Id not found",
+    FILE_EXCEEDED_SIZE: "File is exceeded (>=50)",
+    UPLOAD_FILE_FAILED: "Upload file failed",
+
 }
 
 module.exports = { errorCode, errorMessage };
