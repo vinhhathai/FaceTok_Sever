@@ -40,7 +40,7 @@ const upload = multer({
 function handleMulterError(err, req, res, next) {
     if (err instanceof multer.MulterError) {
         // A Multer error occurred when uploading.
-        return  res.status(413).json({
+        return res.status(413).json({
             timestamp: new Date().toISOString(),
             path: "/upload/",
             code: errorCode.FILE_EXCEEDED_SIZE,
