@@ -1,13 +1,13 @@
 'use strict';
-//----------------------
+//----------------------------------------------------------------
 const bcrypt = require('bcrypt')
-const UserModel = require("../models/UserModel");
-const emailValidation = require("../validation/emailValidation");
+const UserModel = require("../../models/UserModel");
+const emailValidation = require("../../validation/emailValidation");
 const jwt = require('jsonwebtoken');
-const changePasswordValidation = require("../validation/changePasswordValidation");
-const { errorMessage, errorCode } = require('../common/enum/error');
+const changePasswordValidation = require("../../validation/changePasswordValidation");
+const { errorMessage, errorCode } = require('../../common/enum/error');
 require('dotenv').config()
-const sendResetPasswordEmail = require('../utils/sendResetPasswordEmail')
+const sendResetPasswordEmail = require('../../utils/sendResetPasswordEmail')
 
 // Send a reset password email
 exports.resetPassword = async (req, res, next) => {

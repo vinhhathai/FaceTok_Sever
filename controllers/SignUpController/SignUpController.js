@@ -1,8 +1,10 @@
-const signUpValidation = require("../validation//signUpValidation")
-const UserModel = require("../models/UserModel")
+'use strict';
+//----------------------------------------------------------------
+const signUpValidation = require("../../validation/signUpValidation")
+const UserModel = require("../../models/UserModel")
 const bcrypt = require('bcrypt');
 const moment = require('moment');
-const { errorCode, errorMessage } = require('../common/enum/error')
+const { errorCode, errorMessage } = require('../../common/enum/error')
 
 exports.signUp = async (req, res) => {
     try {

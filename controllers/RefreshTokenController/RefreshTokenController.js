@@ -1,5 +1,7 @@
+'use strict';
+//----------------------------------------------------------------
 const jwt = require('jsonwebtoken');
-const { errorCode, errorMessage } = require('../common/enum/error')
+const { errorCode, errorMessage } = require('../../common/enum/error')
 require('dotenv').config()
 
 exports.refreshToken = async (req, res) => {

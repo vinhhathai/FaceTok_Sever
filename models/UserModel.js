@@ -1,3 +1,5 @@
+'use strict';
+//----------------------------------------------------------------
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -16,9 +18,10 @@ const UserSchema = new Schema({
     birthday: { type: Date },
     bio: { type: String }
 }, {
-    timestamps: true
+    timestamps: true,
+    collection: 'users'
 });
 
-const UserModel = mongoose.model('users', UserSchema, 'users');
+const UserModel = mongoose.model('users', UserSchema);
 
 module.exports = UserModel;

@@ -1,11 +1,13 @@
+'use strict';
+//----------------------------------------------------------------
 var express = require('express');
 var router = express.Router();
 
 // import controllers
-const SignUpController = require('../../controllers/SignUpController')
-const LoginController = require('../../controllers/LoginController')
-const ResetPasswordController = require('../../controllers/ResetPasswordController')
-const RefreshTokenController = require('../../controllers/RefreshTokenController')
+const SignUpController = require('../../controllers/SignUpController/SignUpController')
+const LoginController = require('../../controllers/LoginController/LoginController')
+const ResetPasswordController = require('../../controllers/ResetPasswordController/ResetPasswordController')
+const RefreshTokenController = require('../../controllers/RefreshTokenController/RefreshTokenController')
 
 
 // Reset password

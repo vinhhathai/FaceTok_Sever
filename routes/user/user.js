@@ -1,6 +1,8 @@
+'use strict';
+//----------------------------------------------------------------
 var express = require('express');
 var router = express.Router();
-const UserController = require('../../controllers/UserController')
+const UserController = require('../../controllers/SearchUserController/UserController')
 
 // import middlewares
 const checkLogin = require('../../middlewares/checkLogin')
