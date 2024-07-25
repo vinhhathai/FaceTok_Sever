@@ -7,6 +7,15 @@ const { upload, handleMulterError } = require('../../middlewares/uploadFile');
 const CreatePostController = require('../../controllers/ManagePostController/CreatePostController');
 const DeletePostController = require('../../controllers/ManagePostController/DeletePostController');
 const UpdatePostController = require('../../controllers/ManagePostController/UpdatePostController');
+const GetPostHomeController = require('../../controllers/ManagePostController/GetPostHomeController');
+
+
+
+
+
+/* GET POST AT HOME PAGE */
+router.get('/home', GetPostHomeController.getPost);
+
 
 /* UPDATE POST */
 router.put('/update',upload.single('file'), handleMulterError, UpdatePostController.updatePost);

@@ -63,7 +63,7 @@ exports.createNewPost = async (req, res, next) => {
             path: "/post/create",
             code: errorCode.ERR_CREATE_POST_FAILED,
             error: {
-                name: errorMessage.UNKNOWN_ERROR
+                name: error.message
             }
         });
     }
