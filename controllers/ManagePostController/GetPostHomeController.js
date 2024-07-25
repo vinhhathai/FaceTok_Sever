@@ -5,6 +5,7 @@ const { errorCode } = require('../../common/enum/error');
 
 //----------------------------------------------------------------
 exports.getPost = async (req, res) => {
+
     const { user_id, limit, offset } = req.query;
     const limitNum = parseInt(limit, 10);
     const offsetNum = parseInt(offset, 10);
