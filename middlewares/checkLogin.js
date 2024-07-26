@@ -50,10 +50,10 @@ const checkLogin = async (req, res, next) => {
             });
 
         }
-        // Add user_id to req.body
-        req.body.user_id = token._id;
-        console.log(req.body)
-
+         // Add user_id to req.user
+         req.user = {
+            user_id: token._id
+        };
         // Proceed to next middleware
         next();
 

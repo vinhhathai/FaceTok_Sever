@@ -49,7 +49,7 @@ exports.softDeletePost = async (req, res) => {
             path: `/post/delete/${post_id}`,
             code: errorCode.ERR_DELETE_POST_FAILED,
             error: {
-                name: errorMessage.UNKNOWN_ERROR
+                name: error.message
             }
         });
     }

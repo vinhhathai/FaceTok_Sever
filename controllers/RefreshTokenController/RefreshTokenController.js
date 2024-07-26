@@ -44,7 +44,7 @@ exports.refreshToken = async (req, res) => {
             path: "/auth/refresh-token",
             code: errorCode.ERR_CREATE_ACCESS_TOKEN_FAILED,
             error: {
-                name: errorMessage.UNKNOWN_ERROR
+                name: error.message
             }
         });
     }

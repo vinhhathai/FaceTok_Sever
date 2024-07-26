@@ -9,7 +9,7 @@ exports.getPost = async (req, res) => {
     const { limit, offset } = req.query;
     const limitNum = parseInt(limit, 10);
     const offsetNum = parseInt(offset, 10);
-    const {user_id} = req.body // Get user_id từ req.body
+    const {user_id} = req.user // Get user_id từ middleware
 
     try {
         let userPosts = [];

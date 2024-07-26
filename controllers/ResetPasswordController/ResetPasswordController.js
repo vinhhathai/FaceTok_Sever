@@ -134,7 +134,7 @@ exports.changePassword = async (req, res) => {
             path: "/auth/change-password",
             code: errorCode.ERR_CHANGE_PASSWORD_FAILED,
             error: {
-                name: errorMessage.UNKNOWN_ERROR,
+                name: error.message,
             }
         });
     }
