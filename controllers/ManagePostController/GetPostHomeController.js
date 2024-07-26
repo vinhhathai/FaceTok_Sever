@@ -7,7 +7,7 @@ const { errorCode, errorMessage } = require('../../common/enum/error')
 exports.getPost = async (req, res) => {
 
     const { limit, offset } = req.query;
-    const {user_id} = req.body; // get user_id from token
+    const {user_id} = req.user; // get user_id from token
     const limitNum = parseInt(limit, 10);
     const offsetNum = parseInt(offset, 10);
   

@@ -75,7 +75,7 @@ exports.signUp = async (req, res) => {
             path: "/auth/sign-up",
             code: errorCode.ERR_CREATE_ACCOUNT_FAILED,
             error: {
-                name: errorMessage.UNKNOWN_ERROR,
+                name: error.message,
             }
         });
     }

@@ -11,13 +11,14 @@ const GetPostHomeController = require('../../controllers/ManagePostController/Ge
 const GetPostProfileController = require('../../controllers/ManagePostController/GetPostProfileController');
 
 
-
 /* GET POST AT PROFILE PAGE */
 router.get('/profile', GetPostProfileController.getPost);
 
 /* GET POST AT HOME PAGE */
 router.get('/home', GetPostHomeController.getPost);
 
+/* CREATE POST */
+router.post('/create', upload.single('file'), handleMulterError, CreatePostController.createNewPost);
 
 /* UPDATE POST */
 router.put('/update', upload.single('file'), handleMulterError, UpdatePostController.updatePost);
@@ -25,7 +26,6 @@ router.put('/update', upload.single('file'), handleMulterError, UpdatePostContro
 /* DELETE POST */
 router.delete('/delete/:id', DeletePostController.softDeletePost);
 
-/* CREATE POST */
-router.post('/create', upload.single('file'), handleMulterError, CreatePostController.createNewPost);
+
 
 module.exports = router;

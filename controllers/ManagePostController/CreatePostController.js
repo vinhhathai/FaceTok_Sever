@@ -7,10 +7,9 @@ const { errorCode, errorMessage } = require('../../common/enum/error')
 
 //----------------------------------------------------------------
 exports.createNewPost = async (req, res, next) => {
-    const { user_id, caption  } = req.body;
+    const { caption  } = req.body;
     const file = req.file;
-
-    console.log(req.body)
+    const {user_id} = req.user
 
     // Check user_id
     if (!user_id) {

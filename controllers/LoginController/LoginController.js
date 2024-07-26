@@ -83,7 +83,7 @@ exports.loginToSystem = async (req, res) => {
             path: "/auth/login",
             code: errorCode.ERR_LOGIN_FAILED,
             error: {
-                name: errorMessage.UNKNOWN_ERROR,
+                name: error.message,
             }
         });
     }
