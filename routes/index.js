@@ -6,8 +6,9 @@ const router = express.Router();
 
 const postRouter = require('./post/post');
 const authRouter = require('./auth/auth');
+const checkLogin = require('../middlewares/checkLogin')
 
+router.use('/post', checkLogin, postRouter);
 router.use('/auth', authRouter);
-router.use('/post', postRouter);
 
 module.exports = router;

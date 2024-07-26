@@ -67,7 +67,7 @@ exports.loginToSystem = async (req, res) => {
         }
 
         // Create jwt token
-        const accessToken = jwt.sign({ _id: usernameExist._id }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: '5m' }) // 5 minutes
+        const accessToken = jwt.sign({ _id: usernameExist._id }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: '7d' }) // 5 minutes
         const refreshToken = jwt.sign({ _id: usernameExist._id }, process.env.REFRESH_TOKEN_SECRET_KEY, { expiresIn: '7d' }); // 7 days
 
         // If everything is okay, return success message

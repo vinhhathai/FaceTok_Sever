@@ -2,7 +2,8 @@
 
 const UserModel = require("../../models/UserModel");
 const PostModel = require("../../models/PostModel");
-const { errorCode, errorMessage } = require('../../common/enum/error');
+const { errorCode, errorMessage } = require('../../common/enum/error')
+
 
 //----------------------------------------------------------------
 exports.updatePost = async (req, res, next) => {
