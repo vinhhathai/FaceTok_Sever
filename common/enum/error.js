@@ -22,6 +22,7 @@ const errorCode = {
     ERR_GET_POST_FAILED: "ERR_GET_POST_FAILED",
     NOT_PERMISSIONS: "NOT_PERMISSIONS",
     CHECK_AUTHORIZATION_FAILED: "CHECK_AUTHORIZATION_FAILED",
+    ERR_GET_DATA_FAILED: "ERR_GET_DATA_FAILED",
 };
 
 const errorMessage = {
@@ -45,8 +46,8 @@ const errorMessage = {
     POST_NOT_FOUND: "Post is not found",
     LOGIN_REQUIRED: "Login required",
     ERR_TOKEN_CAN_NOT_AUTHORIZE: "Error verifying access token",
-    NOT_PERMISSIONS:  "You don't have permission to access this resource"
-
+    NOT_PERMISSIONS:  "You don't have permission to access this resource",
+    ERR_INVALID_QUERY: "Query parameters is invalid"
 }
 
 module.exports = { errorCode, errorMessage };
