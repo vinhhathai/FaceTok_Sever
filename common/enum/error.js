@@ -23,6 +23,9 @@ const errorCode = {
     NOT_PERMISSIONS: "NOT_PERMISSIONS",
     CHECK_AUTHORIZATION_FAILED: "CHECK_AUTHORIZATION_FAILED",
     ERR_GET_DATA_FAILED: "ERR_GET_DATA_FAILED",
+    ERR_ADD_FRIEND_FAILED: "ERR_ADD_FRIEND_FAILED",
+    ERR_REMOVE_FRIEND_FAILED: "ERR_REMOVE_FRIEND_FAILED",
+    ERR_RETRIEVE_FRIENDS_FAILED: "ERR_RETRIEVE_FRIENDS_FAILED"
 };
 
 const errorMessage = {
@@ -40,14 +43,16 @@ const errorMessage = {
     EXPIRED_TOKEN: "Expired token",
     ERR_CHANGE_PASSWORD_FAILED: "Failure (change password)",
     USER_NOT_FOUND: "User not found",
-    ID_NOT_FOUND: "Id not found",
+    ID_NOT_FOUND: "Id is required",
     FILE_EXCEEDED_SIZE: "File is exceeded (>=50)",
     UPLOAD_FILE_FAILED: "Upload file failed",
     POST_NOT_FOUND: "Post is not found",
     LOGIN_REQUIRED: "Login required",
     ERR_TOKEN_CAN_NOT_AUTHORIZE: "Error verifying access token",
     NOT_PERMISSIONS:  "You don't have permission to access this resource",
-    ERR_INVALID_QUERY: "Query parameters is invalid"
+    ERR_INVALID_QUERY: "Query parameters is invalid",
+    FRIEND_ALREADY_ADDED: "FRIEND_ALREADY_ADDED",
+    ID_CONFLICT: "Id can not be same as owner",
 }
 
 module.exports = { errorCode, errorMessage };
