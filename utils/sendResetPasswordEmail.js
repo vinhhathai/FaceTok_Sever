@@ -3,7 +3,7 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-async function sendResetPasswordEmail(nameHostEmail, receivedEmail, resetLink) {
+async function sendResetPasswordEmail(nameHostEmail, receivedEmail, otp) {
     const hostMail = process.env.HOST_MAIL;
     const passHostMail = process.env.EMAIL_PASS;
     let transporter = nodemailer.createTransport({
@@ -26,7 +26,7 @@ async function sendResetPasswordEmail(nameHostEmail, receivedEmail, resetLink) {
             <br><br>
             If you did not make this request then please ignore this email.
             <br><br>
-            Otherwise, please click this link to change your password: <a href="${resetLink}">LINK</a>
+            Otherwise, please enter this code to change your password: <h1>${otp}</h1>
         `,
     });
 

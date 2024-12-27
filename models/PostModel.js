@@ -1,37 +1,38 @@
-'use strict';
+"use strict";
 //----------------------------------------------------------------
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const PostSchema = new mongoose.Schema({
+const PostSchema = new mongoose.Schema(
+  {
     user_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'users',
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+      required: true,
     },
     caption: {
-        type: String,
-        default: "",
+      type: String,
+      default: "",
     },
     filePath: {
-        type: String,
-        default: "",
+      type: String,
+      default: "",
     },
     fileType: {
-        type: String,
-        default: "",
+      type: String,
+      default: "",
     },
     isDelete: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
     },
-
-}, {
+  },
+  {
     timestamps: true,
-    collection: 'posts',
+    collection: "posts",
+  }
+);
 
-});
-
-const PostModel = mongoose.model('posts', PostSchema);
+const PostModel = mongoose.model("posts", PostSchema);
 
 module.exports = PostModel;

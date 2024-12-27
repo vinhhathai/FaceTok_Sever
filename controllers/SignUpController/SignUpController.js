@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const moment = require('moment');
 const { errorCode, errorMessage } = require('../../common/enum/error')
 
+
 exports.signUp = async (req, res) => {
     try {
         // Validation
@@ -23,7 +24,7 @@ exports.signUp = async (req, res) => {
         }
 
         // Check email and username in database
-        const { email, username } = req.body;
+        const { email, fullName } = req.body;
         const emailExist = await UserModel.findOne({ email });
         if (emailExist) {
             return res.status(409).json({
@@ -37,17 +38,7 @@ exports.signUp = async (req, res) => {
             });
         }
 
-        const usernameExist = await UserModel.findOne({ username });
-        if (usernameExist) {
-            return res.status(409).json({
-                timestamp: new Date().toISOString(),
-                path: "/auth/sign-up",
-                code: errorCode.DATA_CONFLICT,
-                error: {
-                    name: errorMessage.USERNAME_EXISTED,
-                }
-            });
-        }
+       
 
         // Hash password
         const salt = await bcrypt.genSalt(10);

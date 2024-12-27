@@ -10,6 +10,9 @@ var cors = require('cors')
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/user/user');
 const DBConnection = require('./DBConnection/DBConnection');
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger/swagger'); // Đường dẫn tới file swagger.js
 //-----------------------------------END IMPORTING--------------------------------
 
 var app = express();
@@ -27,6 +30,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 const connect = new DBConnection();
 connect.connect();
 //Excute main routes
+// Tạo endpoint cho Swagger UI
+app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/', indexRouter);
 
 

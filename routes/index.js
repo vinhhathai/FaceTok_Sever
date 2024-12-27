@@ -11,7 +11,6 @@ const postRouter = require('./post/post');
 const authRouter = require('./auth/auth');
 const userRouter = require('./user/user');
 
-
 router.use('/user', checkLogin, userRouter);
 router.use('/post', checkLogin, postRouter);
 router.use('/auth', authRouter);
