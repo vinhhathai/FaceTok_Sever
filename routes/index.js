@@ -1,11 +1,20 @@
-var express = require('express');
-var router = express.Router();
-const UserController = require('../controllers/UserController')
+'use strict';
+//----------------------------------------------------------------
+// routes/index.js
+const express = require('express');
+const router = express.Router();
 
-/* GET SEARCHING USER */
-router.get('/search-user', UserController.searchUser );
+// import middlewares
+const checkLogin = require('../middlewares/checkLogin')
+// import routers
+const postRouter = require('./post/post');
+const authRouter = require('./auth/auth');
+const userRouter = require('./user/user');
 
-/* GET home page. */
-router.get('/', UserController.getAllUsers );
+router.use('/user', checkLogin, userRouter);
+router.use('/post', checkLogin, postRouter);
+router.use('/auth', authRouter);
+
+
 
 module.exports = router;
