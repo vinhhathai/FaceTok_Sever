@@ -2,6 +2,7 @@
 
 const UserModel = require("../../models/UserModel");
 const { errorCode, errorMessage } = require('../../common/enum/error');
+const formatDate = require('../../utils/formatDate')
 
 //----------------------------------------------------------------
 exports.getProfile = async (req, res) => {
@@ -42,11 +43,12 @@ exports.getProfile = async (req, res) => {
                 email: user.email,
                 profilePicture: user.profilePicture,
                 thumbnailL: user.thumbnail,
-                birthday: user.birthday,
+                birthday: formatDate(user.birthday),
                 bio: user.bio,
                 gender: user.gender,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
+                location: user.location
             }
         });
     } catch (error) {

@@ -45,12 +45,8 @@ exports.signUp = async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
         // Insert account into database
-        const { birthday } = req.body;
         const newUser = await UserModel.create({
             ...req.body,
-            birthday: moment(birthday, "DD/MM/YYYY").format(
-                "YYYY-MM-DD"
-            ),
             password: hashedPassword,
         })
 
@@ -58,6 +54,7 @@ exports.signUp = async (req, res) => {
         newUser.password = undefined;
         return res.status(201).json({
             message: "Account created successfully",
+            status: true
         })
 
     } catch (error) {
