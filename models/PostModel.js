@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 
 const PostSchema = new mongoose.Schema(
   {
-    user_id: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",
       required: true,
@@ -21,10 +21,6 @@ const PostSchema = new mongoose.Schema(
     fileType: {
       type: String,
       default: "",
-    },
-    isDelete: {
-      type: Boolean,
-      default: false,
     },
   },
   {
