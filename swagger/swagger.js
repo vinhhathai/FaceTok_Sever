@@ -15,7 +15,7 @@ const options = {
     ],
     components: {
       securitySchemes: {
-        BearerAuth: {
+        bearerAuth: {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
@@ -23,7 +23,7 @@ const options = {
       },
     },
   },
-  // Định nghĩa các route mà Swagger sẽ quét để tìm thông tin tài liệusadsdssdfsdfsdfsdfsdf
+  // Định nghĩa các route mà Swagger sẽ quét để tìm thông tin tài liệu
   apis: ['./swagger/**/*.js'],
 };
 

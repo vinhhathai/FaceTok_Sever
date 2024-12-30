@@ -8,6 +8,8 @@ const UserSchema = new Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     fullName: { type: String },
+    profilePicture: { type: String },
+    thumbnail: { type: String },
     role: {
       type: String,
       enum: ["member", "admin", "staff"],
@@ -20,13 +22,13 @@ const UserSchema = new Schema(
     groups: [{ type: mongoose.Types.ObjectId, ref: "groups" }],
     gender: {
       type: String,
-      enum: ["male", "female", "undefined"],
-      default: "undefined",
+      enum: ["male", "female", "other"],
+      default: "other",
     },
     birthday: { type: Date },
     bio: { type: String },
-    otp: { type: String }, 
-    otpExpiry: { type: Date }, 
+    otp: { type: String },
+    otpExpiry: { type: Date },
   },
   {
     timestamps: true,
