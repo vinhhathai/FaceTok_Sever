@@ -33,7 +33,6 @@ exports.getProfile = async (req, res) => {
                 }
             });
         }
-
         return res.status(200).json({
             timestamp: new Date().toISOString(),
             path: `/user/profile/${user.id}`,
@@ -42,7 +41,7 @@ exports.getProfile = async (req, res) => {
                 fullName: user.fullName,
                 email: user.email,
                 profilePicture: user.profilePicture,
-                thumbnailL: user.thumbnail,
+                thumbnail: user.thumbnail,
                 birthday: formatDate(user.birthday),
                 bio: user.bio,
                 gender: user.gender,

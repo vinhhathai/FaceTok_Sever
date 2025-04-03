@@ -21,9 +21,16 @@ router.put("/update-profile/:id", checkLogin, UpdateProfileController.updateProf
 /* GET PROFILE */
 router.get("/profile/:id", checkLogin, ViewProfileController.getProfile);
 /* UPDATE AVATAR */
-router.put("/update-avatar/:id", checkLogin, upload.single('avatar'), handleMulterError, UpdateAvatarController.updateAvatar );
+// router.put("/update-avatar", checkLogin, upload.single('avatar'), handleMulterError, UpdateAvatarController.updateAvatar );
 /* UPDATE THUMBNAIL */
-router.put("/update-thumbnail/:id", checkLogin, upload.single('thumbnail'), handleMulterError, UpdateThumbnailController.updateThumbnail);
+// router.put("/update-thumbnail/:id", checkLogin, upload.single('thumbnail'), handleMulterError, UpdateThumbnailController.updateThumbnail);
+
+// Thêm route mới để cập nhật avatar URL đã được upload lên Firebase từ client
+router.put("/update-avatar-url", checkLogin, UpdateAvatarController.updateAvatarUrl);
+
+// Thêm route mới để cập nhật thumbnail URL
+router.put("/update-thumbnail-url", checkLogin, UpdateThumbnailController.updateThumbnailUrl);
+
 
 
 // /* GET LIST OF FRIENDS */
