@@ -29,7 +29,8 @@ const UserSchema = new Schema(
     bio: { type: String },
     otp: { type: String },
     otpExpiry: { type: Date },
-    location: {type: String, default: "No location"}
+    location: {type: String, default: "No location"},
+    lastNameUpdateTime: { type: Date }
   },
   {
     timestamps: true,
@@ -37,20 +38,7 @@ const UserSchema = new Schema(
   }
 );
 
-// Thêm middleware trước khi lưu để debug
-UserSchema.pre('save', function(next) {
-  console.log('UserModel pre-save hook called');
-  console.log('Document being saved:', this);
-  next();
-});
 
-// Thêm middleware trước khi findOneAndUpdate để debug
-UserSchema.pre('findOneAndUpdate', function(next) {
-  console.log('UserModel pre-findOneAndUpdate hook called');
-  console.log('Update query:', this.getQuery());
-  console.log('Update operations:', this.getUpdate());
-  next();
-});
 
 const UserModel = mongoose.model("users", UserSchema);
 

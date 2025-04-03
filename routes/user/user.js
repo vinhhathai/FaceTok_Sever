@@ -18,6 +18,8 @@ const { upload, handleMulterError } = require('../../middlewares/uploadFile');
 
 /* UPDATE PROFILE */
 router.put("/update-profile/:id", checkLogin, UpdateProfileController.updateProfile);
+/* UPDATE FULLNAME */
+router.put("/update-fullname", checkLogin, UpdateProfileController.updateFullName);
 /* GET PROFILE */
 router.get("/profile/:id", checkLogin, ViewProfileController.getProfile);
 /* UPDATE AVATAR */
