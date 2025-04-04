@@ -10,10 +10,8 @@ const checkLogin = async (req, res, next) => {
     try {
         // Check login
         const authHeader = req.headers.authorization;
-        console.log('Auth header:', authHeader);
         
         const accessToken = authHeader?.split(' ')[1];
-        console.log('Access token extracted:', accessToken?.substring(0, 20) + '...');
         
         if (!accessToken) {
             return res.status(401).json({
@@ -27,16 +25,13 @@ const checkLogin = async (req, res, next) => {
         }
         
         // verify
-        console.log('Verifying token with key:', process.env.ACCESS_TOKEN_SECRET_KEY.substring(0, 5) + '...');
         try {
             const token = await jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET_KEY);
-            console.log('Token verified successfully, user ID:', token._id);
             
             // check role
             const user = await UserModel.findById(token._id);
             
             if (!user) {
-                console.log('User not found with ID:', token._id);
                 return res.status(404).json({
                     timestamp: new Date().toISOString(),
                     path: req.originalUrl,
@@ -47,8 +42,6 @@ const checkLogin = async (req, res, next) => {
                 });
             }
             
-            console.log('User found, role:', user.role);
-
             if (user.role !== role.MEMBER) {
                 return res.status(403).json({
                     timestamp: new Date().toISOString(),

@@ -17,8 +17,10 @@ const checkLogin = require('../../middlewares/checkLogin');
 /* GET USER POSTS */
 router.get('/user/:userId', GetPostController.getUserPosts);
 
+/* GET TIMELINE POSTS */
+
 /* CREATE POST */
-router.post('/create', upload.single('file'), handleMulterError, CreatePostController.createNewPost);
+router.post('/create', checkLogin, upload.single('file'), handleMulterError, CreatePostController.createNewPost);
 
 /* DELETE POST */
 router.delete('/delete/:postId', checkLogin, DeletePostController.deletePost);
