@@ -26,21 +26,6 @@ const PostSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "users"
     }],
-    comments: [{
-      userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "users",
-        required: true
-      },
-      text: {
-        type: String,
-        required: true
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
-    }],
     likesCount: {
       type: Number,
       default: 0
@@ -49,10 +34,7 @@ const PostSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    isDelete: {
-      type: Boolean,
-      default: false
-    }
+   
   },
   {
     timestamps: true,
@@ -79,11 +61,13 @@ PostSchema.methods.unlike = function(userId) {
   this.likesCount = this.likes.length;
 };
 
-// Tạo method để thêm comment
-PostSchema.methods.addComment = function(userId, text) {
-  this.comments.push({ userId, text });
-  this.commentsCount = this.comments.length;
-};
+// Tạo virtual field để lấy comments theo postId
+PostSchema.virtual('comments', {
+  ref: 'comments',
+  localField: '_id',
+  foreignField: 'postId',
+  options: { sort: { createdAt: -1 } }
+});
 
 // Đảm bảo Mongoose biết khi trả về JSON, hãy bao gồm cả virtual properties
 PostSchema.set('toJSON', { virtuals: true });
