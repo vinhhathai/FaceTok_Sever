@@ -10,6 +10,9 @@ var mongoose = require('mongoose');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/user/user');
+var messageRouter = require('./routes/message/message');
+var friendRouter = require('./routes/friend/friend');
+var searchRouter = require('./routes/search/search');
 const DBConnection = require('./DBConnection/DBConnection');
 
 const swaggerUi = require('swagger-ui-express');
@@ -48,6 +51,9 @@ mongoose.connection.on('connected', () => {
 app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/', indexRouter);
 app.use('/user', usersRouter); // Đảm bảo router user được đăng ký
+app.use('/message', messageRouter); // Thêm route cho tin nhắn
+app.use('/friend', friendRouter); // Thêm route cho tính năng kết bạn
+app.use('/search', searchRouter); // Thêm route cho tìm kiếm
 
 // Middleware xử lý lỗi JSON
 app.use((err, req, res, next) => {

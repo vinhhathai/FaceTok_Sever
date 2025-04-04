@@ -11,10 +11,8 @@ const UpdateAvatarController = require("../../controllers/UpdateAvatarController
 const UpdateThumbnailController = require("../../controllers/UpdateThumbnailController/UpdateThumbnailController")
 const UpdateProfileController = require("../../controllers/UpdateProfileController/UpdateProfileController");
 
-
 const checkLogin = require("../../middlewares/checkLogin");
 const { upload, handleMulterError } = require('../../middlewares/uploadFile');
-
 
 /* UPDATE PROFILE */
 router.put("/update-profile/:id", checkLogin, UpdateProfileController.updateProfile);
@@ -32,8 +30,6 @@ router.put("/update-avatar-url", checkLogin, UpdateAvatarController.updateAvatar
 
 // Thêm route mới để cập nhật thumbnail URL
 router.put("/update-thumbnail-url", checkLogin, UpdateThumbnailController.updateThumbnailUrl);
-
-
 
 // /* GET LIST OF FRIENDS */
 // router.get("/friends", GetListOfFriendController.getFriends);

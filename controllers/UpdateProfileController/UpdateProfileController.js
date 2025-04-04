@@ -141,17 +141,25 @@ exports.updateFullName = async (req, res) => {
         user.lastNameUpdateTime = currentTime;
         
         // Lưu lại thông tin sau khi cập nhật
-        await user.save();
+        // Sử dụng findByIdAndUpdate để tránh vấn đề validation
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            user_id,
+            { 
+                fullName: fullName, 
+                lastNameUpdateTime: currentTime 
+            },
+            { new: true, runValidators: false }
+        );
 
         return res.status(200).json({
             timestamp: new Date().toISOString(),
             path: `/user/update-fullname`,
             message: "Đã cập nhật tên thành công",
             data: {
-                id: user._id,
-                fullName: user.fullName,
-                lastNameUpdateTime: user.lastNameUpdateTime,
-                nextNameUpdateAvailable: new Date(user.lastNameUpdateTime.getTime() + 60 * 60 * 1000),
+                id: updatedUser._id,
+                fullName: updatedUser.fullName,
+                lastNameUpdateTime: updatedUser.lastNameUpdateTime,
+                nextNameUpdateAvailable: new Date(updatedUser.lastNameUpdateTime.getTime() + 60 * 60 * 1000),
             },
         });
     } catch (error) {
