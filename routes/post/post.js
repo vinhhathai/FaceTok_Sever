@@ -18,6 +18,7 @@ const checkLogin = require('../../middlewares/checkLogin');
 router.get('/user/:userId', GetPostController.getUserPosts);
 
 /* GET TIMELINE POSTS */
+router.get('/', checkLogin, GetPostController.getTimelinePosts);
 
 /* CREATE POST */
 router.post('/create', checkLogin, upload.single('file'), handleMulterError, CreatePostController.createNewPost);

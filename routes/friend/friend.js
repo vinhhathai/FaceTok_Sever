@@ -8,6 +8,9 @@ const FriendController = require('../../controllers/FriendController/FriendContr
 // Get user's friends
 router.get('/list', checkLogin, FriendController.getFriends);
 
+// Get user's friends by userId
+router.get('/list/:userId', FriendController.getUserFriends);
+
 // Get pending friend requests
 router.get('/requests', checkLogin, FriendController.getPendingRequests);
 

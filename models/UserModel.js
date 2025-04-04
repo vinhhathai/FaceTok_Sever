@@ -22,8 +22,8 @@ const UserSchema = new Schema(
     groups: [{ type: mongoose.Types.ObjectId, ref: "groups" }],
     gender: {
       type: String,
-      enum: ["male", "female", "No gender"],
-      default: "No gender",
+      enum: ["male", "female", "undefined"],
+      default: "undefined",
     },
     birthday: { type: Date, default: () => new Date() },
     bio: { type: String },

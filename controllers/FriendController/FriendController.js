@@ -246,57 +246,78 @@ const removeFriend = async (req, res) => {
  */
 const getFriends = async (req, res) => {
   try {
-    const { user_id } = req.user;
-
-    // Find user with populated friends list
-    const user = await UserModel.findById(user_id).populate('friends', 'fullName profilePicture email');
-
+    const userId = req.user.user_id;
+    const user = await UserModel.findById(userId)
+      .populate('friends', '_id fullName profilePicture email')
+      .select('friends');
+    
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ error: 'User not found' });
     }
-
-    return res.status(200).json({
-      success: true,
-      friends: user.friends
-    });
+    
+    res.json({ friends: user.friends || [] });
   } catch (error) {
-    console.error('Error fetching friends:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error retrieving friends list'
-    });
+    console.error('Error in getFriends:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
 /**
- * Get pending friend requests (sent and received)
+ * Get list of friends for a specific user by userId
+ */
+const getUserFriends = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    
+    const user = await UserModel.findById(userId)
+      .populate('friends', '_id fullName profilePicture email')
+      .select('friends');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ friends: user.friends || [] });
+  } catch (error) {
+    console.error('Error in getUserFriends:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+/**
+ * Get pending friend requests
  */
 const getPendingRequests = async (req, res) => {
   try {
     const userId = req.user.user_id;
-
-    // Find pending requests where user is recipient (received)
+    
+    // Find requests received by current user (where current user is recipient)
     const receivedRequests = await FriendRequestModel.find({
       recipient: userId,
-      status: FriendRequestModel.STATUS.PENDING
-    }).populate('sender', 'fullName profilePicture');
-
-    // Find pending requests where user is sender (sent)
+      status: 'pending'
+    })
+    .populate('sender', '_id fullName profilePicture email')
+    .sort({ createdAt: -1 });
+    
+    // Find requests sent by current user (where current user is sender)
     const sentRequests = await FriendRequestModel.find({
       sender: userId,
-      status: FriendRequestModel.STATUS.PENDING
-    }).populate('recipient', 'fullName profilePicture');
-
-    res.status(200).json({
+      status: 'pending'
+    })
+    .populate('recipient', '_id fullName profilePicture email')
+    .sort({ createdAt: -1 });
+    
+    res.json({
       received: receivedRequests,
       sent: sentRequests
     });
   } catch (error) {
-    console.error('Error getting pending requests:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error in getPendingRequests:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -363,6 +384,7 @@ module.exports = {
   cancelFriendRequest,
   removeFriend,
   getFriends,
+  getUserFriends,
   getPendingRequests,
   checkFriendshipStatus
 }; 
