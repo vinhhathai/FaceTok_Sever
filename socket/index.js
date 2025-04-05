@@ -4,10 +4,14 @@ const socketIO = require('socket.io');
 const MessageModel = require('../models/MessageModel');
 const UserModel = require('../models/UserModel');
 const FriendRequestModel = require('../models/FriendRequestModel');
+const NotificationModel = require('../models/NotificationModel');
 const jwt = require('jsonwebtoken');
 
 // Store online users: { userId: socketId }
 const onlineUsers = new Map();
+
+// Store the Socket.IO instance for access outside this module
+let ioInstance = null;
 
 function setupSocketIO(server) {
   const io = socketIO(server, {
@@ -17,6 +21,9 @@ function setupSocketIO(server) {
       credentials: true
     }
   });
+
+  // Store the io instance
+  ioInstance = io;
 
   // Middleware to authenticate users
   io.use(async (socket, next) => {
@@ -56,7 +63,7 @@ function setupSocketIO(server) {
     
     // Emit online users to all connected clients
     io.emit('userStatus', Array.from(onlineUsers.keys()));
-
+    
     // Handle private message
     socket.on('sendMessage', async (data) => {
       try {
@@ -268,4 +275,38 @@ function setupSocketIO(server) {
   return io;
 }
 
-module.exports = setupSocketIO; 
+// Function to get the Socket.IO instance
+function getSocketIO() {
+  return ioInstance;
+}
+
+// Function to send notification to a user
+async function sendNotification(userId, notification) {
+  try {
+    // Get user's socket ID
+    const userSocketId = onlineUsers.get(userId.toString());
+    
+    console.log(`Attempting to send notification to user ${userId}`);
+    console.log(`User online status: ${userSocketId ? 'Online' : 'Offline'}`);
+    console.log(`Socket ID: ${userSocketId}`);
+    console.log(`Notification data:`, notification);
+    
+    // If user is online, emit notification event
+    if (userSocketId && ioInstance) {
+      console.log(`Emitting newNotification event to socket ${userSocketId}`);
+      ioInstance.to(userSocketId).emit('newNotification', notification);
+      console.log('Notification emitted successfully');
+    } else {
+      console.log(`User ${userId} is offline or socket instance is not available`);
+    }
+  } catch (error) {
+    console.error('Error sending notification:', error);
+  }
+}
+
+module.exports = {
+  setupSocketIO,
+  getSocketIO,
+  onlineUsers,
+  sendNotification
+}; 

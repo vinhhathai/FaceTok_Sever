@@ -13,6 +13,7 @@ var usersRouter = require('./routes/user/user');
 var messageRouter = require('./routes/message/message');
 var friendRouter = require('./routes/friend/friend');
 var searchRouter = require('./routes/search/search');
+var notificationRouter = require('./routes/notification/notification');
 const DBConnection = require('./DBConnection/DBConnection');
 
 const swaggerUi = require('swagger-ui-express');
@@ -54,6 +55,7 @@ app.use('/user', usersRouter); // Đảm bảo router user được đăng ký
 app.use('/message', messageRouter); // Thêm route cho tin nhắn
 app.use('/friend', friendRouter); // Thêm route cho tính năng kết bạn
 app.use('/search', searchRouter); // Thêm route cho tìm kiếm
+app.use('/notification', notificationRouter); // Thêm route cho thông báo
 
 // Middleware xử lý lỗi JSON
 app.use((err, req, res, next) => {

@@ -8,7 +8,7 @@ var app = require('../app');
 var debug = require('debug')('faaytok-sever:server');
 var http = require('http');
 require('dotenv').config();
-var setupSocketIO = require('../socket');
+var socketModule = require('../socket');
 
 /**
  * Get port from environment and store in Express.
@@ -41,7 +41,7 @@ var server = http.createServer(app);
 /**
  * Initialize Socket.IO
  */
-const io = setupSocketIO(server);
+const io = socketModule.setupSocketIO(server);
 // Make io accessible to the express app
 app.set('io', io);
 

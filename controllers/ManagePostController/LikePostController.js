@@ -2,6 +2,7 @@
 
 const PostModel = require('../../models/PostModel');
 const mongoose = require('mongoose');
+const NotificationController = require('../NotificationController/NotificationController');
 
 /**
  * Toggle like/unlike bài viết
@@ -22,7 +23,7 @@ exports.toggleLike = async (req, res) => {
       });
     }
 
-    // Tìm bài viết theo ID
+    // Tìm bài viết theo ID mà không dùng populate
     const post = await PostModel.findById(postId);
 
     // Kiểm tra xem bài viết có tồn tại không
@@ -41,6 +42,8 @@ exports.toggleLike = async (req, res) => {
       // Nếu chưa thích, thêm like
       post.likes.push(userId);
       action = 'liked';
+      
+      // Không gửi thông báo khi like bài viết nữa
     } else {
       // Nếu đã thích, bỏ like
       post.likes.splice(likeIndex, 1);

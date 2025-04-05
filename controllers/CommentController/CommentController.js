@@ -4,6 +4,7 @@ const CommentModel = require('../../models/CommentModel');
 const PostModel = require('../../models/PostModel');
 const mongoose = require('mongoose');
 const { errorCode, errorMessage } = require('../../common/enum/error');
+const NotificationController = require('../NotificationController/NotificationController');
 
 /**
  * Thêm bình luận cho bài viết
@@ -59,6 +60,17 @@ exports.addComment = async (req, res) => {
     await PostModel.findByIdAndUpdate(postId, {
       $inc: { commentsCount: 1 }
     });
+
+    // Gửi thông báo đến chủ bài viết nếu không phải chính họ comment
+    if (post.userId && post.userId.toString() !== userId.toString()) {
+      await NotificationController.createNotification({
+        recipient: post.userId,
+        sender: userId,
+        type: 'comment',
+        post: postId,
+        comment: newComment._id
+      });
+    }
 
     // Populate thông tin người dùng
     await newComment.populate('userId', 'fullName profilePicture');
