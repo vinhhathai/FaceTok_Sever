@@ -70,7 +70,12 @@ exports.loginToSystem = async (req, res) => {
 
     // Create jwt token
     const accessToken = jwt.sign(
-      { _id: emailExist._id },
+      { _id: emailExist._id,
+        profilePicture: emailExist.profilePicture,
+        fullName: emailExist.fullName,
+        thumbnail: emailExist.thumbnail,
+        bio: emailExist.bio,
+       },
       process.env.ACCESS_TOKEN_SECRET_KEY,
       { expiresIn: "7d" }
     ); // 5 minutes

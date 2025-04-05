@@ -5,27 +5,39 @@ const { upload, handleMulterError } = require('../../middlewares/uploadFile');
 
 // import controllers
 const CreatePostController = require('../../controllers/ManagePostController/CreatePostController');
+const GetPostController = require('../../controllers/ManagePostController/GetPostController');
 const DeletePostController = require('../../controllers/ManagePostController/DeletePostController');
 const UpdatePostController = require('../../controllers/ManagePostController/UpdatePostController');
-const GetPostHomeController = require('../../controllers/ManagePostController/GetPostHomeController');
-const GetPostProfileController = require('../../controllers/ManagePostController/GetPostProfileController');
+const LikePostController = require('../../controllers/ManagePostController/LikePostController');
+const CommentController = require('../../controllers/CommentController/CommentController');
 
+// Import middlewares
+const checkLogin = require('../../middlewares/checkLogin');
 
-/* GET POST AT PROFILE PAGE */
-router.get('/profile', GetPostProfileController.getPost);
+/* GET USER POSTS */
+router.get('/user/:userId', GetPostController.getUserPosts);
 
-/* GET POST AT HOME PAGE */
-router.get('/home', GetPostHomeController.getPost);
+/* GET TIMELINE POSTS */
+router.get('/', checkLogin, GetPostController.getTimelinePosts);
 
 /* CREATE POST */
-router.post('/create', upload.single('file'), handleMulterError, CreatePostController.createNewPost);
-
-/* UPDATE POST */
-router.put('/update', upload.single('file'), handleMulterError, UpdatePostController.updatePost);
+router.post('/create', checkLogin, upload.single('file'), handleMulterError, CreatePostController.createNewPost);
 
 /* DELETE POST */
-router.delete('/delete/:id', DeletePostController.softDeletePost);
+router.delete('/delete/:postId', checkLogin, DeletePostController.deletePost);
 
+/* UPDATE POST */
+router.put('/update/:postId', checkLogin, UpdatePostController.updatePost);
 
+/* LIKE/UNLIKE POST */
+router.post('/like/:postId', checkLogin, LikePostController.toggleLike);
+
+/* CHECK LIKE STATUS */
+router.get('/like/:postId/status', checkLogin, LikePostController.checkLikeStatus);
+
+/* COMMENT ROUTES */
+router.post('/comment/:postId', checkLogin, CommentController.addComment);
+router.get('/comment/:postId', checkLogin, CommentController.getComments);
+router.delete('/comment/:commentId', checkLogin, CommentController.deleteComment);
 
 module.exports = router;

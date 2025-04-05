@@ -19,12 +19,11 @@ exports.signUp = async (req, res) => {
                 error: {
                     name: error.message,
                 }
-
             })
         }
 
-        // Check email and username in database
-        const { email, fullName } = req.body;
+        // Check email in database
+        const { email } = req.body;
         const emailExist = await UserModel.findOne({ email });
         if (emailExist) {
             return res.status(409).json({
@@ -34,36 +33,35 @@ exports.signUp = async (req, res) => {
                 error: {
                     name: errorMessage.EMAIL_EXISTED,
                 }
-
             });
         }
-
-       
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
         // Insert account into database
-        const newUser = await UserModel.create({
+        const userData = {
             ...req.body,
             password: hashedPassword,
-        })
+        };
+        
+        const newUser = await UserModel.create(userData);
 
         // Response message to client
-        newUser.password = undefined;
         return res.status(201).json({
             message: "Account created successfully",
             status: true
         })
 
     } catch (error) {
+        console.error("Sign up error:", error);
         return res.status(500).json({
             timestamp: new Date().toISOString(),
             path: "/auth/sign-up",
             code: errorCode.ERR_CREATE_ACCOUNT_FAILED,
             error: {
-                name: error.message,
+                name: error.message || "Internal server error",
             }
         });
     }

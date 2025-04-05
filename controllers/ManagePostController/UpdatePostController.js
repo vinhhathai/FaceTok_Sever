@@ -1,72 +1,65 @@
 'use strict';
 
-const UserModel = require("../../models/UserModel");
-const PostModel = require("../../models/PostModel");
-const { errorCode, errorMessage } = require('../../common/enum/error');
+const PostModel = require('../../models/PostModel');
+const mongoose = require('mongoose');
 
-exports.updatePost = async (req, res, next) => {
-    const { post_id, caption } = req.body;
-    const { user_id } = req.user;
-    const file = req.file;
+/**
+ * Cập nhật nội dung bài viết
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @returns {Object} - Response với thông báo kết quả và bài viết đã cập nhật
+ */
+exports.updatePost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { caption } = req.body;
+    const userId = req.user.user_id; // Lấy từ checkLogin middleware
 
-    if (!post_id) {
-        return res.status(400).json({
-            timestamp: new Date().toISOString(),
-            path: req.originalUrl,
-            code: errorCode.VALIDATION_FAILED,
-            error: {
-                name: errorMessage.ID_NOT_FOUND
-            }
-        });
+    // Kiểm tra định dạng ID hợp lệ
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID bài viết không hợp lệ'
+      });
     }
 
-    // Find post by id
-    try {
-        const post = await PostModel.findById(post_id);
-        if (!post) {
-            return res.status(404).json({
-                timestamp: new Date().toISOString(),
-                path: req.originalUrl,
-                code: errorCode.DATA_NOT_FOUND,
-                error: {
-                    name: errorMessage.POST_NOT_FOUND
-                }
-            });
-        }
+    // Tìm bài viết theo ID
+    const post = await PostModel.findById(postId);
 
-        // Ensure the post belongs to the user making the request
-        if (post.user_id.toString() !== user_id) {
-            return res.status(403).json({
-                timestamp: new Date().toISOString(),
-                path: req.originalUrl,
-                code: errorCode.NOT_PERMISSIONS,
-                error: {
-                    name: errorMessage.NOT_PERMISSIONS
-                }
-            });
-        }
-
-        // Update caption and file
-        if (caption) {
-            post.caption = caption;
-        }
-
-        if (file) {
-            post.filePath = `${req.protocol}://${req.get('host')}/upload/${file.filename}`;
-            post.fileType = file.mimetype;
-        }
-
-        await post.save();
-
-        res.status(200).json({ message: 'Post updated successfully' });
-    } catch (error) {
-        res.status(500).json({
-            timestamp: new Date().toISOString(),
-            path: req.originalUrl,
-            code: errorCode.ERR_UPDATE_POST_FAILED,
-            error: {
-                name: error.message
-            }
-        });
+    // Kiểm tra xem bài viết có tồn tại không
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy bài viết'
+      });
     }
-};
+
+    // Kiểm tra xem người dùng có phải là chủ sở hữu bài viết
+    if (post.userId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền cập nhật bài viết này'
+      });
+    }
+
+    // Cập nhật caption của bài viết
+    post.caption = caption;
+    await post.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Bài viết đã được cập nhật thành công',
+      post: post
+    });
+  } catch (error) {
+    console.error('Update post error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Đã xảy ra lỗi khi cập nhật bài viết',
+      error: {
+        name: error.name,
+        message: error.message
+      }
+    });
+  }
+}; 

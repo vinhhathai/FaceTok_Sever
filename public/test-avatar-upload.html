@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avatar Upload Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .preview {
+      margin-top: 20px;
+    }
+    img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 50%;
+      border: 1px solid #ddd;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Avatar Upload Test</h1>
+  
+  <div class="form-group">
+    <label for="token">JWT Token:</label>
+    <input type="text" id="token" placeholder="Enter your JWT token">
+  </div>
+  
+  <div class="form-group">
+    <label for="avatar">Select Avatar Image:</label>
+    <input type="file" id="avatar" accept="image/jpeg, image/png">
+  </div>
+  
+  <div class="preview">
+    <h3>Preview:</h3>
+    <img id="preview-img" src="https://via.placeholder.com/200" alt="Avatar Preview">
+  </div>
+  
+  <button id="upload-btn">Upload Avatar</button>
+  
+  <div class="result" id="result">
+    <h3>Result:</h3>
+    <pre id="result-json"></pre>
+    <div id="success-img"></div>
+  </div>
+  
+  <script>
+    document.getElementById('avatar').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          document.getElementById('preview-img').src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    document.getElementById('upload-btn').addEventListener('click', async function() {
+      const token = document.getElementById('token').value;
+      const fileInput = document.getElementById('avatar');
+      const resultDiv = document.getElementById('result');
+      const resultJson = document.getElementById('result-json');
+      const successImg = document.getElementById('success-img');
+      
+      if (!token) {
+        alert('Please enter a JWT token');
+        return;
+      }
+      
+      if (!fileInput.files[0]) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('avatar', fileInput.files[0]);
+      
+      try {
+        const response = await fetch('/user/update-avatar', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+        
+        const data = await response.json();
+        resultJson.textContent = JSON.stringify(data, null, 2);
+        resultDiv.style.display = 'block';
+        
+        if (data.avatarUrl) {
+          successImg.innerHTML = `<h3>Uploaded Avatar:</h3><img src="${data.avatarUrl}" alt="Uploaded Avatar">`;
+        }
+      } catch (error) {
+        resultJson.textContent = JSON.stringify({ error: error.message }, null, 2);
+        resultDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html> 

@@ -4,13 +4,13 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'API Documentation',
+      title: 'FaceTok API Documentation',
       version: '1.0.0',
-      description: 'API documentation for your Express application',
+      description: 'API documentation for FaceTok application',
     },
     servers: [
       {
-        url: 'http://localhost:3000', // URL của server API
+        url: 'http://localhost:3000', // URL of the API server
       },
     ],
     components: {
@@ -23,8 +23,13 @@ const options = {
       },
     },
   },
-  // Định nghĩa các route mà Swagger sẽ quét để tìm thông tin tài liệu
-  apis: ['./swagger/**/*.js'],
+  // Define the paths to the API docs
+  apis: [
+    './routes/**/*.js',
+    './controllers/**/*.js',
+    './models/**/*.js',
+    './swagger/**/*.js'
+  ],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

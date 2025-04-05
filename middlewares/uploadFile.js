@@ -4,21 +4,12 @@ const multer = require('multer');
 const path = require('path');
 const { errorCode, errorMessage } = require('../common/enum/error')
 
-
-// Config storage path and file name
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../public/upload'));
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Use memory storage for Firebase uploads
+const storage = multer.memoryStorage();
 
 // Filter to check file type
 const fileFilter = (req, file, cb) => {
-    const fileTypes = /jpeg|jpg|png|mp4|wmv|mkv/;
+    const fileTypes = /jpeg|jpg|png/;
     const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = fileTypes.test(file.mimetype);
 
@@ -32,7 +23,7 @@ const fileFilter = (req, file, cb) => {
 // Create multer
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 1024 * 1024 * 50 }, // Limit file size to 50MB
+    limits: { fileSize: 1024 * 1024 * 5 }, // Limit file size to 5MB
     fileFilter: fileFilter
 });
 
