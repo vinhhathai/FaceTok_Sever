@@ -2,9 +2,7 @@
 //----------------------------------------------------------------
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const UserRepository = require('../../../repositories/UserRepository');
-const { createErrorResponse } = require('../../../utils/responseUtils');
-const EmailService = require('../../../shared/services/EmailService');
+const UserRepository = require('../../user/repositories/UserRepository');
 
 class AuthRegisterService {
     async register(userData) {

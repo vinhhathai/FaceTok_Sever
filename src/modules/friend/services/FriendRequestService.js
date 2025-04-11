@@ -1,10 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
-const mongoose = require('mongoose');
-const FriendRequest = require('../models/FriendRequest');
-const Friend = require('../models/Friend');
-const UserRepository = require('../../../repositories/UserRepository');
-const { createErrorResponse } = require('../../../utils/responseUtils');
+const FriendRequest = require('../models/FriendRequestModel');
+const UserRepository = require('../../user/repositories/UserRepository');
 
 class FriendRequestService {
     async sendFriendRequest(senderId, recipientId) {

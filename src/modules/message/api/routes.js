@@ -6,7 +6,8 @@ const {
     MessageController,
     ConversationController
 } = require('../controllers');
-const { checkLogin } = require('../../../middlewares/auth');
+const  checkLogin  = require('../../../shared/middlewares/checkLogin');
+
 
 // Conversation Routes
 router.get('/conversations', checkLogin, ConversationController.getRecentConversations);

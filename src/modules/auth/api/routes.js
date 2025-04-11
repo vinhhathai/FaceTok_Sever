@@ -7,7 +7,7 @@ const {
     AuthRegisterController,
     AuthPasswordController
 } = require('../controllers');
-const { checkLogin } = require('../../../middlewares/auth');
+const  checkLogin  = require('../../../shared/middlewares/checkLogin');
 
 // Auth Login Routes
 router.post('/login', AuthLoginController.loginToSystem);
