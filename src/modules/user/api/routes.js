@@ -7,7 +7,7 @@ const {
     UserMediaController, 
     UserSearchController 
 } = require('../controllers');
-const { checkLogin } = require('../../../middlewares/auth');
+const  checkLogin  = require('../../../shared/middlewares/checkLogin');
 
 // Profile routes
 router.get('/profile/:id', checkLogin, ProfileController.getProfile);

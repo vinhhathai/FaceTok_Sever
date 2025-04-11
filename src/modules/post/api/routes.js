@@ -8,7 +8,8 @@ const {
     PostInteractionController,
     CommentController
 } = require('../controllers');
-const { checkLogin } = require('../../../middlewares/auth');
+const  checkLogin  = require('../../../shared/middlewares/checkLogin');
+
 
 // Feed Routes
 router.get('/', checkLogin, FeedController.getTimelinePosts);

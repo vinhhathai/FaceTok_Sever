@@ -1,8 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const bcrypt = require('bcrypt');
-const UserRepository = require('../../../repositories/UserRepository');
-const { createErrorResponse } = require('../../../utils/responseUtils');
+const UserRepository = require('../../user/repositories/UserRepository');
 
 class AuthPasswordService {
     async resetPassword(userId, otp, newPassword) {

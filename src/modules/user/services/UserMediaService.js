@@ -1,7 +1,6 @@
 "use strict";
 //----------------------------------------------------------------
-const UserRepository = require('../../../repositories/UserRepository');
-const { createErrorResponse } = require('../../../utils/responseUtils');
+const UserRepository = require('../repositories/UserRepository');
 
 class UserMediaService {
     async updateAvatar(userId, profilePicture) {

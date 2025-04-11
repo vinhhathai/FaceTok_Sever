@@ -6,7 +6,8 @@ const {
     FriendController,
     FriendRequestController
 } = require('../controllers');
-const { checkLogin } = require('../../../middlewares/auth');
+const  checkLogin  = require('../../../shared/middlewares/checkLogin');
+
 
 // Friend Management Routes
 router.get('/list', checkLogin, FriendController.getFriendsList);

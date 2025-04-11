@@ -7,7 +7,8 @@ const {
     NotificationStatusController,
     NotificationCreationController
 } = require("../controllers");
-const { checkLogin } = require("../../../middlewares/auth");
+const  checkLogin  = require('../../../shared/middlewares/checkLogin');
+
 
 // Lấy tất cả thông báo của người dùng
 router.get("/list", checkLogin, NotificationListController.getNotifications);
