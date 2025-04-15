@@ -1,7 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const FriendRepository = require('../repositories/FriendRepository');
-const { errorCode, errorMessage } = require('../../../shared/utils/error');
+const { errorCode, errorMessage } = require('../../../shared/common/error');
 
 class FriendService {
     constructor() {

@@ -2,8 +2,8 @@
 //----------------------------------------------------------------
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
-const { errorCode, errorMessage } = require('../utils/error');
-const { role } = require('../utils/constants');
+const { errorCode, errorMessage } = require('../common/error');
+const { role } = require('../common/constants');
 
 // Đối với Modular Monolith, chúng ta không nên import trực tiếp model từ module khác
 // Thay vào đó, chúng ta sẽ import từ module user thông qua interface

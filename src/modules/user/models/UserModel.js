@@ -8,8 +8,8 @@ const UserSchema = new Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     fullName: { type: String },
-    profilePicture: { type: String, default: '' },
-    thumbnail: { type: String, default: '' },
+    profilePicture: { type: String, default: "" },
+    thumbnail: { type: String, default: "" },
     role: {
       type: String,
       enum: ["member", "admin", "staff"],
@@ -27,10 +27,7 @@ const UserSchema = new Schema(
     },
     birthday: { type: Date, default: () => new Date() },
     bio: { type: String },
-    otp: { type: String },
-    otpExpiry: { type: Date },
-    location: {type: String, default: "No location"},
-    lastNameUpdateTime: { type: Date }
+    location: { type: String, default: "No location" },
   },
   {
     timestamps: true,
@@ -40,4 +37,4 @@ const UserSchema = new Schema(
 
 const UserModel = mongoose.model("users", UserSchema);
 
-module.exports = UserModel; 
+module.exports = UserModel;

@@ -2,7 +2,7 @@
 //----------------------------------------------------------------
 const CommentRepository = require('../repositories/CommentRepository');
 const PostRepository = require('../repositories/PostRepository');
-const { errorCode, errorMessage } = require('../../../shared/utils/error');
+const { errorCode, errorMessage } = require('../../../shared/common/error');
 
 class CommentService {
     constructor() {

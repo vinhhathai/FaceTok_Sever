@@ -2,7 +2,7 @@
 //----------------------------------------------------------------
 const MessageRepository = require('../repositories/MessageRepository');
 const SocketService = require('../../../shared/services/SocketService');
-const { errorCode, errorMessage } = require('../../../shared/utils/error');
+const { errorCode, errorMessage } = require('../../../shared/common/error');
 
 class MessageService {
     constructor() {

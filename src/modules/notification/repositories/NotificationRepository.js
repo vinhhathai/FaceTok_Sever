@@ -115,4 +115,4 @@ class NotificationRepository {
   }
 }
 
-module.exports = new NotificationRepository(); 
+module.exports = NotificationRepository; 

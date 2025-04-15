@@ -1,7 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const UserRepository = require('../repositories/UserRepository');
-const { errorCode, errorMessage } = require('../../../shared/utils/error');
+const { errorCode, errorMessage } = require('../../../shared/common/error');
 
 class ProfileService {
     constructor() {
@@ -79,4 +79,4 @@ class ProfileService {
     }
 }
 
-module.exports = new ProfileService(); 
+module.exports = ProfileService; 
