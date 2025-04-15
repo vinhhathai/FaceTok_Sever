@@ -15,6 +15,11 @@ class UserRepository {
         return this.model.findOne({ email: email });
     }
 
+    async create(userData) {
+        const newUser = new this.model(userData);
+        return await newUser.save();
+    }
+
     async findBySearchTerm(searchTerm) {
         const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         
@@ -58,4 +63,5 @@ class UserRepository {
     }
 }
 
+// Export class
 module.exports = UserRepository; 

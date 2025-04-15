@@ -7,20 +7,27 @@ const {
     AuthRegisterController,
     AuthPasswordController
 } = require('../controllers');
-const  checkLogin  = require('../../../shared/middlewares/checkLogin');
+const checkLogin = require('../../../shared/middlewares/checkLogin');
+const validateRequest = require('../../../shared/middlewares/validateRequest');
+const { 
+    loginValidation,
+    signUpValidation,
+    emailValidation,
+    resetPasswordValidation,
+    changePasswordValidation
+} = require('../../../shared/validation');
 
 // Auth Login Routes
-router.post('/login', AuthLoginController.loginToSystem);
-router.post('/refresh-token', AuthLoginController.refreshToken);
-router.post('/logout', checkLogin, AuthLoginController.logout);
+router.post('/login', validateRequest(loginValidation), AuthLoginController.loginToSystem);
+// router.post('/refresh-token', AuthLoginController.refreshToken);
 
 // Auth Register Routes
-router.post('/sign-up', AuthRegisterController.signUp);
-router.post('/verify-otp', AuthRegisterController.verifyOTP);
+router.post('/sign-up', validateRequest(signUpValidation), AuthRegisterController.signUp);
+// router.post('/verify-otp', validateRequest(resetPasswordValidation), AuthRegisterController.verifyOTP);
 
 // Auth Password Routes
-router.post('/request-reset', AuthPasswordController.requestPasswordReset);
-router.post('/reset-password', AuthPasswordController.resetPassword);
-router.put('/change-password', checkLogin, AuthPasswordController.changePassword);
+router.post('/request-reset', validateRequest(emailValidation), AuthPasswordController.requestPasswordReset);
+router.post('/reset-password', validateRequest(resetPasswordValidation), AuthPasswordController.resetPassword);
+router.put('/change-password', checkLogin, validateRequest(changePasswordValidation), AuthPasswordController.changePassword);
 
 module.exports = router; 

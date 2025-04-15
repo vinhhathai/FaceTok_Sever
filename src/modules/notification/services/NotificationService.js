@@ -2,7 +2,7 @@
 //----------------------------------------------------------------
 const NotificationRepository = require("../repositories/NotificationRepository");
 const SocketService = require('../../../shared/services/SocketService');
-const { errorCode, errorMessage } = require('../../../shared/utils/error');
+const { errorCode, errorMessage } = require('../../../shared/common/error');
 
 class NotificationService {
   constructor() {

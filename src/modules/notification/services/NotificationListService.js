@@ -1,7 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const NotificationRepository = require("../repositories/NotificationRepository");
-const { errorCode, errorMessage } = require('../../../shared/utils/error');
+const { errorCode, errorMessage } = require('../../../shared/common/error');
 
 class NotificationListService {
   constructor() {

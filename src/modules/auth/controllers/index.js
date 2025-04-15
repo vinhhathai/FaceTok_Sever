@@ -5,7 +5,7 @@ const AuthRegisterController = require('./AuthRegisterController');
 const AuthPasswordController = require('./AuthPasswordController');
 
 module.exports = {
-    AuthLoginController,
-    AuthRegisterController,
-    AuthPasswordController
+    AuthLoginController: new AuthLoginController(),
+    AuthRegisterController: new AuthRegisterController(),
+    AuthPasswordController: new AuthPasswordController()
 }; 

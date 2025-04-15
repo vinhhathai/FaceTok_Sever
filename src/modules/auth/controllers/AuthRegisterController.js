@@ -1,108 +1,47 @@
 "use strict";
 //----------------------------------------------------------------
-const { AuthRegisterService } = require('../services');
+const { AuthRegisterService } = require("../services");
+const { errorCode } = require("../../../shared/common/error");
 
 class AuthRegisterController {
-    constructor() {
-        this.authRegisterService = AuthRegisterService;
+  constructor() {
+    this.authRegisterService = new AuthRegisterService();
+  }
+
+  signUp = async (req, res) => {
+    try {
+      // Lấy data từ request
+      let userData = req.body;
+      console.log("userData", userData);
+
+      // Xử lý trường hợp userData có dạng { value: {...} }
+      if (userData && userData.value) {
+        userData = userData.value;
+      }
+
+      const result = await this.authRegisterService.register(userData);
+
+      return res.status(result.statusCode).json(
+        result.success
+          ? { message: "Account created successfully", status: true }
+          : {
+              timestamp: new Date().toISOString(),
+              path: "/auth/sign-up",
+              error: result.error,
+            }
+      );
+    } catch (error) {
+      console.error("Sign up controller error:", error);
+      return res.status(500).json({
+        timestamp: new Date().toISOString(),
+        path: "/auth/sign-up",
+        error: {
+          code: errorCode.CREATE_ACCOUNT_FAILED,
+          message: error.message || "Internal server error",
+        },
+      });
     }
-    
-    signUp = async (req, res) => {
-        const { username, email, password, fullName } = req.body;
-        
-        // Validate input
-        if (!username || !email || !password || !fullName) {
-            return res.status(400).json({
-                timestamp: new Date().toISOString(),
-                path: '/auth/sign-up',
-                error: {
-                    code: 'MISSING_FIELDS',
-                    message: 'All fields are required (username, email, password, fullName)'
-                }
-            });
-        }
-        
-        // Simple email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                timestamp: new Date().toISOString(),
-                path: '/auth/sign-up',
-                error: {
-                    code: 'INVALID_EMAIL',
-                    message: 'Please provide a valid email address'
-                }
-            });
-        }
-        
-        // Username validation
-        if (username.length < 3 || username.length > 20) {
-            return res.status(400).json({
-                timestamp: new Date().toISOString(),
-                path: '/auth/sign-up',
-                error: {
-                    code: 'INVALID_USERNAME',
-                    message: 'Username must be between 3 and 20 characters'
-                }
-            });
-        }
-        
-        // Password validation
-        if (password.length < 6) {
-            return res.status(400).json({
-                timestamp: new Date().toISOString(),
-                path: '/auth/sign-up',
-                error: {
-                    code: 'INVALID_PASSWORD',
-                    message: 'Password must be at least 6 characters'
-                }
-            });
-        }
-        
-        const result = await this.authRegisterService.register({
-            username,
-            email,
-            password,
-            fullName
-        });
-        
-        return res.status(result.statusCode).json(
-            result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: '/auth/sign-up',
-                    error: result.error 
-                }
-        );
-    }
-    
-    verifyOTP = async (req, res) => {
-        const { userId, otp } = req.body;
-        
-        if (!userId || !otp) {
-            return res.status(400).json({
-                timestamp: new Date().toISOString(),
-                path: '/auth/verify-otp',
-                error: {
-                    code: 'MISSING_FIELDS',
-                    message: 'User ID and OTP are required'
-                }
-            });
-        }
-        
-        const result = await this.authRegisterService.verifyOTP(userId, otp);
-        
-        return res.status(result.statusCode).json(
-            result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: '/auth/verify-otp',
-                    error: result.error 
-                }
-        );
-    }
+  };
 }
 
-module.exports = new AuthRegisterController(); 
+module.exports = AuthRegisterController;

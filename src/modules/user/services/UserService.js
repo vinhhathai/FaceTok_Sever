@@ -1,11 +1,11 @@
 "use strict";
 //----------------------------------------------------------------
 const UserRepository = require('../repositories/UserRepository');
-const { errorCode, errorMessage } = require('../../../shared/utils/error');
+const { errorCode, errorMessage } = require('../../../shared/common/error');
 
 class UserService {
     constructor() {
-        this.userRepository = new UserRepository();
+        this.userRepository = UserRepository;
     }
 
     async getUserProfile(userId) {
@@ -187,5 +187,4 @@ class UserService {
     }
 }
 
-// Export instance thay vì class
-module.exports = new UserService(); 
+module.exports = UserService; 
