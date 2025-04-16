@@ -2,6 +2,7 @@
 //----------------------------------------------------------------
 const PostRepository = require('../repositories/PostRepository');
 const { errorCode, errorMessage } = require('../../../shared/common/error');
+const serviceResponse = require('../../../shared/helper/serviceResponse');
 
 class FeedService {
     constructor() {
@@ -14,26 +15,19 @@ class FeedService {
             const posts = await this.postRepository.findByUserId(userId, { skip, limit });
             const totalPosts = await this.postRepository.getTotalPostCount(userId);
             
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    posts,
-                    page,
-                    limit,
-                    total: totalPosts,
-                    totalPages: Math.ceil(totalPosts / limit)
-                }
-            };
+            return serviceResponse.success({
+                posts,
+                page,
+                limit,
+                total: totalPosts,
+                totalPages: Math.ceil(totalPosts / limit)
+            }, "User posts retrieved successfully");
         } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
+            return serviceResponse.error(
+                errorCode.ERR_GET_DATA_FAILED,
+                "Failed to get user posts",
+                error.message
+            );
         }
     }
 
@@ -107,26 +101,19 @@ class FeedService {
                 .slice(skip, skip + limit)
                 .map(item => item.post);
             
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    posts: sortedPosts,
-                    page,
-                    limit,
-                    total: totalPosts,
-                    totalPages: Math.ceil(totalPosts / limit)
-                }
-            };
+            return serviceResponse.success({
+                posts: sortedPosts,
+                page,
+                limit,
+                total: totalPosts,
+                totalPages: Math.ceil(totalPosts / limit)
+            }, "Timeline posts retrieved successfully");
         } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
+            return serviceResponse.error(
+                errorCode.ERR_GET_DATA_FAILED,
+                "Failed to get timeline posts",
+                error.message
+            );
         }
     }
 }

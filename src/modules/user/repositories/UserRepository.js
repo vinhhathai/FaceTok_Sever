@@ -61,6 +61,27 @@ class UserRepository {
             .skip(skip)
             .limit(limit);
     }
+
+    async updateUserPassword(userId, hashedPassword) {
+        return this.model.findByIdAndUpdate(
+            userId,
+            { password: hashedPassword },
+            { new: true }
+        );
+    }
+
+    async updateUserVerification(userId, verificationData) {
+        return this.model.findByIdAndUpdate(
+            userId,
+            { verification: verificationData },
+            { new: true }
+        );
+    }
+
+    async createUser(userData) {
+        const user = new this.model(userData);
+        return user.save();
+    }
 }
 
 // Export class

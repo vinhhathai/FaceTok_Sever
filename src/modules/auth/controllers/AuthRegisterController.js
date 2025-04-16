@@ -1,7 +1,9 @@
 "use strict";
 //----------------------------------------------------------------
 const { AuthRegisterService } = require("../services");
-const { errorCode } = require("../../../shared/common/error");
+const { errorCode, errorMessage } = require("../../../shared/common/error");
+const { AuthRegisterDto } = require("../dtos");
+const { signUpValidation } = require("../validations/authValidation");
 
 class AuthRegisterController {
   constructor() {
@@ -10,35 +12,51 @@ class AuthRegisterController {
 
   signUp = async (req, res) => {
     try {
-      // Lấy data từ request
-      let userData = req.body;
-      console.log("userData", userData);
+      // Validate dữ liệu đầu vào bằng Joi
+      const { error, value } = signUpValidation.validate(req.body);
 
-      // Xử lý trường hợp userData có dạng { value: {...} }
-      if (userData && userData.value) {
-        userData = userData.value;
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          path: req.originalUrl,
+          error: {
+            code: errorCode.INVALID_INPUT,
+            message: error.details[0].message,
+          },
+          timestamp: new Date().toISOString(),
+        });
       }
 
-      const result = await this.authRegisterService.register(userData);
+      // Tạo DTO từ dữ liệu đã validate
+      const registerDto = new AuthRegisterDto(value);
 
-      return res.status(result.statusCode).json(
-        result.success
-          ? { message: "Account created successfully", status: true }
-          : {
-              timestamp: new Date().toISOString(),
-              path: "/auth/sign-up",
-              error: result.error,
-            }
-      );
+      // Chuẩn hóa dữ liệu và gọi service
+      registerDto.normalize();
+      const result = await this.authRegisterService.register(registerDto);
+
+      if (result.success) {
+        return res.status(201).json({
+          ...result,
+          path: req.originalUrl,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        return res.status(400).json({
+          ...result,
+          path: req.originalUrl,
+          timestamp: new Date().toISOString(),
+        });
+      }
     } catch (error) {
       console.error("Sign up controller error:", error);
       return res.status(500).json({
+        ...AuthRegisterDto.error(
+          errorCode.CREATE_ACCOUNT_FAILED,
+          errorMessage.CREATE_ACCOUNT_FAILED,
+          error.message
+        ),
+        path: req.originalUrl,
         timestamp: new Date().toISOString(),
-        path: "/auth/sign-up",
-        error: {
-          code: errorCode.CREATE_ACCOUNT_FAILED,
-          message: error.message || "Internal server error",
-        },
       });
     }
   };
