@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const FeedService = require('../services/FeedService');
+const { handleServiceResult } = require('../../../shared/helper/handleService');
 
 class FeedController {
     constructor() {
@@ -8,51 +9,45 @@ class FeedController {
     }
 
     getTimelinePosts = async (req, res) => {
-        const userId = req.user.id;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        
-        const result = await this.feedService.getTimelinePosts(userId, page, limit);
-        
-        if (result.success) {
-            return res.status(result.statusCode).json({
-                success: true,
-                posts: result.data.posts,
-                page: result.data.page,
-                limit: result.data.limit,
-                total: result.data.total,
-                totalPages: result.data.totalPages
-            });
-        } else {
-            return res.status(result.statusCode).json({ 
-                timestamp: new Date().toISOString(),
-                path: '/post',
-                error: result.error 
+        try {
+            const userId = req.user.id;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            
+            const result = await this.feedService.getTimelinePosts(userId, page, limit);
+            
+            return handleServiceResult(res, result);
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'GET_POSTS_FAILED',
+                    message: 'Failed to get timeline posts',
+                    detail: error.message
+                },
+                timestamp: new Date().toISOString()
             });
         }
     }
 
     getUserPosts = async (req, res) => {
-        const userId = req.params.userId;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        
-        const result = await this.feedService.getUserPosts(userId, page, limit);
-        
-        if (result.success) {
-            return res.status(result.statusCode).json({
-                success: true,
-                posts: result.data.posts,
-                page: result.data.page,
-                limit: result.data.limit,
-                total: result.data.total,
-                totalPages: result.data.totalPages
-            });
-        } else {
-            return res.status(result.statusCode).json({ 
-                timestamp: new Date().toISOString(),
-                path: `/post/user/${userId}`,
-                error: result.error 
+        try {
+            const userId = req.params.userId;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            
+            const result = await this.feedService.getUserPosts(userId, page, limit);
+            
+            return handleServiceResult(res, result);
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'GET_USER_POSTS_FAILED',
+                    message: 'Failed to get user posts',
+                    detail: error.message
+                },
+                timestamp: new Date().toISOString()
             });
         }
     }

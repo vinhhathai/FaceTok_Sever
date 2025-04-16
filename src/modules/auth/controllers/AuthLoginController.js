@@ -1,8 +1,9 @@
 "use strict";
 //----------------------------------------------------------------
 const { AuthLoginService } = require("../services");
-const { errorCode } = require("../../../shared/common/error");
-const UserRepository = require("../../user/repositories/UserRepository");
+const { errorCode, errorMessage } = require("../../../shared/common/error");
+const { AuthLoginDto } = require("../dtos");
+const { loginValidation } = require("../validations/authValidation");
 
 class AuthLoginController {
   constructor() {
@@ -11,46 +12,46 @@ class AuthLoginController {
 
   loginToSystem = async (req, res) => {
     try {
-      // Lấy data từ request
-      let userData = req.body;
-
-      // Xử lý trường hợp userData có dạng { value: {...} }
-      if (userData && userData.value) {
-        userData = userData.value;
+      // Validate dữ liệu đầu vào bằng Joi
+      const { error, value } = loginValidation.validate(req.body);
+      
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          path: req.originalUrl,
+          error: {
+            code: errorCode.INVALID_INPUT,
+            message: error.details[0].message
+          },
+          timestamp: new Date().toISOString()
+        });
       }
+      
+      
+      const result = await this.authLoginService.login(value.email, value.password);
 
-      let { email, password } = userData;
-
-      // Chuẩn hóa email (chuyển sang chữ thường)
-      if (email) {
-        email = email.toLowerCase().trim();
+      if (result.success) {
+        return res.status(200).json({
+          ...result,
+          path: req.originalUrl,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        return res.status(400).json({
+          ...result,
+          path: req.originalUrl,
+          timestamp: new Date().toISOString()
+        });
       }
-
-      const result = await this.authLoginService.login(email, password);
-
-      return res.status(result.statusCode).json(
-        result.success
-          ? {
-              message: "Login successfully",
-              accessToken: result.data.accessToken,
-              refreshToken: result.data.refreshToken,
-              data: result.data,
-            }
-          : {
-              timestamp: new Date().toISOString(),
-              path: "/auth/login",
-              error: result.error,
-            }
-      );
     } catch (error) {
-      console.error("Login controller error:", error);
       return res.status(500).json({
-        timestamp: new Date().toISOString(),
-        path: "/auth/login",
-        error: {
-          code: errorCode.LOGIN_FAILED,
-          message: error.message || "Internal server error",
-        },
+        ...AuthLoginDto.error(
+          errorCode.LOGIN_FAILED,
+          errorMessage.LOGIN_FAILED,
+          error.message
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString()
       });
     }
   };

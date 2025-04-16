@@ -2,6 +2,7 @@
 //----------------------------------------------------------------
 const FriendRequest = require('../models/FriendRequestModel');
 const UserRepository = require('../../user/repositories/UserRepository');
+const serviceResponse = require('../../../shared/helper/serviceResponse');
 
 class FriendRequestService {
     async sendFriendRequest(senderId, recipientId) {
@@ -108,7 +109,7 @@ class FriendRequestService {
             };
         } catch (error) {
             console.error('Error in sendFriendRequest:', error);
-            return createErrorResponse(500, 'INTERNAL_SERVER_ERROR', 'Failed to send friend request');
+            return serviceResponse.error('INTERNAL_SERVER_ERROR', 'Failed to send friend request', error.message);
         }
     }
     

@@ -15,7 +15,7 @@ const swaggerSpec = require('./shared/swagger/swagger');
 const DBConnection = require('./shared/database/DBConnection');
 
 // Import modules
-const userModule = require('./modules/user');
+// const userModule = require('./modules/user');
 const postModule = require('./modules/post');
 const messageModule = require('./modules/message');
 const friendModule = require('./modules/friend');
@@ -66,7 +66,7 @@ mongoose.connection.on('connected', () => {
 });
 
 // Đăng ký routes từ các module
-app.use('/user', userModule.routes);
+// app.use('/user', userModule.routes);
 app.use('/post', postModule.routes);
 app.use('/message', messageModule.routes);
 app.use('/friend', friendModule.routes);
