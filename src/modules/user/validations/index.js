@@ -3,9 +3,15 @@
 
 // Import all validations
 const { updateProfileValidation, profileValidation } = require('./userValidation');
+const avatarValidation = require('./avatarValidation');
+const thumbnailValidation = require('./thumbnailValidation');
+const fullnameValidation = require('./fullnameValidation');
 
 // Export all validations
 module.exports = {
     updateProfileValidation,
-    profileValidation
+    profileValidation,
+    avatarValidation,
+    thumbnailValidation,
+    fullnameValidation
 }; 

@@ -13,23 +13,23 @@ const  checkLogin  = require('../../../shared/middlewares/checkLogin');
 
 // Feed Routes
 router.get('/', checkLogin, FeedController.getTimelinePosts);
-router.get('/user/:userId', checkLogin, FeedController.getUserPosts);
+router.post('/user', checkLogin, FeedController.getUserPosts);
 
 // Post Management Routes
 router.post('/create', checkLogin, PostManagementController.createPost);
-router.put('/update/:postId', checkLogin, PostManagementController.updatePost);
-router.delete('/delete/:postId', checkLogin, PostManagementController.deletePost);
-router.get('/:id', checkLogin, PostManagementController.getPostById);
+router.put('/update', checkLogin, PostManagementController.updatePost);
+router.delete('/delete', checkLogin, PostManagementController.deletePost);
+router.post('/get-by-id', checkLogin, PostManagementController.getPostById);
 
 // Post Interaction Routes
-router.post('/like/:postId', checkLogin, PostInteractionController.toggleLike);
-router.get('/like/:postId/status', checkLogin, PostInteractionController.checkLikeStatus);
-router.post('/:id/like', checkLogin, PostInteractionController.likePost);
-router.post('/:id/unlike', checkLogin, PostInteractionController.unlikePost);
+router.post('/like', checkLogin, PostInteractionController.toggleLike);
+router.post('/like-status', checkLogin, PostInteractionController.checkLikeStatus);
+router.post('/like-post', checkLogin, PostInteractionController.likePost);
+router.post('/unlike-post', checkLogin, PostInteractionController.unlikePost);
 
 // Comment Routes
-router.post('/comment/:postId', checkLogin, CommentController.createComment);
-router.get('/comment/:postId', checkLogin, CommentController.getComments);
-router.delete('/comment/:commentId', checkLogin, CommentController.deleteComment);
+router.post('/comment', checkLogin, CommentController.createComment);
+router.post('/get-comments', checkLogin, CommentController.getComments);
+router.delete('/comment', checkLogin, CommentController.deleteComment);
 
 module.exports = router; 
