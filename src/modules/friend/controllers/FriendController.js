@@ -27,9 +27,20 @@ class FriendController {
     
     getUserFriends = async (req, res) => {
         const viewerId = req.user.id;
-        const userId = req.params.userId;
+        const { userId } = req.body;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
+        
+        if (!userId) {
+            return res.status(400).json({
+                timestamp: new Date().toISOString(),
+                path: '/friend/user-friends',
+                error: {
+                    code: 'INVALID_REQUEST',
+                    message: 'User ID is required'
+                }
+            });
+        }
         
         const result = await this.friendService.getUserFriendsWithPermissionCheck(userId, viewerId, page, limit);
         
@@ -38,7 +49,7 @@ class FriendController {
                 ? { data: result.data } 
                 : { 
                     timestamp: new Date().toISOString(),
-                    path: `/friend/list/${userId}`,
+                    path: '/friend/user-friends',
                     error: result.error 
                 }
         );
@@ -46,7 +57,18 @@ class FriendController {
     
     checkFriendship = async (req, res) => {
         const userId = req.user.id;
-        const targetUserId = req.params.targetUserId;
+        const { targetUserId } = req.body;
+        
+        if (!targetUserId) {
+            return res.status(400).json({
+                timestamp: new Date().toISOString(),
+                path: '/friend/status',
+                error: {
+                    code: 'INVALID_REQUEST',
+                    message: 'Target User ID is required'
+                }
+            });
+        }
         
         const result = await this.friendService.checkFriendshipStatus(userId, targetUserId);
         
@@ -55,7 +77,7 @@ class FriendController {
                 ? { data: result.data } 
                 : { 
                     timestamp: new Date().toISOString(),
-                    path: `/friend/status/${targetUserId}`,
+                    path: '/friend/status',
                     error: result.error 
                 }
         );

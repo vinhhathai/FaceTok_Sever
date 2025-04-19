@@ -89,6 +89,26 @@ class UserRepository {
         );
     }
 
+    /**
+     * Cập nhật họ tên người dùng và thời gian cập nhật
+     * @param {string} userId - ID của người dùng
+     * @param {string} fullName - Họ tên mới
+     * @param {Date} lastNameUpdateTime - Thời gian cập nhật
+     * @returns {Promise<Object>} Thông tin người dùng sau khi cập nhật
+     */
+    async updateFullName(userId, fullName, lastNameUpdateTime) {
+        return this.model.findByIdAndUpdate(
+            userId,
+            { 
+                $set: { 
+                    fullName,
+                    lastNameUpdateTime
+                } 
+            },
+            { new: true }
+        );
+    }
+
     async findByQueryPattern(queryPattern, limit = 20, skip = 0) {
         return this.model.find(queryPattern)
             .select('_id username fullName email profilePicture thumbnail bio')

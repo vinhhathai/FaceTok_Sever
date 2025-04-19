@@ -50,6 +50,7 @@ const UserSchema = new Schema(
     birthday: { type: Date, default: () => new Date() },
     bio: { type: String, default: "" },
     location: { type: String, default: "No location" },
+    lastNameUpdateTime: { type: Date, default: null },
     verification: {
       otp: {
         type: String,

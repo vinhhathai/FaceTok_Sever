@@ -11,7 +11,7 @@ const updateProfileValidation = (data) => {
   const schema = Joi.object({
     bio: Joi.string().allow(''),
     fullName: Joi.string().min(3).max(50),
-    gender: Joi.string().valid('male', 'female', 'undefined'),
+    gender: Joi.string().valid('male', 'female', 'undefined', 'No gender'),
     location: Joi.string().allow(''),
     birthday: Joi.date()
   });

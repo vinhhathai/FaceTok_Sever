@@ -1,7 +1,13 @@
 "use strict";
 //----------------------------------------------------------------
 const ProfileController = require('./ProfileController');
+const AvatarController = require('./AvatarController');
+const ThumbnailController = require('./ThumbnailController');
+const FullnameController = require('./FullnameController');
 
 module.exports = {
-    ProfileController: new ProfileController()
+    ProfileController: new ProfileController(),
+    AvatarController: new AvatarController(),
+    ThumbnailController: new ThumbnailController(),
+    FullnameController: new FullnameController()
 }; 

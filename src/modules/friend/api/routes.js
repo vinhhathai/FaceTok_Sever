@@ -11,8 +11,8 @@ const  checkLogin  = require('../../../shared/middlewares/checkLogin');
 
 // Friend Management Routes
 router.get('/list', checkLogin, FriendController.getFriendsList);
-router.get('/list/:userId', checkLogin, FriendController.getUserFriends);
-router.get('/status/:targetUserId', checkLogin, FriendController.checkFriendship);
+router.post('/user-friends', checkLogin, FriendController.getUserFriends);
+router.post('/status', checkLogin, FriendController.checkFriendship);
 router.post('/remove', checkLogin, FriendController.removeFriend);
 
 // Friend Request Routes
