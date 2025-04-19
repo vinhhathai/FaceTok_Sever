@@ -2,9 +2,10 @@
 //----------------------------------------------------------------
 
 // Import all validations
-const { updateProfileValidation } = require('./userValidation');
+const { updateProfileValidation, profileValidation } = require('./userValidation');
 
 // Export all validations
 module.exports = {
-    updateProfileValidation
+    updateProfileValidation,
+    profileValidation
 }; 

@@ -53,12 +53,7 @@ const signUpValidation = Joi.object({
     'any.required': 'Mật khẩu xác nhận là bắt buộc',
     'string.empty': 'Mật khẩu xác nhận không được để trống'
   }),
-  gender: Joi.string().valid('male', 'female', 'undefined').messages({
-    'any.only': 'Giới tính phải là một trong các giá trị: male, female, undefined'
-  }),
-  dateOfBirth: Joi.date().messages({
-    'date.base': 'Ngày sinh không hợp lệ'
-  })
+  
 });
 
 const changePasswordValidation = Joi.object({

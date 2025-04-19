@@ -1,23 +1,57 @@
 "use strict";
 //----------------------------------------------------------------
 const UserModel = require('../models/UserModel');
+const mongoose = require('mongoose');
 
+/**
+ * Repository xử lý dữ liệu người dùng
+ */
 class UserRepository {
     constructor() {
         this.model = UserModel;
     }
 
-    async findById(id) {
-        return this.model.findById(id);
+    /**
+     * Tìm người dùng theo ID
+     * @param {string} id - ID của người dùng
+     * @param {Object} projection - Các trường cần lấy hoặc loại bỏ
+     * @returns {Promise<Object>} Thông tin người dùng
+     */
+    async findById(id, projection = {}) {
+        return this.model.findById(id, projection);
     }
 
+    /**
+     * Tìm người dùng theo email
+     * @param {string} email - Email của người dùng
+     * @returns {Promise<Object>} Thông tin người dùng
+     */
     async findByEmail(email) {
-        return this.model.findOne({ email: email });
+        return this.model.findOne({ email });
     }
 
+    /**
+     * Tạo người dùng mới
+     * @param {Object} userData - Dữ liệu người dùng mới
+     * @returns {Promise<Object>} Thông tin người dùng đã tạo
+     */
     async create(userData) {
-        const newUser = new this.model(userData);
-        return await newUser.save();
+        const user = new this.model(userData);
+        return user.save();
+    }
+
+    /**
+     * Cập nhật thông tin người dùng
+     * @param {string} id - ID của người dùng
+     * @param {Object} updateData - Dữ liệu cần cập nhật
+     * @returns {Promise<Object>} Thông tin người dùng sau khi cập nhật
+     */
+    async update(id, updateData) {
+        return this.model.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        );
     }
 
     async findBySearchTerm(searchTerm) {

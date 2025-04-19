@@ -32,16 +32,13 @@ class AuthPasswordController {
         });
       }
 
-      const resetRequestData = AuthPasswordDto.toResetRequestData(value);
       const result = await this.authPasswordService.requestPasswordReset(
-        resetRequestData.email
+        value.email
       );
 
       if (result.success) {
         return res.status(200).json({
-          ...result,
-          path: req.originalUrl,
-          timestamp: new Date().toISOString(),
+          ...result
         });
       } else {
         return res.status(400).json({
@@ -51,7 +48,6 @@ class AuthPasswordController {
         });
       }
     } catch (error) {
-      console.error("Request password reset error:", error);
       return res.status(500).json({
         ...AuthPasswordDto.error(
           errorCode.INTERNAL_SERVER_ERROR,
@@ -81,33 +77,47 @@ class AuthPasswordController {
         });
       }
 
-      // Chuẩn hóa dữ liệu đầu vào
-      const verificationData = AuthPasswordDto.toOtpVerificationData(value);
-      console.log(verificationData);
+      // Chuyển OTP thành string nếu là số
+      const otpString = String(value.otp).trim();
+      const email = String(value.email).toLowerCase().trim();
 
-      // Gọi service để xác thực OTP
       const result = await this.authPasswordService.verifyOTP(
-        verificationData.email,
-        verificationData.otp
+        email,
+        otpString
       );
 
-      // Nếu xác thực OTP thành công, tạo reset token
       if (result.success) {
-        const resetPasswordToken = jwt.sign(
-          { email: verificationData.email },
-          process.env.SECRET_KEY || "secret-fallback",
-          { expiresIn: "15m" }
-        );
-
-        return res.status(200).json({
-          success: true,
-          path: req.originalUrl,
-          message: "Xác thực OTP thành công",
-          data: {
-            resetToken: resetPasswordToken,
-          },
-          timestamp: new Date().toISOString(),
-        });
+        try {
+          const secretKey = process.env.SECRET_KEY || "secret-fallback";
+          
+          const resetPasswordToken = jwt.sign(
+            { email: email },
+            secretKey,
+            { expiresIn: "15m" }
+          );
+          
+          // Sử dụng helper từ DTO
+          const tokenData = AuthPasswordDto.toTokenResponse(email, resetPasswordToken);
+          
+          const response = {
+            success: true,
+            message: "Xác thực OTP thành công",
+            data: tokenData
+          };
+          
+          return res.status(200).json(response);
+        } catch (tokenError) {
+          return res.status(500).json({
+            success: false,
+            message: "Lỗi tạo token",
+            error: {
+              code: errorCode.INTERNAL_SERVER_ERROR,
+              message: tokenError.message,
+            },
+            path: req.originalUrl,
+            timestamp: new Date().toISOString(),
+          });
+        }
       } else {
         return res.status(400).json({
           ...result,
@@ -116,7 +126,6 @@ class AuthPasswordController {
         });
       }
     } catch (error) {
-      console.error("Verify OTP error:", error);
       return res.status(500).json({
         ...AuthPasswordDto.error(
           errorCode.VERIFY_OTP_FAILED,
@@ -171,21 +180,14 @@ class AuthPasswordController {
         });
       }
 
-      const passwordResetData = AuthPasswordDto.toPasswordResetData({
-        newPassword: value.newPassword,
-        token,
-      });
-
       const result = await this.authPasswordService.resetPassword(
         decoded.email,
-        passwordResetData.newPassword
+        value.newPassword
       );
 
       if (result.success) {
         return res.status(200).json({
-          ...result,
-          path: req.originalUrl,
-          timestamp: new Date().toISOString(),
+          ...result
         });
       } else {
         return res.status(400).json({
@@ -195,11 +197,10 @@ class AuthPasswordController {
         });
       }
     } catch (error) {
-      console.error("Reset password error:", error);
       return res.status(500).json({
         ...AuthPasswordDto.error(
-          errorCode.PASSWORD_RESET_FAILED,
-          errorMessage.PASSWORD_RESET_FAILED,
+          errorCode.RESET_PASSWORD_FAILED,
+          errorMessage.RESET_PASSWORD_FAILED,
           error.message
         ),
         path: req.originalUrl,

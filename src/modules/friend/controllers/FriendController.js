@@ -4,7 +4,7 @@ const FriendService = require('../services/FriendService');
 
 class FriendController {
     constructor() {
-        this.friendService = FriendService;
+        this.friendService = new FriendService();
     }
     
     getFriendsList = async (req, res) => {
@@ -12,7 +12,7 @@ class FriendController {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         
-        const result = await this.friendService.getUserFriends(userId, page, limit);
+        const result = await this.friendService.getFriendsList(userId, page, limit);
         
         return res.status(result.statusCode).json(
             result.success 

@@ -395,4 +395,4 @@ class FriendService {
 }
 
 // Export instance của service
-module.exports = new FriendService(); 
+module.exports = FriendService; 

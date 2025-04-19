@@ -10,10 +10,10 @@ class AuthRegisterService {
     this.userRepository = new UserRepository();
   }
 
-  async register(registerDto) {
+  async register(data) {
     try {
       // Kiểm tra email đã tồn tại chưa
-      const existingEmail = await this.userRepository.findByEmail(registerDto.email);
+      const existingEmail = await this.userRepository.findByEmail(data.email);
       if (existingEmail) {
         return AuthRegisterDto.error(
           errorCode.EMAIL_ALREADY_EXISTS,
@@ -23,23 +23,18 @@ class AuthRegisterService {
 
       // Hash password
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(registerDto.password, salt);
+      const hashedPassword = await bcrypt.hash(data.password, salt);
 
-      // Lấy dữ liệu người dùng từ DTO
-      const userData = registerDto.toCreateUserData();
-      
-      // Tạo người dùng mới với cấu trúc đúng theo schema
-      const newUser = await this.userRepository.create({
-        email: userData.email,
+      // Tạo đối tượng userData từ dữ liệu đầu vào
+      const userData = {
+        email: data.email,
         password: hashedPassword,
-        fullName: userData.fullName,
-        dateOfBirth: userData.dateOfBirth || null,
-        gender: userData.gender || "undefined",
-        bio: "",
-        profilePicture: process.env.DEFAULT_PROFILE_PICTURE || "https://via.placeholder.com/150",
-        thumbnail: process.env.DEFAULT_THUMBNAIL || "https://via.placeholder.com/50",
-        isActive: true
-      });
+        fullName: data.fullName,
+        isActive: true,
+      };
+
+      // Tạo người dùng mới với cấu trúc đúng theo schema
+      const newUser = await this.userRepository.create(userData);
 
       // Tạo response data từ DTO
       const responseData = AuthRegisterDto.toResponse(newUser);
@@ -49,7 +44,6 @@ class AuthRegisterService {
         "Đăng ký tài khoản thành công"
       );
     } catch (error) {
-      console.error("Error in register:", error);
       return AuthRegisterDto.error(
         errorCode.REGISTER_FAILED,
         "Đăng ký tài khoản thất bại",

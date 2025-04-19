@@ -31,8 +31,24 @@ const checkLogin = async (req, res, next) => {
         try {
             const token = await jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET_KEY);
             
+            // Kiểm tra xem token có chứa userId không
+            const userId = token.userId || token._id;
+            
+            if (!userId) {
+                console.error('Token missing userId:', token);
+                return res.status(401).json({
+                    timestamp: new Date().toISOString(),
+                    path: req.originalUrl,
+                    code: errorCode.UNAUTHORIZED,
+                    error: {
+                        name: 'invalid_token',
+                        message: 'Token does not contain user ID'
+                    }
+                });
+            }
+            
             // check role
-            const user = await UserModel.findById(token._id);
+            const user = await UserModel.findById(userId);
             
             if (!user) {
                 return res.status(404).json({
@@ -58,7 +74,7 @@ const checkLogin = async (req, res, next) => {
             
             // Add user info to req.user
             req.user = {
-                id: token._id,
+                id: userId,
                 role: user.role
             };
             

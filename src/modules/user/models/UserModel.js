@@ -48,7 +48,7 @@ const UserSchema = new Schema(
       default: "undefined",
     },
     birthday: { type: Date, default: () => new Date() },
-    bio: { type: String },
+    bio: { type: String, default: "" },
     location: { type: String, default: "No location" },
     verification: {
       otp: {
@@ -60,14 +60,7 @@ const UserSchema = new Schema(
         default: null
       }
     },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now
-    }
+
   },
   {
     timestamps: true,

@@ -1,5 +1,8 @@
 "use strict";
 
+//----------------------------------------------------------------
+const { dtoResponse } = require("../../../shared/helper");
+
 /**
  * DTO cho xử lý các thao tác liên quan đến mật khẩu
  */
@@ -58,6 +61,19 @@ class AuthPasswordDto {
             resetToken: token
         };
     }
+
+    /**
+     * Tạo response cho reset token
+     * @param {string} email - Email đã xác thực
+     * @param {string} token - Reset token
+     * @returns {Object} - Response data
+     */
+    static toTokenResponse(email, token) {
+        return {
+            email,
+            resetToken: token
+        };
+    }
     
     /**
      * Tạo error response format
@@ -66,19 +82,7 @@ class AuthPasswordDto {
      * @param {any} detail - Chi tiết lỗi (nếu có)
      */
     static error(code, message, detail = null) {
-        const response = {
-            success: false,
-            error: {
-                code,
-                message
-            }
-        };
-
-        if (detail) {
-            response.error.detail = detail;
-        }
-
-        return response;
+        return dtoResponse.error(code, message, detail);
     }
 
     /**
@@ -87,11 +91,7 @@ class AuthPasswordDto {
      * @param {string} message - Thông báo thành công
      */
     static success(data = {}, message = "Success") {
-        return {
-            success: true,
-            message,
-            data
-        };
+        return dtoResponse.success(data, message);
     }
 
     /**

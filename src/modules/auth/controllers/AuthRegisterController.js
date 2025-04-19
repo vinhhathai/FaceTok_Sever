@@ -27,18 +27,11 @@ class AuthRegisterController {
         });
       }
 
-      // Tạo DTO từ dữ liệu đã validate
-      const registerDto = new AuthRegisterDto(value);
-
-      // Chuẩn hóa dữ liệu và gọi service
-      registerDto.normalize();
-      const result = await this.authRegisterService.register(registerDto);
+      const result = await this.authRegisterService.register(value);
 
       if (result.success) {
         return res.status(201).json({
           ...result,
-          path: req.originalUrl,
-          timestamp: new Date().toISOString(),
         });
       } else {
         return res.status(400).json({
