@@ -22,12 +22,7 @@ class AuthLoginService {
     };
   }
 
-  /**
-   * Xử lý đăng nhập
-   * @param {string} email - Email người dùng
-   * @param {string} password - Mật khẩu
-   * @returns {Promise<Object>} - Kết quả đăng nhập
-   */
+
   async login(email, password) {
     try {
       // Tìm kiếm người dùng theo email

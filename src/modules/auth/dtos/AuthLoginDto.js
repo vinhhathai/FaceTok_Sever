@@ -1,14 +1,11 @@
 "use strict";
+//----------------------------------------------------------------
+const { dtoResponse } = require("../../../shared/helper");
 
 /**
  * DTO cho xử lý đăng nhập
  */
 class AuthLoginDto {
- 
-  constructor(data = {}) {
-    this.email = data.email;
-    this.password = data.password;
-  }
 
   static toResponse(user, accessToken, refreshToken) {
     return {
@@ -25,27 +22,11 @@ class AuthLoginDto {
   }
   
   static error(code, message, detail = null) {
-    const response = {
-      success: false,
-      error: {
-        code,
-        message
-      }
-    };
-
-    if (detail) {
-      response.error.detail = detail;
-    }
-
-    return response;
+    return dtoResponse.error(code, message, detail);
   }
 
   static success(data = {}, message = "Success") {
-    return {
-      success: true,
-      message,
-      data
-    };
+    return dtoResponse.success(data, message);
   }
 
 }

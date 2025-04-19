@@ -32,9 +32,7 @@ class AuthLoginController {
 
       if (result.success) {
         return res.status(200).json({
-          ...result,
-          path: req.originalUrl,
-          timestamp: new Date().toISOString()
+          ...result
         });
       } else {
         return res.status(400).json({
