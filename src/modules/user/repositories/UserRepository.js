@@ -136,6 +136,29 @@ class UserRepository {
         const user = new this.model(userData);
         return user.save();
     }
+
+    /**
+     * Tìm người dùng theo điều kiện
+     * @param {Object} condition - Điều kiện tìm kiếm
+     * @param {Object} projection - Các trường cần lấy hoặc loại bỏ
+     * @param {Object} options - Tùy chọn (sắp xếp, phân trang, v.v.)
+     * @returns {Promise<Array>} Danh sách người dùng
+     */
+    async findByCondition(condition, projection = {}, options = {}) {
+        return this.model.find(condition, projection)
+            .skip(options.skip || 0)
+            .limit(options.limit || 20)
+            .sort(options.sort || { createdAt: -1 });
+    }
+
+    /**
+     * Đếm số lượng người dùng theo điều kiện
+     * @param {Object} condition - Điều kiện tìm kiếm
+     * @returns {Promise<Number>} Số lượng người dùng
+     */
+    async countByCondition(condition) {
+        return this.model.countDocuments(condition);
+    }
 }
 
 // Export class

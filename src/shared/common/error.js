@@ -45,6 +45,7 @@ const errorCode = {
     GET_PROFILE_FAILED: 'USER_GET_PROFILE_FAILED',
     SEARCH_USER_FAILED: 'USER_SEARCH_FAILED',
     NAME_UPDATE_TIME_LIMIT: 'USER_NAME_UPDATE_TIME_LIMIT',
+    SEARCH_USERS_FAILED: 'USER_SEARCH_USERS_FAILED',
     
     // Post Operations Errors (POST)
     CREATE_POST_FAILED: 'POST_CREATE_FAILED',
@@ -125,6 +126,7 @@ const errorMessage = {
     UPDATE_THUMBNAIL_FAILED: 'Cập nhật ảnh bìa thất bại',
     GET_PROFILE_FAILED: 'Lấy thông tin cá nhân thất bại',
     SEARCH_USER_FAILED: 'Tìm kiếm người dùng thất bại',
+    SEARCH_USERS_FAILED: 'Tìm kiếm người dùng thất bại',
     
     // Post Operations Messages
     CREATE_POST_FAILED: 'Tạo bài viết thất bại',

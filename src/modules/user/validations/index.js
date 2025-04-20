@@ -6,6 +6,7 @@ const { updateProfileValidation, profileValidation } = require('./userValidation
 const avatarValidation = require('./avatarValidation');
 const thumbnailValidation = require('./thumbnailValidation');
 const fullnameValidation = require('./fullnameValidation');
+const userSearchValidation = require('./userSearchValidation');
 
 // Export all validations
 module.exports = {
@@ -13,5 +14,6 @@ module.exports = {
     profileValidation,
     avatarValidation,
     thumbnailValidation,
-    fullnameValidation
+    fullnameValidation,
+    userSearchValidation
 }; 

@@ -2,7 +2,7 @@
 //----------------------------------------------------------------
 const express = require("express");
 const router = express.Router();
-const { UserController, ProfileController, AvatarController, ThumbnailController, FullnameController } = require("../controllers");
+const { UserController, ProfileController, AvatarController, ThumbnailController, FullnameController, UserSearchController } = require("../controllers");
 const checkLogin = require("../../../shared/middlewares/checkLogin");
 
 // Profile Routes
@@ -17,6 +17,9 @@ router.put("/update-thumbnail-url", checkLogin, ThumbnailController.updateThumbn
 
 // Fullname Routes
 router.put("/update-fullname", checkLogin, FullnameController.updateFullName);
+
+// Search Routes
+router.get("/search", checkLogin, UserSearchController.searchUsers);
 
 // Other User Routes
 
