@@ -43,12 +43,24 @@ FriendRequestSchema.index({ sender: 1, recipient: 1 }, { unique: true });
 
 // Static method to check if a friend request exists
 FriendRequestSchema.statics.checkExists = async function(senderId, recipientId) {
-  return await this.findOne({
+  const request = await this.findOne({
+    sender: senderId,
+    recipient: recipientId
+  }).lean();
+  
+  return request;
+};
+
+// Add a method to check if a request exists in any direction (used for checking if users have any relationship)
+FriendRequestSchema.statics.checkRelationshipExists = async function(userId, targetUserId) {
+  const request = await this.findOne({
     $or: [
-      { sender: senderId, recipient: recipientId },
-      { sender: recipientId, recipient: senderId }
+      { sender: userId, recipient: targetUserId },
+      { sender: targetUserId, recipient: userId }
     ]
-  });
+  }).lean();
+  
+  return request;
 };
 
 // Export the status enum for use in other files

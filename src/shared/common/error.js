@@ -1,6 +1,9 @@
 'use strict';
 //----------------------------------------------------------------
 
+/**
+ * Định nghĩa các mã lỗi sử dụng trong hệ thống
+ */
 const errorCode = {
     // Auth Errors (AUTH)
     UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
@@ -80,9 +83,17 @@ const errorCode = {
     // Request Errors (REQ)
     BAD_REQUEST: 'REQ_BAD_REQUEST',
     ERR_GET_DATA_FAILED: 'REQ_GET_DATA_FAILED',
-    ROUTE_NOT_FOUND: 'REQ_ROUTE_NOT_FOUND'
+    ROUTE_NOT_FOUND: 'REQ_ROUTE_NOT_FOUND',
+    
+    // Friend Errors
+    GET_FRIENDS_LIST_FAILED: 'GET_FRIENDS_LIST_FAILED',
+    FRIEND_REQUEST_FAILED: 'FRIEND_REQUEST_FAILED',
+    GET_FRIEND_REQUESTS_FAILED: 'GET_FRIEND_REQUESTS_FAILED'
 };
 
+/**
+ * Định nghĩa các thông báo lỗi tương ứng với các mã lỗi
+ */
 const errorMessage = {
     // Auth Messages
     UNAUTHORIZED: 'Bạn cần đăng nhập để truy cập tài nguyên này',
@@ -156,7 +167,12 @@ const errorMessage = {
     // Request Messages
     BAD_REQUEST: 'Yêu cầu không hợp lệ',
     ERR_GET_DATA_FAILED: 'Không thể lấy dữ liệu',
-    ROUTE_NOT_FOUND: 'Không tìm thấy đường dẫn'
+    ROUTE_NOT_FOUND: 'Không tìm thấy đường dẫn',
+    
+    // Friend Messages
+    GET_FRIENDS_LIST_FAILED: 'Lỗi khi lấy danh sách bạn bè',
+    FRIEND_REQUEST_FAILED: 'Gửi lời mời kết bạn thất bại',
+    GET_FRIEND_REQUESTS_FAILED: 'Lỗi khi lấy danh sách lời mời kết bạn'
 };
 
 module.exports = {

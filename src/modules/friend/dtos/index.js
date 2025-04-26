@@ -1,7 +1,8 @@
 "use strict";
 //----------------------------------------------------------------
-const FriendService = require('./FriendService');
+
+const FriendDto = require('./FriendDto');
 
 module.exports = {
-    FriendService,
-};
+  FriendDto,
+}; 

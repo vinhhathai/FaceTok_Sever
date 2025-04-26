@@ -42,7 +42,12 @@ class UserSearchController {
 
 
       // Gọi service để tìm kiếm người dùng
-      const result = await this.userSearchService.searchUsers(value.query, value.page, value.limit);
+      const result = await this.userSearchService.searchUsers(
+        value.query, 
+        value.page, 
+        value.limit,
+        req.user?.id
+      );
 
       // Kiểm tra kết quả và trả về response phù hợp
       if (!result.success) {
