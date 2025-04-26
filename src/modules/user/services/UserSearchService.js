@@ -18,9 +18,10 @@ class UserSearchService {
    * @param {string} query - Từ khóa tìm kiếm
    * @param {number} page - Trang hiện tại
    * @param {number} limit - Số lượng kết quả trên mỗi trang
+   * @param {string} currentUserId - ID của người dùng hiện tại (để loại bỏ khỏi kết quả)
    * @returns {Promise<Object>} Danh sách người dùng tìm thấy
    */
-  async searchUsers(query, page = 1, limit = 20) {
+  async searchUsers(query, page = 1, limit = 20, currentUserId = null) {
     try {
       
       // Kiểm tra tính hợp lệ của tham số
@@ -42,6 +43,11 @@ class UserSearchService {
           { email: { $regex: query, $options: 'i' } }     // Tìm theo email
         ]
       };
+      
+      // Loại bỏ người dùng hiện tại khỏi kết quả tìm kiếm
+      if (currentUserId) {
+        searchCondition._id = { $ne: currentUserId };
+      }
       
       // Chỉ lấy các trường phù hợp với kiến trúc cũ - chỉ sử dụng inclusion (không sử dụng exclusion)
       const projection = { 

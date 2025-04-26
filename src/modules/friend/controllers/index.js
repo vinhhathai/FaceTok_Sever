@@ -1,9 +1,8 @@
 "use strict";
 //----------------------------------------------------------------
 const FriendController = require('./FriendController');
-const FriendRequestController = require('./FriendRequestController');
 
+// Export the controller instance directly
 module.exports = {
-    FriendController,
-    FriendRequestController
+    FriendController
 };
