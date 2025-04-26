@@ -33,7 +33,13 @@ class FriendRepository {
    */
   async checkFriendRequestExists(userId, targetUserId) {
     // Use checkRelationshipExists to find requests in either direction
-    return await FriendRequestModel.checkRelationshipExists(userId, targetUserId);
+    return await this.friendRequestModel.findOne({
+      $or: [
+        { sender: userId, recipient: targetUserId },
+        { sender: targetUserId, recipient: userId }
+      ]
+    });
+    
   }
 
   /**
