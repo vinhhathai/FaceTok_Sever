@@ -3,7 +3,7 @@
 const { dtoResponse } = require("../../../shared/helper");
 
 /**
- * DTO cho xử lý đăng nhập
+ * DTO for login handling
  */
 class AuthLoginDto {
 

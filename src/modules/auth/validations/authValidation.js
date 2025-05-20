@@ -2,106 +2,106 @@ const Joi = require('joi');
 
 const emailValidation = Joi.object({
   email: Joi.string().email().required().messages({
-    'string.email': 'Email không hợp lệ',
-    'any.required': 'Email là bắt buộc',
-    'string.empty': 'Email không được để trống'
+    'string.email': 'Invalid email format',
+    'any.required': 'Email is required',
+    'string.empty': 'Email cannot be empty'
   })
 });
 
 const resetPasswordValidation = Joi.object({
   newPassword: Joi.string().min(6).required().messages({
-    'string.min': 'Mật khẩu phải có ít nhất 6 ký tự',
-    'any.required': 'Mật khẩu mới là bắt buộc',
-    'string.empty': 'Mật khẩu mới không được để trống'
+    'string.min': 'Password must be at least 6 characters',
+    'any.required': 'New password is required',
+    'string.empty': 'New password cannot be empty'
   }),
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
-    'any.only': 'Mật khẩu xác nhận không khớp',
-    'any.required': 'Mật khẩu xác nhận là bắt buộc',
-    'string.empty': 'Mật khẩu xác nhận không được để trống'
+    'any.only': 'Confirm password does not match',
+    'any.required': 'Confirm password is required',
+    'string.empty': 'Confirm password cannot be empty'
   })
 });
 
 const loginValidation = Joi.object({
   email: Joi.string().email().required().messages({
-    'string.email': 'Email không hợp lệ',
-    'any.required': 'Email là bắt buộc',
-    'string.empty': 'Email không được để trống'
+    'string.email': 'Invalid email format',
+    'any.required': 'Email is required',
+    'string.empty': 'Email cannot be empty'
   }),
   password: Joi.string().required().messages({
-    'any.required': 'Mật khẩu là bắt buộc',
-    'string.empty': 'Mật khẩu không được để trống'
+    'any.required': 'Password is required',
+    'string.empty': 'Password cannot be empty'
   })
 });
 
 const signUpValidation = Joi.object({
   fullName: Joi.string().required().messages({
-    'any.required': 'Họ tên là bắt buộc',
-    'string.empty': 'Họ tên không được để trống'
+    'any.required': 'Full name is required',
+    'string.empty': 'Full name cannot be empty'
   }),
   email: Joi.string().email().required().messages({
-    'string.email': 'Email không hợp lệ',
-    'any.required': 'Email là bắt buộc',
-    'string.empty': 'Email không được để trống'
+    'string.email': 'Invalid email format',
+    'any.required': 'Email is required',
+    'string.empty': 'Email cannot be empty'
   }),
   password: Joi.string().min(6).required().messages({
-    'string.min': 'Mật khẩu phải có ít nhất 6 ký tự',
-    'any.required': 'Mật khẩu là bắt buộc',
-    'string.empty': 'Mật khẩu không được để trống'
+    'string.min': 'Password must be at least 6 characters',
+    'any.required': 'Password is required',
+    'string.empty': 'Password cannot be empty'
   }),
   confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
-    'any.only': 'Mật khẩu xác nhận không khớp',
-    'any.required': 'Mật khẩu xác nhận là bắt buộc',
-    'string.empty': 'Mật khẩu xác nhận không được để trống'
+    'any.only': 'Confirm password does not match',
+    'any.required': 'Confirm password is required',
+    'string.empty': 'Confirm password cannot be empty'
   }),
   
 });
 
 const changePasswordValidation = Joi.object({
   currentPassword: Joi.string().required().messages({
-    'any.required': 'Mật khẩu hiện tại là bắt buộc',
-    'string.empty': 'Mật khẩu hiện tại không được để trống'
+    'any.required': 'Current password is required',
+    'string.empty': 'Current password cannot be empty'
   }),
   newPassword: Joi.string().min(6).required().messages({
-    'string.min': 'Mật khẩu mới phải có ít nhất 6 ký tự',
-    'any.required': 'Mật khẩu mới là bắt buộc',
-    'string.empty': 'Mật khẩu mới không được để trống'
+    'string.min': 'New password must be at least 6 characters',
+    'any.required': 'New password is required',
+    'string.empty': 'New password cannot be empty'
   }),
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
-    'any.only': 'Mật khẩu xác nhận không khớp',
-    'any.required': 'Mật khẩu xác nhận là bắt buộc',
-    'string.empty': 'Mật khẩu xác nhận không được để trống'
+    'any.only': 'Confirm password does not match',
+    'any.required': 'Confirm password is required',
+    'string.empty': 'Confirm password cannot be empty'
   })
 });
 
 const otpVerificationValidation = Joi.object({
   email: Joi.string().required().messages({
-    'any.required': 'Email là bắt buộc',
-    'string.empty': 'Email không được để trống'
+    'any.required': 'Email is required',
+    'string.empty': 'Email cannot be empty'
   }),
   otp: Joi.alternatives().try(
     Joi.string().pattern(/^\d{6}$/).messages({
-      'string.pattern.base': 'OTP phải là 6 chữ số'
+      'string.pattern.base': 'OTP must be 6 digits'
     }),
     Joi.number().integer().min(100000).max(999999).messages({
-      'number.min': 'OTP phải là 6 chữ số',
-      'number.max': 'OTP phải là 6 chữ số',
-      'number.integer': 'OTP phải là số nguyên'
+      'number.min': 'OTP must be 6 digits',
+      'number.max': 'OTP must be 6 digits',
+      'number.integer': 'OTP must be an integer'
     })
   ).required().messages({
-    'any.required': 'OTP là bắt buộc'
+    'any.required': 'OTP is required'
   })
 });
 
 const passwordResetWithTokenValidation = Joi.object({
   newPassword: Joi.string().min(6).required().messages({
-    'string.min': 'Mật khẩu phải có ít nhất 6 ký tự',
-    'any.required': 'Mật khẩu mới là bắt buộc',
-    'string.empty': 'Mật khẩu mới không được để trống'
+    'string.min': 'Password must be at least 6 characters',
+    'any.required': 'New password is required',
+    'string.empty': 'New password cannot be empty'
   }),
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
-    'any.only': 'Mật khẩu xác nhận không khớp',
-    'any.required': 'Mật khẩu xác nhận là bắt buộc',
-    'string.empty': 'Mật khẩu xác nhận không được để trống'
+    'any.only': 'Confirm password does not match',
+    'any.required': 'Confirm password is required',
+    'string.empty': 'Confirm password cannot be empty'
   })
 });
 
