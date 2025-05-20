@@ -12,12 +12,12 @@ class AuthRegisterService {
 
   async register(data) {
     try {
-      // Kiểm tra email đã tồn tại chưa
+      // Check if email already exists
       const existingEmail = await this.userRepository.findByEmail(data.email);
       if (existingEmail) {
         return AuthRegisterDto.error(
           errorCode.EMAIL_ALREADY_EXISTS,
-          "Email đã được sử dụng. Vui lòng sử dụng email khác."
+          "Email is already in use. Please use a different email."
         );
       }
 
@@ -25,7 +25,7 @@ class AuthRegisterService {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(data.password, salt);
 
-      // Tạo đối tượng userData từ dữ liệu đầu vào
+      // Create userData object from input data
       const userData = {
         email: data.email,
         password: hashedPassword,
@@ -33,20 +33,20 @@ class AuthRegisterService {
         isActive: true,
       };
 
-      // Tạo người dùng mới với cấu trúc đúng theo schema
+      // Create new user with correct schema structure
       const newUser = await this.userRepository.create(userData);
 
-      // Tạo response data từ DTO
+      // Create response data from DTO
       const responseData = AuthRegisterDto.toResponse(newUser);
 
       return AuthRegisterDto.success(
         responseData,
-        "Đăng ký tài khoản thành công"
+        "Account registration successful"
       );
     } catch (error) {
       return AuthRegisterDto.error(
         errorCode.REGISTER_FAILED,
-        "Đăng ký tài khoản thất bại",
+        "Account registration failed",
         error.message
       );
     }

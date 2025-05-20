@@ -25,12 +25,7 @@ class FriendRepository {
     return user && user.friends.includes(userId2);
   }
 
-  /**
-   * Kiểm tra xem đã có lời mời kết bạn giữa hai người dùng chưa
-   * @param {string} userId - ID của người dùng thứ nhất  
-   * @param {string} targetUserId - ID của người dùng thứ hai
-   * @returns {Promise<Object|null>} Thông tin lời mời kết bạn nếu tồn tại
-   */
+ 
   async checkFriendRequestExists(userId, targetUserId) {
     // Use checkRelationshipExists to find requests in either direction
     return await this.friendRequestModel.findOne({
@@ -42,23 +37,14 @@ class FriendRepository {
     
   }
 
-  /**
-   * Kiểm tra xem có lời mời kết bạn cụ thể từ senderId đến recipientId hay không
-   * @param {string} senderId - ID của người gửi
-   * @param {string} recipientId - ID của người nhận
-   * @returns {Promise<Object|null>} Thông tin lời mời kết bạn nếu tồn tại
-   */
+
+  
   async checkExactFriendRequest(senderId, recipientId) {
     // Use checkExists for exact sender/recipient match only
     return await FriendRequestModel.checkExists(senderId, recipientId);
   }
 
-  /**
-   * Tạo lời mời kết bạn mới
-   * @param {string} senderId - ID của người gửi lời mời
-   * @param {string} recipientId - ID của người nhận lời mời
-   * @returns {Promise<Object>} - Lời mời kết bạn đã tạo
-   */
+
   async createFriendRequest(senderId, recipientId) {
     const newRequest = new this.friendRequestModel({
       sender: senderId,
@@ -74,22 +60,14 @@ class FriendRepository {
       .populate('recipient', '_id fullName profilePicture');
   }
 
-  /**
-   * Lấy lời mời kết bạn theo ID
-   * @param {string} requestId - ID của lời mời kết bạn
-   * @returns {Promise<Object|null>} - Lời mời kết bạn nếu tồn tại, null nếu không
-   */
+  
   async getFriendRequestById(requestId) {
     return await this.friendRequestModel.findById(requestId)
       .populate('sender', '_id fullName profilePicture')
       .populate('recipient', '_id fullName profilePicture');
   }
 
-  /**
-   * Lấy danh sách lời mời kết bạn mà người dùng đã nhận
-   * @param {string} userId - ID của người dùng
-   * @returns {Promise<Array>} - Danh sách lời mời kết bạn
-   */
+ 
   async getReceivedFriendRequests(userId) {
     return await this.friendRequestModel.find({
       recipient: userId,
@@ -99,11 +77,7 @@ class FriendRepository {
       .sort({ createdAt: -1 });
   }
 
-  /**
-   * Lấy danh sách lời mời kết bạn mà người dùng đã gửi
-   * @param {string} userId - ID của người dùng
-   * @returns {Promise<Array>} - Danh sách lời mời kết bạn
-   */
+ 
   async getSentFriendRequests(userId) {
     return await this.friendRequestModel.find({
       sender: userId,
@@ -113,11 +87,7 @@ class FriendRepository {
       .sort({ createdAt: -1 });
   }
 
-  /**
-   * Chấp nhận lời mời kết bạn
-   * @param {Object} friendRequest - Đối tượng lời mời kết bạn
-   * @returns {Promise<Object>} - Lời mời kết bạn đã được chấp nhận và thông tin bạn bè
-   */
+  
   async acceptFriendRequest(friendRequest) {
     // Đảm bảo friendRequest được populate đầy đủ
     if (!friendRequest.sender._id) {
@@ -152,31 +122,18 @@ class FriendRepository {
     };
   }
 
-  /**
-   * Từ chối lời mời kết bạn
-   * @param {Object} friendRequest - Đối tượng lời mời kết bạn
-   * @returns {Promise<Object>} - Lời mời kết bạn đã bị từ chối
-   */
+
   async rejectFriendRequest(friendRequest) {
     friendRequest.status = this.STATUS.REJECTED;
     return await friendRequest.save();
   }
 
-  /**
-   * Xóa lời mời kết bạn
-   * @param {string} requestId - ID của lời mời kết bạn
-   * @returns {Promise<Object>} - Kết quả xóa
-   */
+ 
   async deleteFriendRequest(requestId) {
     return await this.friendRequestModel.findByIdAndDelete(requestId);
   }
 
-  /**
-   * Xóa mối quan hệ bạn bè giữa hai người dùng
-   * @param {string} userId1 - ID của người dùng thứ nhất
-   * @param {string} userId2 - ID của người dùng thứ hai
-   * @returns {Promise<Array>} - Kết quả cập nhật cho cả hai người dùng
-   */
+
   async removeFriend(userId1, userId2) {
     const user1Update = this.userModel.findByIdAndUpdate(
       userId1,

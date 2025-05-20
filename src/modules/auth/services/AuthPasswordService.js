@@ -14,56 +14,56 @@ class AuthPasswordService {
 
   async verifyOTP(email, otp) {
     try {
-      // Kiểm tra đầu vào
+      // Check input
       if (!email || !otp) {
         return AuthPasswordDto.error(
           errorCode.INVALID_INPUT,
-          "Email và mã OTP là bắt buộc"
+          "Email and OTP are required"
         );
       }
 
-      // Chuẩn hóa email và OTP
+      // Normalize email and OTP
       email = String(email).toLowerCase().trim();
       otp = String(otp).trim();
 
-      // Tìm người dùng theo email
+      // Find user by email
       const user = await this.userRepository.findByEmail(email);
       if (!user) {
         return AuthPasswordDto.error(
           errorCode.USER_NOT_FOUND,
-          "Không tìm thấy tài khoản với email này"
+          "No account found with this email"
         );
       }
 
-      // Kiểm tra OTP hợp lệ
+      // Validate OTP
       const storedOtp = user.verification?.otp || "";
       
       if (!storedOtp || storedOtp !== otp) {
         return AuthPasswordDto.error(
           errorCode.VERIFY_OTP_FAILED,
-          "Mã OTP không chính xác"
+          "Incorrect OTP"
         );
       }
 
-      // Kiểm tra OTP hết hạn
+      // Check OTP expiration
       const now = new Date();
       const otpExpiry = user.verification?.otpExpiry;
       
       if (!otpExpiry || now > otpExpiry) {
         return AuthPasswordDto.error(
           errorCode.TOKEN_EXPIRED,
-          "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới"
+          "OTP has expired. Please request a new code"
         );
       }
 
       return AuthPasswordDto.success(
         { verified: true, email: user.email },
-        "Xác thực OTP thành công"
+        "OTP verification successful"
       );
     } catch (error) {
       return AuthPasswordDto.error(
         errorCode.VERIFY_OTP_FAILED,
-        "Xác thực OTP thất bại",
+        "OTP verification failed",
         error.message
       );
     }
@@ -71,31 +71,31 @@ class AuthPasswordService {
 
   async resetPassword(email, newPassword) {
     try {
-      // Kiểm tra đầu vào
+      // Check input
       if (!email || !newPassword) {
         return AuthPasswordDto.error(
           errorCode.INVALID_INPUT,
-          "Email và mật khẩu mới là bắt buộc"
+          "Email and new password are required"
         );
       }
 
-      // Chuẩn hóa email
+      // Normalize email
       email = email.toLowerCase().trim();
 
-      // Tìm người dùng
+      // Find user
       const user = await this.userRepository.findByEmail(email);
       if (!user) {
         return AuthPasswordDto.error(
           errorCode.USER_NOT_FOUND,
-          "Không tìm thấy tài khoản với email này"
+          "No account found with this email"
         );
       }
 
-      // Hash mật khẩu và cập nhật
+      // Hash password and update
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-      // Cập nhật mật khẩu và xóa OTP
+      // Update password and clear OTP
       await Promise.all([
         this.userRepository.updateUserPassword(user._id, hashedPassword),
         this.userRepository.updateUserVerification(user._id, {
@@ -106,12 +106,12 @@ class AuthPasswordService {
 
       return AuthPasswordDto.success(
         { updated: true },
-        "Đặt lại mật khẩu thành công"
+        "Password reset successful"
       );
     } catch (error) {
       return AuthPasswordDto.error(
         errorCode.RESET_PASSWORD_FAILED,
-        "Đặt lại mật khẩu thất bại",
+        "Password reset failed",
         error.message
       );
     }
@@ -119,32 +119,32 @@ class AuthPasswordService {
 
   async requestPasswordReset(email) {
     try {
-      // Kiểm tra đầu vào
+      // Check input
       if (!email) {
         return AuthPasswordDto.error(
           errorCode.INVALID_INPUT,
-          "Email là bắt buộc"
+          "Email is required"
         );
       }
 
-      // Chuẩn hóa email
+      // Normalize email
       email = email.toLowerCase().trim();
       
-      // Tìm người dùng
+      // Find user
       const user = await this.userRepository.findByEmail(email);
       if (!user) {
         return AuthPasswordDto.error(
           errorCode.USER_NOT_FOUND,
-          "Không tìm thấy tài khoản với email này"
+          "No account found with this email"
         );
       }
 
-      // Tạo OTP (6 chữ số)
+      // Generate OTP (6 digits)
       const otp = crypto.randomInt(100000, 999999).toString();
       const otpExpiry = new Date();
-      otpExpiry.setMinutes(otpExpiry.getMinutes() + 10); // OTP có hiệu lực 10 phút
+      otpExpiry.setMinutes(otpExpiry.getMinutes() + 10); // OTP valid for 10 minutes
 
-      // Lưu OTP và gửi email
+      // Save OTP and send email
       await this.userRepository.updateUserVerification(user._id, {
         otp,
         otpExpiry,
@@ -154,12 +154,12 @@ class AuthPasswordService {
 
       return AuthPasswordDto.success(
         { emailSent: true, otpExpires: otpExpiry },
-        "Đã gửi mã OTP đến email của bạn"
+        "OTP code has been sent to your email"
       );
     } catch (error) {
       return AuthPasswordDto.error(
         errorCode.REQUEST_PASSWORD_RESET_FAILED,
-        "Không thể gửi email đặt lại mật khẩu",
+        "Unable to send password reset email",
         error.message
       );
     }

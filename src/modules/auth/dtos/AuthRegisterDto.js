@@ -3,7 +3,7 @@
 const { dtoResponse } = require("../../../shared/helper");
 
 /**
- * DTO cho xử lý đăng ký tài khoản
+ * DTO for account registration handling
  */
 class AuthRegisterDto {
 

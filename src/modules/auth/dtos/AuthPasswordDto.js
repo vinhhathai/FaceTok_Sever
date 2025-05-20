@@ -4,12 +4,12 @@
 const { dtoResponse } = require("../../../shared/helper");
 
 /**
- * DTO cho xử lý các thao tác liên quan đến mật khẩu
+ * DTO for password-related operations
  */
 class AuthPasswordDto {
     /**
-     * Tạo DTO cho yêu cầu đặt lại mật khẩu
-     * @param {Object} data - Dữ liệu từ request đã được validate
+     * Create DTO for password reset request
+     * @param {Object} data - Validated request data
      */
     static toResetRequestData(data) {
         return {
@@ -18,17 +18,17 @@ class AuthPasswordDto {
     }
 
     /**
-     * Tạo DTO cho xác thực OTP
-     * @param {Object} data - Dữ liệu từ request đã được validate
+     * Create DTO for OTP verification
+     * @param {Object} data - Validated request data
      */
     static toOtpVerificationData(data) {
-        // Đảm bảo email được chuẩn hóa
+        // Ensure email is normalized
         let email = data.email;
         if (typeof email === 'string') {
             email = email.toLowerCase().trim();
         }
         
-        // Đảm bảo OTP luôn là string
+        // Ensure OTP is always a string
         let otp = data.otp;
         if (otp !== undefined) {
             otp = String(otp).trim();
@@ -41,8 +41,8 @@ class AuthPasswordDto {
     }
 
     /**
-     * Tạo DTO cho đặt lại mật khẩu
-     * @param {Object} data - Dữ liệu từ request đã được validate
+     * Create DTO for password reset
+     * @param {Object} data - Validated request data
      */
     static toPasswordResetData(data) {
         return {
@@ -52,7 +52,7 @@ class AuthPasswordDto {
     }
 
     /**
-     * Tạo response cho việc xác thực OTP thành công
+     * Create response for successful OTP verification
      * @param {string} token - Reset token
      * @returns {Object} - Response data
      */
@@ -63,8 +63,8 @@ class AuthPasswordDto {
     }
 
     /**
-     * Tạo response cho reset token
-     * @param {string} email - Email đã xác thực
+     * Create response for reset token
+     * @param {string} email - Verified email
      * @param {string} token - Reset token
      * @returns {Object} - Response data
      */
@@ -76,28 +76,28 @@ class AuthPasswordDto {
     }
     
     /**
-     * Tạo error response format
-     * @param {string} code - Mã lỗi
-     * @param {string} message - Thông báo lỗi
-     * @param {any} detail - Chi tiết lỗi (nếu có)
+     * Create error response format
+     * @param {string} code - Error code
+     * @param {string} message - Error message
+     * @param {any} detail - Error details (if any)
      */
     static error(code, message, detail = null) {
         return dtoResponse.error(code, message, detail);
     }
 
     /**
-     * Tạo success response format
-     * @param {any} data - Dữ liệu trả về
-     * @param {string} message - Thông báo thành công
+     * Create success response format
+     * @param {any} data - Response data
+     * @param {string} message - Success message
      */
     static success(data = {}, message = "Success") {
         return dtoResponse.success(data, message);
     }
 
     /**
-     * Normalize (chuẩn hóa) email
-     * @param {string} email - Email cần chuẩn hóa
-     * @returns {string} - Email sau khi chuẩn hóa
+     * Normalize email
+     * @param {string} email - Email to normalize
+     * @returns {string} - Normalized email
      */
     static normalizeEmail(email) {
         return email ? email.toLowerCase().trim() : email;

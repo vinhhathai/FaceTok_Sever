@@ -8,7 +8,7 @@ const { AuthLoginDto } = require("../dtos");
 require("dotenv").config();
 
 /**
- * Service xử lý đăng nhập
+ * Service for handling login
  */
 class AuthLoginService {
   constructor() {
@@ -25,34 +25,34 @@ class AuthLoginService {
 
   async login(email, password) {
     try {
-      // Tìm kiếm người dùng theo email
+      // Find user by email
       const user = await this.userRepository.findByEmail(email);
 
       if (!user) {
         return AuthLoginDto.error(
           errorCode.INVALID_CREDENTIALS,
-          "Email hoặc mật khẩu không đúng"
+          "Invalid email or password"
         );
       }
 
-      // Kiểm tra trạng thái tài khoản
+      // Check account status
       if (!user.isActive) {
         return AuthLoginDto.error(
           errorCode.ACCOUNT_IS_BANNED,
-          "Tài khoản đã bị tạm khóa"
+          "Account has been suspended"
         );
       }
 
-      // Kiểm tra mật khẩu
+      // Validate password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         return AuthLoginDto.error(
           errorCode.INVALID_CREDENTIALS,
-          "Email hoặc mật khẩu không đúng"
+          "Invalid email or password"
         );
       }
 
-      // Tạo JWT token
+      // Create JWT token
       const accessToken = jwt.sign(
         {
           userId: user._id,
@@ -65,7 +65,7 @@ class AuthLoginService {
         }
       );
 
-      // Tạo refresh token với thời gian sống dài hơn
+      // Create refresh token with longer lifetime
       const refreshToken = jwt.sign(
         {
           userId: user._id,
@@ -76,18 +76,18 @@ class AuthLoginService {
         }
       );
 
-      // Tạo response data
+      // Create response data
       const responseData = AuthLoginDto.toResponse(
         user,
         accessToken,
         refreshToken
       );
 
-      return AuthLoginDto.success(responseData, "Đăng nhập thành công");
+      return AuthLoginDto.success(responseData, "Login successful");
     } catch (error) {
       return AuthLoginDto.error(
         errorCode.LOGIN_FAILED,
-        "Đăng nhập thất bại",
+        "Login failed",
         error.message
       );
     }
