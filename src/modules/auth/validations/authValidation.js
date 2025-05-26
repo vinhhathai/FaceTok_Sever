@@ -93,6 +93,7 @@ const otpVerificationValidation = Joi.object({
 });
 
 const passwordResetWithTokenValidation = Joi.object({
+
   newPassword: Joi.string().min(6).required().messages({
     'string.min': 'Password must be at least 6 characters',
     'any.required': 'New password is required',
