@@ -12,7 +12,7 @@ class AuthLoginController {
 
   loginToSystem = async (req, res) => {
     try {
-      // Validate dữ liệu đầu vào bằng Joi
+      // Validate input data using Joi
       const { error, value } = loginValidation.validate(req.body);
       
       if (error) {
