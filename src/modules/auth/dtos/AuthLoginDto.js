@@ -15,6 +15,7 @@ class AuthLoginDto {
         fullName: user.fullName,
         profilePicture: user.profilePicture || null,
         thumbnail: user.thumbnail || null,
+        role: user.role,
       },
       accessToken,
       refreshToken,

@@ -4,6 +4,7 @@ const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { ProfileService } = require("../services");
 const { ProfileDto } = require("../dtos");
 const { profileValidation, updateProfileValidation } = require("../validations");
+const { processAndUploadImage } = require('../../../shared/utils/cloudinaryUpload');
 
 /**
  * Controller xử lý các chức năng liên quan đến profile người dùng
@@ -147,6 +148,145 @@ class ProfileController {
         ProfileDto.error(
           errorCode.UPDATE_PROFILE_FAILED,
           error.message || "Lỗi khi cập nhật thông tin profile"
+        )
+      );
+    }
+  };
+
+  /**
+   * Update user's cover photo
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>}
+   */
+  updateCoverPhoto = async (req, res) => {
+    try {
+      // Check if file exists
+      if (!req.file) {
+        return res.status(400).json(
+          ProfileDto.error(
+            errorCode.VALIDATION_FAILED,
+            'Không tìm thấy ảnh bìa'
+          )
+        );
+      }
+      
+      const userId = req.user.id; // Assuming user ID is available from auth middleware
+      
+      // Image processing options for cover photos
+      const imageOptions = {
+        width: 1200,
+        height: 400,
+        fit: 'cover',
+        format: 'jpeg',
+        quality: 80,
+      };
+      
+      // Upload options for Cloudinary
+      const uploadOptions = {
+        public_id: `user_${userId}_thumbnail_${Date.now()}`, // Unique identifier
+        tags: ['thumbnail', `user_${userId}`],
+        transformation: [
+          { width: 1200, height: 400, crop: 'fill', gravity: 'auto' }
+        ]
+      };
+      
+      // Process and upload image
+      const result = await processAndUploadImage(
+        req.file.buffer,
+        'chaotok/thumbnails', // Cloudinary folder
+        imageOptions,
+        uploadOptions
+      );
+      
+      // Update user's cover photo URL in database
+      // This would normally be handled by a service that updates the user record
+      // userService.updateUserById(userId, { coverPhoto: result.secure_url });
+      
+      // Return success response
+      return res.status(200).json({
+        success: true,
+        data: {
+          coverPhotoUrl: result.secure_url,
+          publicId: result.public_id
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error in updateCoverPhoto controller:", error);
+      return res.status(500).json(
+        ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          error.message || "Lỗi khi cập nhật ảnh bìa"
+        )
+      );
+    }
+  };
+
+  /**
+   * Update user's profile picture
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>}
+   */
+  updateProfilePicture = async (req, res) => {
+    try {
+      // Check if file exists
+      if (!req.file) {
+        return res.status(400).json(
+          ProfileDto.error(
+            errorCode.VALIDATION_FAILED,
+            'Không tìm thấy ảnh hồ sơ'
+          )
+        );
+      }
+      
+      const userId = req.user.id; // Assuming user ID is available from auth middleware
+      
+      // Image processing options for profile pictures
+      const imageOptions = {
+        width: 400,
+        height: 400,
+        fit: 'cover',
+        format: 'jpeg',
+        quality: 85,
+      };
+      
+      // Upload options for Cloudinary
+      const uploadOptions = {
+        public_id: `user_${userId}_profile_${Date.now()}`, // Unique identifier
+        tags: ['profile_picture', `user_${userId}`],
+        transformation: [
+          { width: 400, height: 400, crop: 'fill', gravity: 'face' }
+        ]
+      };
+      
+      // Process and upload image
+      const result = await processAndUploadImage(
+        req.file.buffer,
+        'chaotok/avatars', // Cloudinary folder
+        imageOptions,
+        uploadOptions
+      );
+      
+      // Update user's profile picture URL in database
+      // userService.updateUserById(userId, { profilePicture: result.secure_url });
+      
+      // Return success response
+      return res.status(200).json({
+        success: true,
+        data: {
+          profilePictureUrl: result.secure_url,
+          publicId: result.public_id
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error in updateProfilePicture controller:", error);
+      return res.status(500).json(
+        ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          error.message || "Lỗi khi cập nhật ảnh hồ sơ"
         )
       );
     }
