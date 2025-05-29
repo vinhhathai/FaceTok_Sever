@@ -52,5 +52,5 @@ function onListening() {
         ? 'pipe ' + addr
         : 'port ' + addr.port;
     console.log('Listening on ' + bind);
-    console.log(`FaceTok server running at http://localhost:${port}`);
+    console.log(`Chaotok server running at http://localhost:${port}`);
 } 

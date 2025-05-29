@@ -50,11 +50,10 @@ class ThumbnailController {
         );
       }
 
-      // Format data bằng DTO
-      const thumbnailData = ThumbnailDto.toUpdateData(value);
+
 
       // Gọi service để cập nhật thumbnail
-      const result = await this.thumbnailService.updateThumbnail(userId, thumbnailData.thumbnailUrl);
+      const result = await this.thumbnailService.updateThumbnail(userId, value.thumbnailUrl);
 
       // Kiểm tra kết quả và trả về response phù hợp
       if (!result.success) {
