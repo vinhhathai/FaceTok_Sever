@@ -49,6 +49,7 @@ const USER_MESSAGES = {
     GET_PROFILE_FAILED: 'Failed to retrieve profile information',
     SEARCH_USER_FAILED: 'User search failed',
     SEARCH_USERS_FAILED: 'Users search failed',
+    UPDATE_THUMBNAIL_SAVING_FAILED: 'Thumbnail image saving failed',
 };
 
 const POST_MESSAGES = {

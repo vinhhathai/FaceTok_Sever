@@ -18,12 +18,12 @@ router.post(
   profileController.updateProfilePicture
 );
 
-// Upload cover photo
-router.post(
-  "/upload-thumbnail",
-  checkLogin,
-  uploadImageMiddleware.coverPhoto,
-  profileController.updateCoverPhoto
-);
+// // Upload cover photo
+// router.post(
+//   "/upload-thumbnail",
+//   checkLogin,
+//   uploadImageMiddleware.coverPhoto,
+//   profileController.updateCoverPhoto
+// );
 
 module.exports = router;

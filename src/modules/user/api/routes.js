@@ -14,7 +14,7 @@ router.put("/update-profile", checkLogin, ProfileController.updateProfile);
 router.put("/update-avatar-url", checkLogin, AvatarController.updateAvatarUrl);
 
 // Thumbnail Routes
-router.put("/update-thumbnail-url", checkLogin, ThumbnailController.updateThumbnailUrl);
+// router.put("/update-thumbnail-url", checkLogin, ThumbnailController.updateThumbnailUrl);
 
 // Fullname Routes
 router.put("/update-fullname", checkLogin, FullnameController.updateFullName);
@@ -28,7 +28,7 @@ router.post(
     "/upload-thumbnail",
     checkLogin,
     uploadImageMiddleware.coverPhoto,
-    ProfileController.updateCoverPhoto
+    ThumbnailController.updateThumbnail
   );
 
 

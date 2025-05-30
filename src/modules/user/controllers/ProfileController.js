@@ -238,14 +238,15 @@ class ProfileController {
       });
     } catch (error) {
       console.error("Error in updateCoverPhoto controller:", error);
-      return res
-        .status(500)
-        .json(
-          ProfileDto.error(
-            errorCode.UPDATE_PROFILE_FAILED,
-            error.message || "Lỗi khi cập nhật ảnh bìa"
-          )
-        );
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: errorCode.UPDATE_PROFILE_FAILED,
+          message: error.message || "Lỗi khi cập nhật ảnh bìa"
+        },
+        path: req.originalUrl,
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
