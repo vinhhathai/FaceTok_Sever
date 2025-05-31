@@ -13,6 +13,7 @@ const updateProfileValidation = (data) => {
     fullName: Joi.string().min(3).max(50),
     gender: Joi.string().valid('male', 'female', 'undefined', 'No gender'),
     location: Joi.string().allow(''),
+    relationship: Joi.string().valid('single', 'relationship', 'married', ''),
     birthday: Joi.date()
   });
 

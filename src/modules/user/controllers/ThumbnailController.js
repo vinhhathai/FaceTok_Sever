@@ -9,7 +9,7 @@ const {
 } = require("../../../shared/utils/cloudinaryUpload");
 
 /**
- * Controller xử lý các chức năng liên quan đến thumbnail người dùng
+ * Controller handling user thumbnail/cover photo related functionalities
  */
 class ThumbnailController {
   constructor() {
@@ -25,7 +25,7 @@ class ThumbnailController {
   updateThumbnail = async (req, res) => {
     try {
       const file = req.file;
-      const userId = req.user.id; // Assuming user ID is available from auth middleware
+      const userId = req.user.id; // Get user ID from auth middleware
 
       const result = await this.thumbnailService.updateThumbnail(
         userId,
@@ -41,7 +41,7 @@ class ThumbnailController {
       return res.status(500).json({
         ...ThumbnailDto.error(
           errorCode.UPDATE_THUMBNAIL_FAILED,
-          error.message || "Lỗi khi cập nhật ảnh bìa",
+          error.message || "Failed to update cover photo",
           error.detail
         ),
         path: req.originalUrl,

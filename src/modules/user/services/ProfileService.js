@@ -97,6 +97,8 @@ class ProfileService {
         updateData.gender = profileData.gender;
       if (profileData.location !== undefined)
         updateData.location = profileData.location;
+      if (profileData.relationship !== undefined)
+        updateData.relationship = profileData.relationship;
       if (profileData.birthday !== undefined)
         updateData.birthday = new Date(profileData.birthday);
 

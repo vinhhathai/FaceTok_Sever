@@ -10,16 +10,16 @@ const uploadImageMiddleware = require("../../../shared/middlewares/uploadImageMi
 router.get("/profile/:id", checkLogin, ProfileController.getProfile);
 // router.put("/update-profile", checkLogin, ProfileController.updateProfile);
 
-// // Avatar Routes
+// Avatar Routes
 // router.put("/update-avatar-url", checkLogin, AvatarController.updateAvatarUrl);
 
-// // Thumbnail Routes
-// // router.put("/update-thumbnail-url", checkLogin, ThumbnailController.updateThumbnailUrl);
+// Thumbnail Routes
+// router.put("/update-thumbnail-url", checkLogin, ThumbnailController.updateThumbnailUrl);
 
-// // Fullname Routes
+// Fullname Routes
 // router.put("/update-fullname", checkLogin, FullnameController.updateFullName);
 
-// // Search Routes
+// Search Routes
 // router.get("/search", checkLogin, UserSearchController.searchUsers);
 
 //-----------------------------------------------------------
@@ -29,8 +29,15 @@ router.post(
     checkLogin,
     uploadImageMiddleware.coverPhoto,
     ThumbnailController.updateThumbnail
-  );
+);
 
+// Upload avatar photo
+router.post(
+    "/upload-avatar",
+    checkLogin,
+    uploadImageMiddleware.profilePicture,
+    AvatarController.updateAvatar
+);
 
 // Other User Routes
 
