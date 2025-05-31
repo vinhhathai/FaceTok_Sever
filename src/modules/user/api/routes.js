@@ -2,7 +2,14 @@
 //----------------------------------------------------------------
 const express = require("express");
 const router = express.Router();
-const { UserController, ProfileController, AvatarController, ThumbnailController, FullnameController, UserSearchController } = require("../controllers");
+const {
+  UserController,
+  ProfileController,
+  AvatarController,
+  ThumbnailController,
+  FullnameController,
+  UserSearchController,
+} = require("../controllers");
 const checkLogin = require("../../../shared/middlewares/checkLogin");
 const uploadImageMiddleware = require("../../../shared/middlewares/uploadImageMiddleware");
 
@@ -25,20 +32,20 @@ router.get("/profile/:id", checkLogin, ProfileController.getProfile);
 //-----------------------------------------------------------
 // Upload cover photo
 router.post(
-    "/upload-thumbnail",
-    checkLogin,
-    uploadImageMiddleware.coverPhoto,
-    ThumbnailController.updateThumbnail
+  "/upload-thumbnail",
+  checkLogin,
+  uploadImageMiddleware.coverPhoto,
+  ThumbnailController.updateThumbnail
 );
 
 // Upload avatar photo
 router.post(
-    "/upload-avatar",
-    checkLogin,
-    uploadImageMiddleware.profilePicture,
-    AvatarController.updateAvatar
+  "/upload-avatar",
+  checkLogin,
+  uploadImageMiddleware.profilePicture,
+  AvatarController.updateAvatar
 );
 
 // Other User Routes
 
-module.exports = router; 
+module.exports = router;
