@@ -2,13 +2,13 @@
 //----------------------------------------------------------------
 const Joi = require('joi');
 
-// Validation schema cho cập nhật fullname
+// Validation schema for fullname update
 const fullnameUpdateValidation = Joi.object({
   fullName: Joi.string().min(3).max(50).required().messages({
-    'string.empty': 'Họ tên không được để trống',
-    'string.min': 'Họ tên phải có ít nhất {#limit} ký tự',
-    'string.max': 'Họ tên không được vượt quá {#limit} ký tự',
-    'any.required': 'Họ tên là bắt buộc'
+    'string.empty': 'Fullname cannot be empty',
+    'string.min': 'Fullname must be at least {#limit} characters long',
+    'string.max': 'Fullname cannot exceed {#limit} characters',
+    'any.required': 'Fullname is required'
   })
 });
 

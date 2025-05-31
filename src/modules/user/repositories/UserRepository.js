@@ -105,11 +105,11 @@ class UserRepository {
     }
 
     /**
-     * Cập nhật họ tên người dùng và thời gian cập nhật
-     * @param {string} userId - ID của người dùng
-     * @param {string} fullName - Họ tên mới
-     * @param {Date} lastNameUpdateTime - Thời gian cập nhật
-     * @returns {Promise<Object>} Thông tin người dùng sau khi cập nhật
+     * Update user's fullname and update time
+     * @param {string} userId - User ID
+     * @param {string} fullName - New fullname
+     * @param {Date} lastNameUpdateTime - Update timestamp
+     * @returns {Promise<Object>} Updated user information
      */
     async updateFullName(userId, fullName, lastNameUpdateTime) {
         return this.model.findByIdAndUpdate(

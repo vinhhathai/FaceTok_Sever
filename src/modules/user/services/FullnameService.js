@@ -6,7 +6,7 @@ const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { FullnameDto } = require("../dtos");
 
 /**
- * Service xử lý các chức năng liên quan đến họ tên người dùng
+ * Service for handling user fullname operations
  */
 class FullnameService {
   constructor() {
@@ -14,87 +14,86 @@ class FullnameService {
   }
 
   /**
-   * Cập nhật họ tên người dùng
-   * @param {string} userId - ID của người dùng cần cập nhật
-   * @param {string} fullName - Họ tên mới
-   * @returns {Promise<Object>} Kết quả cập nhật họ tên
+   * Update user's fullname
+   * @param {string} userId - ID of the user to update
+   * @param {string} fullName - New fullname
+   * @returns {Promise<Object>} Result of fullname update
    */
   async updateFullName(userId, fullName) {
     try {
-      console.log(`[FullnameService] Bắt đầu cập nhật họ tên cho userId: ${userId}`);
+      console.log(`[FullnameService] Starting fullname update for userId: ${userId}`);
       
-      // Kiểm tra tính hợp lệ của userId
+      // Validate userId
       if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        console.log(`[FullnameService] UserID không hợp lệ: ${userId}`);
+        console.log(`[FullnameService] Invalid userId: ${userId}`);
         return FullnameDto.error(
           errorCode.VALIDATION_FAILED,
-          "ID người dùng không hợp lệ"
+          "Invalid user ID"
         );
       }
 
-      // Kiểm tra tính hợp lệ của fullName
+      // Validate fullName
       if (!fullName || fullName.trim() === '') {
-        console.log(`[FullnameService] Họ tên không hợp lệ: ${fullName}`);
+        console.log(`[FullnameService] Invalid fullName: ${fullName}`);
         return FullnameDto.error(
           errorCode.VALIDATION_FAILED,
-          "Họ tên không được để trống"
+          "Fullname cannot be empty"
         );
       }
 
-      // Kiểm tra xem người dùng có tồn tại không
+      // Check if user exists
       const existingUser = await this.userRepository.findById(userId);
       if (!existingUser) {
-        console.log(`[FullnameService] Không tìm thấy người dùng với ID: ${userId}`);
+        console.log(`[FullnameService] User not found with ID: ${userId}`);
         return FullnameDto.error(
           errorCode.DATA_NOT_FOUND,
           errorMessage.USER_NOT_FOUND
         );
       }
 
-      console.log(`[FullnameService] Tìm thấy người dùng: ${existingUser.fullName}, lastNameUpdateTime: ${existingUser.lastNameUpdateTime}`);
+      console.log(`[FullnameService] User found: ${existingUser.fullName}, lastNameUpdateTime: ${existingUser.lastNameUpdateTime}`);
 
-      // Kiểm tra thời gian cập nhật tên lần cuối
-      const lastNameUpdateTime = existingUser.lastNameUpdateTime || new Date(0); // Nếu chưa có, lấy thời điểm 0
+      // Check last update time
+      const lastNameUpdateTime = existingUser.lastNameUpdateTime || new Date(0); // If none, use epoch time
       const currentTime = new Date();
       const timeDiffMs = currentTime.getTime() - lastNameUpdateTime.getTime();
       const timeDiffMinutes = Math.floor(timeDiffMs / (1000 * 60));
       
-      console.log(`[FullnameService] Thời gian hiện tại: ${currentTime}`);
-      console.log(`[FullnameService] Thời gian cập nhật tên lần cuối: ${lastNameUpdateTime}`);
-      console.log(`[FullnameService] Thời gian đã trôi qua (phút): ${timeDiffMinutes}`);
+      console.log(`[FullnameService] Current time: ${currentTime}`);
+      console.log(`[FullnameService] Last name update time: ${lastNameUpdateTime}`);
+      console.log(`[FullnameService] Time elapsed (minutes): ${timeDiffMinutes}`);
       
-      // Kiểm tra xem đã đủ 60 phút kể từ lần đổi tên gần nhất chưa
+      // Check if 60 minutes have passed since last name update
       if (timeDiffMinutes < 60) {
         const timeRemaining = 60 - timeDiffMinutes;
-        console.log(`[FullnameService] Chưa đủ thời gian, còn ${timeRemaining} phút nữa`);
+        console.log(`[FullnameService] Not enough time has passed, ${timeRemaining} minutes remaining`);
         return FullnameDto.error(
           errorCode.NAME_UPDATE_TIME_LIMIT,
-          `Bạn cần đợi thêm ${timeRemaining} phút nữa để đổi tên`,
+          `You need to wait ${timeRemaining} more minutes to update your name`,
           { timeRemaining }
         );
       }
 
-      console.log(`[FullnameService] Đủ thời gian để cập nhật tên, tiến hành cập nhật`);
+      console.log(`[FullnameService] Sufficient time has passed for name update, proceeding`);
       
-      // Cập nhật họ tên
+      // Update fullname
       const updatedUser = await this.userRepository.updateFullName(userId, fullName, currentTime);
       
-      // Kiểm tra kết quả cập nhật
+      // Check update result
       if (!updatedUser) {
-        console.log(`[FullnameService] Không thể cập nhật họ tên cho userId: ${userId}`);
+        console.log(`[FullnameService] Could not update fullname for userId: ${userId}`);
         return FullnameDto.error(
           errorCode.ERR_UPDATE_PROFILE_FAILED,
-          "Không thể cập nhật họ tên"
+          "Could not update fullname"
         );
       }
 
-      console.log(`[FullnameService] Cập nhật họ tên thành công: ${updatedUser.fullName}, thời gian cập nhật: ${updatedUser.lastNameUpdateTime}`);
+      console.log(`[FullnameService] Fullname updated successfully: ${updatedUser.fullName}, update time: ${updatedUser.lastNameUpdateTime}`);
 
-      // Format dữ liệu trả về bằng DTO
+      // Format response data with DTO
       const responseData = FullnameDto.toResponse(updatedUser);
 
-      // Xử lý trường hợp lastNameUpdateTime có thể null/undefined
-      // Nếu lastNameUpdateTime tồn tại thì tính thời gian có thể cập nhật tên tiếp theo
+      // Calculate next available update time
       let nextNameUpdateAvailable;
       if (updatedUser.lastNameUpdateTime) {
         nextNameUpdateAvailable = new Date(updatedUser.lastNameUpdateTime.getTime() + 60 * 60 * 1000);
@@ -103,15 +102,15 @@ class FullnameService {
       }
       
       responseData.nextNameUpdateAvailable = nextNameUpdateAvailable;
-      console.log(`[FullnameService] Thời gian có thể cập nhật tên tiếp theo: ${nextNameUpdateAvailable}`);
+      console.log(`[FullnameService] Next name update available at: ${nextNameUpdateAvailable}`);
 
-      // Trả về kết quả thành công
-      return FullnameDto.success(responseData, "Cập nhật họ tên thành công");
+      // Return success result
+      return FullnameDto.success(responseData, "Fullname updated successfully");
     } catch (error) {
       console.error("Error in updateFullName service:", error);
       return FullnameDto.error(
         errorCode.ERR_UPDATE_PROFILE_FAILED,
-        "Lỗi khi cập nhật họ tên",
+        "Error updating fullname",
         error.message
       );
     }
