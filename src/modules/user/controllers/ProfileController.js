@@ -19,60 +19,36 @@ class ProfileController {
     this.profileService = new ProfileService();
   }
 
-  /**
-   * Xem thông tin profile của người dùng theo ID
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   getProfile = async (req, res) => {
     try {
       // Lấy ID người dùng đang đăng nhập từ token
-      const viewerId = req.user?.id;
+      const logingUserId = req.user?.id;
 
       // Lấy ID người dùng cần xem profile từ params
-      const targetUserId = req.params.id;
+      const viewingUserId = req.params.id;
 
-      // Kiểm tra ID
-      if (!targetUserId) {
+      const { error, value } = profileValidation({
+        userId: viewingUserId,
+      });
+
+      if (error) {
         return res
           .status(400)
           .json(
             ProfileDto.error(
               errorCode.VALIDATION_FAILED,
-              errorMessage.ID_NOT_FOUND
+              error.details[0].message
             )
           );
       }
 
-      // Bổ sung kiểm tra bảo mật: Nếu không phải xem profile của chính mình, cần kiểm tra quyền
-      // Phương pháp đơn giản: cho phép xem (có thể mở rộng để kiểm tra mối quan hệ bạn bè hoặc cài đặt riêng tư)
-      // Trong thực tế, bạn có thể thêm logic kiểm tra chi tiết hơn ở đây
+      let result = null;
 
-      // Log thông tin để theo dõi
-      console.log(
-        `User ${viewerId} is viewing profile of user ${targetUserId}`
-      );
-
-      // Gọi service để lấy thông tin profile
-      const result = await this.profileService.getProfile(targetUserId);
-
-      // Kiểm tra kết quả và trả về response phù hợp
-      if (!result.success) {
-        let statusCode = 500;
-        if (result.error && result.error.code === errorCode.DATA_NOT_FOUND) {
-          statusCode = 404;
-        } else if (
-          result.error &&
-          result.error.code === errorCode.VALIDATION_FAILED
-        ) {
-          statusCode = 400;
-        }
-
-        return res.status(statusCode).json({
-          ...result,
-          path: req.originalUrl,
-          timestamp: new Date().toISOString(),
-        });
+      if (value) {
+        result = await this.profileService.getProfile(
+          viewingUserId,
+          logingUserId
+        );
       }
 
       // Trả về kết quả thành công
@@ -80,15 +56,15 @@ class ProfileController {
         ...result,
       });
     } catch (error) {
-      console.error("Error in getProfile controller:", error);
-      return res
-        .status(500)
-        .json(
-          ProfileDto.error(
-            errorCode.ERR_RETRIEVE_PROFILE_FAILED,
-            error.message || "Lỗi khi lấy thông tin profile"
-          )
-        );
+      return res.status(500).json({
+        ...ProfileDto.error(
+          errorCode.ERR_RETRIEVE_PROFILE_FAILED,
+          error.message || "Lỗi khi lấy thông tin profile",
+          error.detail
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString(),
+      });
     }
   };
 
@@ -242,10 +218,10 @@ class ProfileController {
         success: false,
         error: {
           code: errorCode.UPDATE_PROFILE_FAILED,
-          message: error.message || "Lỗi khi cập nhật ảnh bìa"
+          message: error.message || "Lỗi khi cập nhật ảnh bìa",
         },
         path: req.originalUrl,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   };

@@ -91,9 +91,13 @@ app.use(jsonErrorHandler);
 // Xử lý lỗi 404
 app.use((req, res, next) => {
     res.status(404).json({
-        timestamp: new Date().toISOString(),
+        success: false,
+        error: {
+            code: 'RESOURCE_NOT_FOUND',
+            message: 'Resource not found'
+        },
         path: req.originalUrl,
-        message: 'Resource not found'
+        timestamp: new Date().toISOString(),
     });
 });
 

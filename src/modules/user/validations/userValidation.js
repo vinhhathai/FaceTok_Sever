@@ -24,7 +24,7 @@ const updateProfileValidation = (data) => {
  */
 const profileValidation = (data) => {
   const schema = Joi.object({
-    id: Joi.string().required()
+    userId: Joi.string().required(),
   });
 
   return schema.validate(data);

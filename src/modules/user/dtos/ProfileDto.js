@@ -12,7 +12,7 @@ class ProfileDto {
    * @param {Object} user - Dữ liệu người dùng
    * @returns {Object} Dữ liệu profile đã được format
    */
-  static toResponse(user) {
+  static toResponse(user, isOwner = false) {
     return {
       id: user._id,
       fullName: user.fullName,
@@ -24,7 +24,8 @@ class ProfileDto {
       gender: user.gender,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      location: user.location || "No location"
+      location: user.location || "No location",
+      isOwner: isOwner,
     };
   }
 

@@ -5,18 +5,18 @@ const uploadImageMiddleware = require("../../../shared/middlewares/uploadImageMi
 const { checkLogin } = require("../../../shared/middlewares/checkLogin");
 
 // Get user profile
-router.get("/:userId", profileController.getUserProfile);
+// router.get("/:userId", profileController.getUserProfile);
 
-// Update user profile
-router.put("/update", authMiddleware, profileController.updateProfile);
+// // Update user profile
+// router.put("/update", authMiddleware, profileController.updateProfile);
 
-// Upload profile picture
-router.post(
-  "/upload-avatar",
-  checkLogin,
-  uploadImageMiddleware.profilePicture,
-  profileController.updateProfilePicture
-);
+// // Upload profile picture
+// router.post(
+//   "/upload-avatar",
+//   checkLogin,
+//   uploadImageMiddleware.profilePicture,
+//   profileController.updateProfilePicture
+// );
 
 // // Upload cover photo
 // router.post(
