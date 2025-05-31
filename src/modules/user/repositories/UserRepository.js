@@ -65,12 +65,27 @@ class UserRepository {
         });
     }
 
+    /**
+     * Update user profile data
+     * @param {string} userId - User ID to update
+     * @param {Object} profileData - Profile data to update
+     * @returns {Promise<Object>} Updated user document
+     */
     async updateProfile(userId, profileData) {
-        return this.model.findByIdAndUpdate(
-            userId,
-            { $set: profileData },
-            { new: true, runValidators: true }
-        );
+        try {
+            return await this.model.findByIdAndUpdate(
+                userId,
+                { $set: profileData },
+                { 
+                    new: true,             // Return updated document
+                    runValidators: true,   // Run schema validators
+                    lean: true             // Return plain JS object for better performance
+                }
+            ).select('-password -__v');    // Exclude sensitive fields
+        } catch (error) {
+            console.error(`Error updating profile for user ${userId}:`, error);
+            throw error; // Propagate error to service layer for proper handling
+        }
     }
 
     async updateAvatar(userId, profilePicture) {

@@ -25,9 +25,11 @@ class ProfileDto {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       location: user.location || "No location",
-      isOwner: isOwner,
+      relationship: user.relationship || "",
+      ...(isOwner && { isOwner: true }),
     };
   }
+  
 
   /**
    * Chuyển đổi response thành định dạng lỗi

@@ -45,7 +45,7 @@ class FullnameController {
         return res.status(400).json(
           FullnameDto.error(
             errorCode.VALIDATION_FAILED,
-            errorMessage.ID_NOT_FOUND
+            "Can not get user ID"
           )
         );
       }

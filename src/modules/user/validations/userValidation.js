@@ -5,27 +5,26 @@ const JoiDate = require('@joi/date');
 const JoiExtended = Joi.extend(JoiDate);
 
 /**
- * Validation cho cập nhật profile
+ * Profile update validation schema
  */
 const updateProfileValidation = (data) => {
   const schema = Joi.object({
-    bio: Joi.string().allow(''),
-    fullName: Joi.string().min(3).max(50),
-    gender: Joi.string().valid('male', 'female', 'undefined', 'No gender'),
-    location: Joi.string().allow(''),
+    bio: Joi.string().max(500).allow(''),
+    gender: Joi.string().valid('male', 'female', 'other'),
+    location: Joi.string().max(100).allow(''),
     relationship: Joi.string().valid('single', 'relationship', 'married', ''),
-    birthday: Joi.date()
+    birthday: Joi.date().iso().max('now').allow(null, '')
   });
 
-  return schema.validate(data);
+  return schema.validate(data, { abortEarly: false });
 };
 
 /**
- * Validation cho xem profile
+ * Profile view validation schema
  */
 const profileValidation = (data) => {
   const schema = Joi.object({
-    userId: Joi.string().required(),
+    userId: Joi.string().required().regex(/^[0-9a-fA-F]{24}$/).message('Invalid user ID format'),
   });
 
   return schema.validate(data);

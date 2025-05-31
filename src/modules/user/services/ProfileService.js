@@ -49,95 +49,72 @@ class ProfileService {
   }
 
   /**
-   * Cập nhật thông tin profile người dùng
-   * @param {string} userId - ID của người dùng cần cập nhật
-   * @param {Object} profileData - Dữ liệu profile cần cập nhật
-   * @returns {Promise<Object>} Kết quả cập nhật profile
+   * Update user profile information
+   * @param {string} userId - User ID to update
+   * @param {Object} profileData - Profile data to update
+   * @returns {Promise<Object>} Profile update result
    */
   async updateProfile(userId, profileData) {
     try {
-      console.log(
-        `[ProfileService] Bắt đầu cập nhật profile cho userId: ${userId}`
-      );
-
-      // Kiểm tra tính hợp lệ của ID
+      // Check userId validity
       if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        console.log(`[ProfileService] UserID không hợp lệ: ${userId}`);
         return ProfileDto.error(
           errorCode.VALIDATION_FAILED,
-          "ID người dùng không hợp lệ"
+          "Invalid user ID format"
         );
       }
 
-      // Kiểm tra người dùng có tồn tại không
-      const existingUser = await this.userRepository.findById(userId);
-      if (!existingUser) {
-        console.log(
-          `[ProfileService] Không tìm thấy người dùng với ID: ${userId}`
-        );
+      // Find existing user
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
         return ProfileDto.error(
           errorCode.DATA_NOT_FOUND,
           errorMessage.USER_NOT_FOUND
         );
       }
 
-      console.log(
-        `[ProfileService] Tìm thấy người dùng: ${existingUser.fullName}`
-      );
-      console.log(`[ProfileService] Dữ liệu cập nhật:`, profileData);
+      // Prepare update data (only include provided fields)
+      const updateData = Object.entries(profileData)
+        .filter(([key, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+          // Special handling for birthday
+          if (key === 'birthday' && value) {
+            acc[key] = new Date(value);
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {});
 
-      // Chuẩn bị dữ liệu cập nhật
-      const updateData = {};
-
-      // Chỉ cập nhật các trường có trong request
-      if (profileData.bio !== undefined) updateData.bio = profileData.bio;
-      if (profileData.fullName !== undefined)
-        updateData.fullName = profileData.fullName;
-      if (profileData.gender !== undefined)
-        updateData.gender = profileData.gender;
-      if (profileData.location !== undefined)
-        updateData.location = profileData.location;
-      if (profileData.relationship !== undefined)
-        updateData.relationship = profileData.relationship;
-      if (profileData.birthday !== undefined)
-        updateData.birthday = new Date(profileData.birthday);
-
-      console.log(`[ProfileService] Dữ liệu đã chuẩn bị:`, updateData);
-
-      // Cập nhật profile
-      const updatedUser = await this.userRepository.updateProfile(
-        userId,
-        updateData
-      );
-
-      // Kiểm tra kết quả cập nhật
-      if (!updatedUser) {
-        console.log(
-          `[ProfileService] Không thể cập nhật profile cho userId: ${userId}`
-        );
-        return ProfileDto.error(
-          errorCode.UPDATE_PROFILE_FAILED,
-          "Không thể cập nhật thông tin cá nhân"
+      // Skip update if no data provided
+      if (Object.keys(updateData).length === 0) {
+        return ProfileDto.success(
+          ProfileDto.toResponse(user),
+          "No changes to update"
         );
       }
 
-      console.log(
-        `[ProfileService] Cập nhật profile thành công cho userId: ${userId}`
-      );
+      // Update profile
+      const updatedUser = await this.userRepository.updateProfile(userId, updateData);
+      if (!updatedUser) {
+        return ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          "Failed to update profile"
+        );
+      }
+      
+      console.log("Updated user data (including relationship):", updatedUser);
 
-      // Format dữ liệu trả về bằng DTO
-      const responseData = ProfileDto.toResponse(updatedUser);
-
-      // Trả về kết quả thành công
+      // Return success response with updated data
       return ProfileDto.success(
-        responseData,
-        "Cập nhật thông tin cá nhân thành công"
+        ProfileDto.toResponse(updatedUser),
+        "Profile updated successfully"
       );
     } catch (error) {
-      console.error("Error in updateProfile service:", error);
+      console.error(`Profile update error for user ${userId}:`, error);
       return ProfileDto.error(
         errorCode.UPDATE_PROFILE_FAILED,
-        "Lỗi khi cập nhật thông tin cá nhân",
+        "Error updating profile",
         error.message
       );
     }
