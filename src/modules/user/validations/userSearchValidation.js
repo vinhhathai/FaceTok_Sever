@@ -9,7 +9,7 @@ const userSearchValidation = (data) => {
   const schema = Joi.object({
     query: Joi.string().required().min(1).max(100),
     page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(50).default(20)
+    limit: Joi.number().integer().min(1).max(50).default(10)
   });
 
   return schema.validate(data);

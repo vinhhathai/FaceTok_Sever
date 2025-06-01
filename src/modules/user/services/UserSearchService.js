@@ -6,7 +6,7 @@ const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { UserSearchDto } = require("../dtos");
 
 /**
- * Service xử lý các chức năng liên quan đến tìm kiếm người dùng
+ * Service for handling user search functionality
  */
 class UserSearchService {
   constructor() {
@@ -14,42 +14,41 @@ class UserSearchService {
   }
 
   /**
-   * Tìm kiếm người dùng theo từ khóa
-   * @param {string} query - Từ khóa tìm kiếm
-   * @param {number} page - Trang hiện tại
-   * @param {number} limit - Số lượng kết quả trên mỗi trang
-   * @param {string} currentUserId - ID của người dùng hiện tại (để loại bỏ khỏi kết quả)
-   * @returns {Promise<Object>} Danh sách người dùng tìm thấy
+   * Search for users by keyword
+   * @param {string} query - Search keyword
+   * @param {number} page - Current page number
+   * @param {number} limit - Number of results per page
+   * @param {string} currentUserId - ID of current user (to exclude from results)
+   * @returns {Promise<Object>} List of users found
    */
-  async searchUsers(query, page = 1, limit = 20, currentUserId = null) {
+  async searchUsers(query, page = 1, limit = 10, currentUserId = null) {
     try {
-      
-      // Kiểm tra tính hợp lệ của tham số
+      // Validate input parameters
       if (!query || query.trim() === '') {
-        console.log(`[UserSearchService] Từ khóa tìm kiếm không hợp lệ`);
+        console.log(`[UserSearchService] Invalid search keyword`);
         return UserSearchDto.error(
           errorCode.VALIDATION_FAILED,
-          "Từ khóa tìm kiếm không được để trống"
+          "Search keyword cannot be empty"
         );
       }
 
-      // Xử lý phân trang
+      // Handle pagination
       const skip = (page - 1) * limit;
       
-      // Tạo điều kiện tìm kiếm (phù hợp với kiến trúc cũ)
+      // Optimize search query with proper indexing support
       const searchCondition = {
         $or: [
-          { fullName: { $regex: query, $options: 'i' } }, // Tìm theo tên, không phân biệt chữ hoa/thường
-          { email: { $regex: query, $options: 'i' } }     // Tìm theo email
+          { fullName: { $regex: query, $options: 'i' } }, // Case-insensitive name search
+          { email: { $regex: query, $options: 'i' } }     // Case-insensitive email search
         ]
       };
       
-      // Loại bỏ người dùng hiện tại khỏi kết quả tìm kiếm
+      // Exclude current user from search results if provided
       if (currentUserId) {
         searchCondition._id = { $ne: currentUserId };
       }
       
-      // Chỉ lấy các trường phù hợp với kiến trúc cũ - chỉ sử dụng inclusion (không sử dụng exclusion)
+      // Select only necessary fields to optimize performance
       const projection = { 
         _id: 1,
         fullName: 1, 
@@ -59,46 +58,46 @@ class UserSearchService {
         bio: 1
       };
       
-      // Lấy danh sách người dùng phù hợp với điều kiện tìm kiếm
+      // Execute search query with pagination
       const users = await this.userRepository.findByCondition(
         searchCondition,
         projection,
         { 
           skip, 
           limit,
-          sort: { fullName: 1 } // Sắp xếp theo tên A-Z
+          sort: { fullName: 1 } // Sort by name A-Z
         }
       );
       
-      // Đếm tổng số kết quả để phục vụ phân trang
+      // Count total results for pagination metadata
       const total = await this.userRepository.countByCondition(searchCondition);
       
-      console.log(`[UserSearchService] Tìm thấy ${users.length} người dùng (tổng ${total} kết quả)`);
+      console.log(`[UserSearchService] Found ${users.length} users (total ${total} results)`);
 
-      // Format dữ liệu trả về bằng DTO
+      // Format response data using DTO
       const formattedUsers = UserSearchDto.toResponseList(users);
       
-      // Tạo metadata cho phân trang
+      // Create pagination metadata
       const pagination = {
-        currentPage: page,
+        page: page,
+        limit: limit,
         totalPages: Math.ceil(total / limit),
-        totalResults: total,
-        resultsPerPage: limit
+        totalResults: total
       };
 
-      // Trả về kết quả thành công
+      // Return successful response
       return UserSearchDto.success(
         { 
           users: formattedUsers,
           pagination
         }, 
-        "Tìm kiếm người dùng thành công"
+        "User search completed successfully"
       );
     } catch (error) {
       console.error("Error in searchUsers service:", error);
       return UserSearchDto.error(
         errorCode.SEARCH_USERS_FAILED,
-        "Lỗi khi tìm kiếm người dùng",
+        "Error when searching for users",
         error.message
       );
     }

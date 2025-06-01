@@ -16,7 +16,7 @@ class ProfileDto {
     return {
       id: user._id,
       fullName: user.fullName,
-      email: user.email,
+      email: isOwner ? user.email : "",
       profilePicture: user.profilePicture || "",
       thumbnail: user.thumbnail || "",
       birthday: user.birthday ? new Date(user.birthday).toISOString().split('T')[0] : null,

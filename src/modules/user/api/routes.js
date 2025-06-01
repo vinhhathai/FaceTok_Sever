@@ -19,7 +19,7 @@ router.put("/update-profile", checkLogin, ProfileController.updateProfile);
 router.put("/update-fullname", checkLogin, FullnameController.updateFullName);
 
 // Search Routes
-// router.get("/search", checkLogin, UserSearchController.searchUsers);
+router.get("/search", checkLogin, UserSearchController.searchUsers);
 
 //-----------------------------------------------------------
 // Upload cover photo
