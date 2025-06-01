@@ -64,6 +64,7 @@ const FRIEND_MESSAGES = {
     ADD_FRIEND_FAILED: 'Friend addition failed',
     REMOVE_FRIEND_FAILED: 'Friend removal failed',
     SEND_FRIEND_REQUEST_FAILED: 'Friend request sending failed',
+    CANCEL_FRIEND_REQUEST_FAILED: 'Friend request cancellation failed',
     ACCEPT_FRIEND_REQUEST_FAILED: 'Friend request acceptance failed',
     REJECT_FRIEND_REQUEST_FAILED: 'Friend request rejection failed',
     GET_FRIENDS_LIST_FAILED: 'Failed to retrieve friends list',

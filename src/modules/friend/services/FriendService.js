@@ -4,6 +4,7 @@ const FriendRepository = require("../repositories/FriendRepository");
 const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { FriendDto } = require("../dtos");
 const FriendRequestModel = require("../models/FriendRequestModel");
+const mongoose = require("mongoose");
 
 /**
  * Service xử lý chức năng quản lý bạn bè
@@ -23,31 +24,30 @@ class FriendService {
       if (!userId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "User ID không được để trống"
+          "User ID is required"
         );
       }
 
       const friends = await this.friendRepository.getFriendsList(userId);
 
-      // Đếm tổng số bạn bè
+      // Count total friends
       const totalFriends = friends.length;
 
-      // Format dữ liệu trả về bằng DTO
+      // Format the data using DTO
       const formattedFriends = FriendDto.toResponseList(friends);
 
-      // Trả về kết quả thành công
       return FriendDto.success(
         {
           friends: formattedFriends,
           totalFriends: totalFriends,
         },
-        "Lấy danh sách bạn bè thành công"
+        "Friends list retrieved successfully"
       );
     } catch (error) {
       console.error("Error in getFriendsList service:", error);
       return FriendDto.error(
         errorCode.GET_FRIENDS_LIST_FAILED,
-        "Lỗi khi lấy danh sách bạn bè",
+        "Failed to retrieve friends list",
         error.message
       );
     }
@@ -61,414 +61,471 @@ class FriendService {
    */
   async sendFriendRequest(senderId, recipientId) {
     try {
-      // Kiểm tra dữ liệu đầu vào
       if (!senderId || !recipientId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "ID người gửi và người nhận không được để trống"
+          "Sender and recipient IDs are required"
         );
       }
 
-      // Kiểm tra xem người gửi có tự gửi lời mời kết bạn cho chính mình không
       if (senderId === recipientId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "Không thể gửi lời mời kết bạn cho chính mình"
+          "Cannot send friend request to yourself"
         );
       }
 
-      // Kiểm tra xem hai người dùng đã là bạn bè chưa
       const alreadyFriends = await this.friendRepository.checkIfFriends(senderId, recipientId);
       if (alreadyFriends) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "Hai người dùng đã là bạn bè"
+          "Users are already friends"
         );
       }
 
-      // Kiểm tra xem đã có lời mời kết bạn giữa hai người dùng chưa
       const existingRequest = await this.friendRepository.checkFriendRequestExists(senderId, recipientId);
       
       if (existingRequest) {
-        // Nếu đã có lời mời và trạng thái là pending
         if (existingRequest.status === this.friendRepository.STATUS.PENDING) {
-          // Nếu người gửi hiện tại là người đã nhận lời mời trước đó
           if (existingRequest.sender.toString() === senderId.toString()) {
             return FriendDto.error(
               errorCode.VALIDATION_FAILED,
-              "Lời mời kết bạn đã được gửi trước đó"
+              "Friend request already sent"
             );
           } else if (existingRequest.recipient.toString() === senderId) {
-            // Trường hợp này là lời mời ngược lại - tự động chấp nhận
             existingRequest.status = this.friendRepository.STATUS.ACCEPTED;
             await existingRequest.save();
             
             return FriendDto.success(
               { friendRequest: existingRequest },
-              "Lời mời kết bạn đã được chấp nhận do cả hai đều gửi lời mời"
+              "Friend request accepted as both users sent requests"
             );
           }
           
-          // Nếu lời mời đã tồn tại và người gửi giống nhau
           return FriendDto.error(
             errorCode.VALIDATION_FAILED,
-            "Lời mời kết bạn đã được gửi trước đó và đang chờ phản hồi"
+            "Friend request is pending response"
           );
         }
         
-        // Nếu đã có lời mời và trạng thái là rejected
         if (existingRequest.status === this.friendRepository.STATUS.REJECTED) {
-          // Cập nhật lại trạng thái thành pending
           existingRequest.status = this.friendRepository.STATUS.PENDING;
           await existingRequest.save();
           
           return FriendDto.success(
             { friendRequest: existingRequest },
-            "Lời mời kết bạn đã được gửi lại"
+            "Friend request resent successfully"
           );
         }
       }
 
-      // Tạo lời mời kết bạn mới
       const newFriendRequest = await this.friendRepository.createFriendRequest(senderId, recipientId);
 
-      // Trả về kết quả thành công
       return FriendDto.success(
         { friendRequest: newFriendRequest },
-        "Gửi lời mời kết bạn thành công"
+        "Friend request sent successfully"
       );
     } catch (error) {
       console.error("Error in sendFriendRequest service:", error);
       return FriendDto.error(
         errorCode.SEND_FRIEND_REQUEST_FAILED,
-        "Lỗi khi gửi lời mời kết bạn",
+        "Failed to send friend request",
         error.message
       );
     }
   }
 
-  /**
-   * Lấy danh sách lời mời kết bạn của người dùng
-   * @param {string} userId - ID của người dùng
-   * @returns {Promise<Object>} Kết quả danh sách lời mời kết bạn
-   */
-  async getFriendRequests(userId) {
+  async cancelFriendRequest(requestId, userId) {
     try {
+      if (!requestId || !mongoose.Types.ObjectId.isValid(requestId)) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Invalid request ID format"
+        );
+      }
+
       if (!userId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "User ID không được để trống"
+          "User ID is required"
         );
       }
 
-      // Lấy danh sách lời mời kết bạn mà người dùng nhận được
-      const receivedRequests = await this.friendRepository.getReceivedFriendRequests(userId);
-      
-      // Lấy danh sách lời mời kết bạn mà người dùng đã gửi
-      const sentRequests = await this.friendRepository.getSentFriendRequests(userId);
+      const friendRequest = await this.friendRepository.getFriendRequestById(requestId);
+
+      if (!friendRequest) {
+        return FriendDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "Friend request not found"
+        );
+      }
+
+      // Check if the user is the sender of the request
+      if (friendRequest.sender._id.toString() !== userId) {
+        return FriendDto.error(
+          errorCode.UNAUTHORIZED_ACCESS,
+          "Only the sender can cancel this friend request"
+        );
+      }
+
+      // Check if the request is in a valid state to cancel
+      if (friendRequest.status !== this.friendRepository.STATUS.PENDING) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Only pending friend requests can be canceled"
+        );
+      }
+
+      // Delete the friend request
+      const result = await this.friendRepository.deleteFriendRequest(requestId);
+
+      if (!result) {
+        return FriendDto.error(
+          errorCode.CANCEL_FRIEND_REQUEST_FAILED,
+          "Failed to cancel friend request"
+        );
+      }
 
       return FriendDto.success(
-        {
-          received: receivedRequests,
-          sent: sentRequests,
-          totalReceived: receivedRequests.length,
-          totalSent: sentRequests.length
-        },
-        "Lấy danh sách lời mời kết bạn thành công"
+        null,
+        "Friend request canceled successfully"
       );
     } catch (error) {
-      console.error("Error in getFriendRequests service:", error);
+      console.error("Error in cancelFriendRequest service:", error);
       return FriendDto.error(
-        errorCode.GET_FRIEND_REQUESTS_FAILED,
-        "Lỗi khi lấy danh sách lời mời kết bạn",
+        errorCode.CANCEL_FRIEND_REQUEST_FAILED,
+        "Failed to cancel friend request",
         error.message
       );
     }
   }
 
-  /**
-   * Chấp nhận lời mời kết bạn
-   * @param {string} userId - ID của người dùng chấp nhận lời mời
-   * @param {string} requestId - ID của lời mời kết bạn
-   * @returns {Promise<Object>} Kết quả chấp nhận lời mời kết bạn
-   */
-  async acceptFriendRequest(userId, requestId) {
+  async acceptFriendRequest(requestId, userId) {
     try {
-      if (!userId || !requestId) {
+      if (!requestId || !mongoose.Types.ObjectId.isValid(requestId)) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "User ID và Request ID không được để trống"
+          "Invalid request ID format"
         );
       }
 
-      // Kiểm tra xem lời mời kết bạn có tồn tại không
+      if (!userId) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "User ID is required"
+        );
+      }
+
       const friendRequest = await this.friendRepository.getFriendRequestById(requestId);
-      
+
       if (!friendRequest) {
         return FriendDto.error(
           errorCode.DATA_NOT_FOUND,
-          "Không tìm thấy lời mời kết bạn"
+          "Friend request not found"
         );
       }
 
-      // Kiểm tra trạng thái của lời mời
+      // Check if the user is the recipient of the request
+      if (friendRequest.recipient._id.toString() !== userId) {
+        return FriendDto.error(
+          errorCode.UNAUTHORIZED_ACCESS,
+          "Only the recipient can accept this friend request"
+        );
+      }
+
+      // Check if the request is in a pending state
       if (friendRequest.status !== this.friendRepository.STATUS.PENDING) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "Lời mời kết bạn này đã được xử lý trước đó"
+          "This friend request cannot be accepted"
         );
       }
 
-      // Chấp nhận lời mời kết bạn
+      // Accept the friend request
       const result = await this.friendRepository.acceptFriendRequest(friendRequest);
 
+      if (!result) {
+        return FriendDto.error(
+          errorCode.ACCEPT_FRIEND_REQUEST_FAILED,
+          "Failed to accept friend request"
+        );
+      }
+
       return FriendDto.success(
-        { 
-          friendRequest: result.friendRequest,
-          friend: result.friend
-        },
-        "Chấp nhận lời mời kết bạn thành công"
+        result,
+        "Friend request accepted successfully"
       );
     } catch (error) {
       console.error("Error in acceptFriendRequest service:", error);
       return FriendDto.error(
         errorCode.ACCEPT_FRIEND_REQUEST_FAILED,
-        "Lỗi khi chấp nhận lời mời kết bạn",
+        "Failed to accept friend request",
         error.message
       );
     }
   }
 
-  /**
-   * Từ chối lời mời kết bạn
-   * @param {string} userId - ID của người dùng từ chối lời mời
-   * @param {string} requestId - ID của lời mời kết bạn
-   * @returns {Promise<Object>} Kết quả từ chối lời mời kết bạn
-   */
-  async rejectFriendRequest(userId, requestId) {
+  async rejectFriendRequest(requestId, userId) {
     try {
-      
-      if (!userId || !requestId) {
-        console.log("Validation failed - missing userId or requestId");
+      if (!requestId || !mongoose.Types.ObjectId.isValid(requestId)) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "User ID và Request ID không được để trống"
+          "Invalid request ID format"
         );
       }
 
-      // Kiểm tra xem lời mời kết bạn có tồn tại không
+      if (!userId) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "User ID is required"
+        );
+      }
+
       const friendRequest = await this.friendRepository.getFriendRequestById(requestId);
-      
+
       if (!friendRequest) {
         return FriendDto.error(
           errorCode.DATA_NOT_FOUND,
-          "Không tìm thấy lời mời kết bạn"
+          "Friend request not found"
         );
       }
 
-      
+      // Check if the user is the recipient of the request
+      if (friendRequest.recipient._id.toString() !== userId) {
+        return FriendDto.error(
+          errorCode.UNAUTHORIZED_ACCESS,
+          "Only the recipient can reject this friend request"
+        );
+      }
 
-      // Kiểm tra trạng thái của lời mời
-      const isPending = friendRequest.status === this.friendRepository.STATUS.PENDING;
-      
-      if (!isPending) {
-        console.log("Request already processed");
+      // Check if the request is in a pending state
+      if (friendRequest.status !== this.friendRepository.STATUS.PENDING) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "Lời mời kết bạn này đã được xử lý trước đó"
+          "This friend request cannot be rejected"
         );
       }
 
-      // Từ chối lời mời kết bạn
-      const rejectedRequest = await this.friendRepository.rejectFriendRequest(friendRequest);
+      // Reject the friend request
+      const result = await this.friendRepository.rejectFriendRequest(friendRequest);
+
+      if (!result) {
+        return FriendDto.error(
+          errorCode.REJECT_FRIEND_REQUEST_FAILED,
+          "Failed to reject friend request"
+        );
+      }
 
       return FriendDto.success(
-        { friendRequest: rejectedRequest },
-        "Từ chối lời mời kết bạn thành công"
+        { friendRequest: result },
+        "Friend request rejected successfully"
       );
     } catch (error) {
       console.error("Error in rejectFriendRequest service:", error);
       return FriendDto.error(
         errorCode.REJECT_FRIEND_REQUEST_FAILED,
-        "Lỗi khi từ chối lời mời kết bạn",
+        "Failed to reject friend request",
         error.message
       );
     }
   }
 
-  /**
-   * Hủy lời mời kết bạn đã gửi
-   * @param {string} userId - ID của người dùng hủy lời mời
-   * @param {string} requestId - ID của lời mời kết bạn
-   * @returns {Promise<Object>} Kết quả hủy lời mời kết bạn
-   */
-  async cancelFriendRequest(userId, requestId) {
+  async getSentFriendRequests(userId) {
     try {
-      if (!userId || !requestId) {
+      if (!userId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "User ID và Request ID không được để trống"
+          "User ID is required"
         );
       }
 
-      // Kiểm tra xem lời mời kết bạn có tồn tại không
-      const friendRequest = await this.friendRepository.getFriendRequestById(requestId);
-      
-      if (!friendRequest) {
-        return FriendDto.error(
-          errorCode.DATA_NOT_FOUND,
-          "Không tìm thấy lời mời kết bạn"
-        );
-      }
+      const sentRequests = await this.friendRepository.getSentFriendRequests(userId);
 
-
-      // Kiểm tra trạng thái của lời mời
-      if (friendRequest.status !== this.friendRepository.STATUS.PENDING) {
-        return FriendDto.error(
-          errorCode.VALIDATION_FAILED,
-          "Lời mời kết bạn này đã được xử lý trước đó"
-        );
-      }
-
-      // Xóa lời mời kết bạn
-      await this.friendRepository.deleteFriendRequest(requestId);
+      // Format the response using DTO
+      const formattedRequests = sentRequests.map(request => ({
+        id: request._id,
+        recipient: {
+          id: request.recipient._id,
+          fullName: request.recipient.fullName,
+          profilePicture: request.recipient.profilePicture
+        },
+        status: request.status,
+        createdAt: request.createdAt
+      }));
 
       return FriendDto.success(
-        { message: "Lời mời kết bạn đã được hủy" },
-        "Hủy lời mời kết bạn thành công"
+        { 
+          requests: formattedRequests,
+          totalRequests: formattedRequests.length
+        },
+        "Sent friend requests retrieved successfully"
       );
     } catch (error) {
-      console.error("Error in cancelFriendRequest service:", error);
+      console.error("Error in getSentFriendRequests service:", error);
       return FriendDto.error(
-        errorCode.SEND_FRIEND_REQUEST_FAILED,
-        "Lỗi khi hủy lời mời kết bạn",
+        errorCode.GET_FRIEND_REQUESTS_FAILED,
+        "Failed to retrieve sent friend requests",
         error.message
       );
     }
   }
 
-  /**
-   * Xóa bạn bè
-   * @param {string} userId - ID của người dùng
-   * @param {string} friendId - ID của người bạn cần xóa
-   * @returns {Promise<Object>} Kết quả xóa bạn bè
-   */
-  async removeFriend(userId, friendId) {
+  async getReceivedFriendRequests(userId) {
+    try {
+      if (!userId) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "User ID is required"
+        );
+      }
+
+      const receivedRequests = await this.friendRepository.getReceivedFriendRequests(userId);
+
+      // Format the response using DTO
+      const formattedRequests = receivedRequests.map(request => ({
+        id: request._id,
+        sender: {
+          id: request.sender._id,
+          fullName: request.sender.fullName,
+          profilePicture: request.sender.profilePicture,
+          email: request.sender.email
+        },
+        status: request.status,
+        createdAt: request.createdAt
+      }));
+
+      return FriendDto.success(
+        { 
+          requests: formattedRequests,
+          totalRequests: formattedRequests.length
+        },
+        "Received friend requests retrieved successfully"
+      );
+    } catch (error) {
+      console.error("Error in getReceivedFriendRequests service:", error);
+      return FriendDto.error(
+        errorCode.GET_FRIEND_REQUESTS_FAILED,
+        "Failed to retrieve received friend requests",
+        error.message
+      );
+    }
+  }
+
+  async unfriend(userId, friendId) {
     try {
       if (!userId || !friendId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "User ID và Friend ID không được để trống"
+          "Both user ID and friend ID are required"
         );
       }
 
-      // Kiểm tra xem hai người có phải là bạn bè không
-      const alreadyFriends = await this.friendRepository.checkIfFriends(userId, friendId);
-      console.log(userId, friendId)
-      
-      if (!alreadyFriends) {
+      if (userId === friendId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "Người dùng này không phải là bạn bè của bạn"
+          "Cannot unfriend yourself"
         );
       }
 
-      // Xóa mối quan hệ bạn bè
-      await this.friendRepository.removeFriend(userId, friendId);
+      // Validate IDs format
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(friendId)) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Invalid ID format"
+        );
+      }
+
+      // Check if they are actually friends
+      const areFriends = await this.friendRepository.checkIfFriends(userId, friendId);
+      if (!areFriends) {
+        return FriendDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "These users are not friends"
+        );
+      }
+
+      // Remove the friendship
+      const result = await this.friendRepository.removeFriend(userId, friendId);
+
+      if (!result) {
+        return FriendDto.error(
+          errorCode.REMOVE_FRIEND_FAILED,
+          "Failed to remove friend"
+        );
+      }
 
       return FriendDto.success(
-        { 
-          message: "Đã xóa khỏi danh sách bạn bè",
-          friendId: friendId
-        },
-        "Xóa bạn bè thành công"
+        null,
+        "Friend removed successfully"
       );
     } catch (error) {
-      console.error("Error in removeFriend service:", error);
+      console.error("Error in unfriend service:", error);
       return FriendDto.error(
         errorCode.REMOVE_FRIEND_FAILED,
-        "Lỗi khi xóa bạn bè",
+        "Failed to remove friend",
         error.message
       );
     }
   }
 
-  /**
-   * Kiểm tra trạng thái mối quan hệ bạn bè giữa hai người dùng
-   * @param {string} userId - ID của người dùng đang đăng nhập
-   * @param {string} targetUserId - ID của người dùng cần kiểm tra
-   * @returns {Promise<Object>} Trạng thái mối quan hệ bạn bè
-   */
-  async checkFriendshipStatus(userId, targetUserId) {
+  async searchFriends(userId, searchQuery, page, limit) {
     try {
-      if (!userId || !targetUserId) {
+      if (!userId) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "User ID và Target User ID không được để trống"
+          "User ID is required"
         );
       }
 
-      // Kiểm tra xem hai người có phải là một người không
-      if (userId === targetUserId) {
-        return FriendDto.success(
-          { status: "self" },
-          "Đây là chính người dùng"
+      if (!searchQuery || searchQuery.trim().length === 0) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Search query is required"
         );
       }
 
-      // Kiểm tra xem hai người có phải là bạn bè không
-      const areFriends = await this.friendRepository.checkIfFriends(userId, targetUserId);
+      // Convert parameters to appropriate types
+      const pageNumber = parseInt(page, 10) || 1;
+      const limitNumber = parseInt(limit, 10) || 10;
       
-      if (areFriends) {
-        return FriendDto.success(
-          { status: "friends" },
-          "Hai người dùng là bạn bè"
-        );
-      }
+      // Calculate skip for pagination
+      const skip = (pageNumber - 1) * limitNumber;
 
-      // Kiểm tra xem có lời mời kết bạn nào giữa hai người không
-      const friendRequest = await this.friendRepository.checkFriendRequestExists(userId, targetUserId);
-      
-      if (friendRequest) {
-        if (friendRequest.status === this.friendRepository.STATUS.PENDING) {
-          if (friendRequest.sender.toString() === userId) {
-            return FriendDto.success(
-              { 
-                status: "pending_sent",
-                requestId: friendRequest._id
-              },
-              "Đã gửi lời mời kết bạn và đang chờ phản hồi"
-            );
-          } else {
-            return FriendDto.success(
-              { 
-                status: "pending_received",
-                requestId: friendRequest._id
-              },
-              "Đã nhận lời mời kết bạn và đang chờ phản hồi"
-            );
-          }
-        } else if (friendRequest.status === this.friendRepository.STATUS.REJECTED) {
-          return FriendDto.success(
-            { 
-              status: "rejected",
-              requestId: friendRequest._id
-            },
-            "Lời mời kết bạn đã bị từ chối"
-          );
-        }
-      }
+      // Call repository to search for friends
+      const { friends, totalCount } = await this.friendRepository.searchFriends(
+        userId, 
+        searchQuery.trim(), 
+        skip, 
+        limitNumber
+      );
 
-      // Nếu không có mối quan hệ gì
+      // Format the friends data using DTO
+      const formattedFriends = FriendDto.toResponseList(friends);
+
+      // Calculate pagination info
+      const totalPages = Math.ceil(totalCount / limitNumber);
+      const hasNextPage = pageNumber < totalPages;
+      const hasPreviousPage = pageNumber > 1;
+
       return FriendDto.success(
-        { status: "none" },
-        "Không có mối quan hệ bạn bè"
+        {
+          friends: formattedFriends,
+          pagination: {
+            page: pageNumber,
+            limit: limitNumber,
+            totalCount,
+            totalPages,
+            hasNextPage,
+            hasPreviousPage
+          }
+        },
+        "Friends search completed successfully"
       );
     } catch (error) {
-      console.error("Error in checkFriendshipStatus service:", error);
+      console.error("Error in searchFriends service:", error);
       return FriendDto.error(
-        errorCode.CHECK_FRIENDSHIP_STATUS_FAILED,
-        "Lỗi khi kiểm tra trạng thái bạn bè",
+        errorCode.SEARCH_USERS_FAILED,
+        "Failed to search for friends",
         error.message
       );
     }

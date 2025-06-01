@@ -157,6 +157,40 @@ class FriendRepository {
 
     return await Promise.all([user1Update, user2Update, requestsDelete]);
   }
+
+  async searchFriends(userId, searchQuery, skip, limit) {
+    // Get the user's friends list
+    const user = await this.userModel.findById(userId).select('friends');
+    
+    if (!user || !user.friends || user.friends.length === 0) {
+      return { friends: [], totalCount: 0 };
+    }
+
+    // Create a regex pattern for case-insensitive search
+    const searchRegex = new RegExp(searchQuery, 'i');
+
+    // Query to get friends matching the search criteria
+    const query = {
+      _id: { $in: user.friends },
+      $or: [
+        { fullName: searchRegex },
+        { email: searchRegex },
+        { bio: searchRegex }
+      ]
+    };
+
+    // Execute the query with pagination
+    const [friends, totalCount] = await Promise.all([
+      this.userModel.find(query)
+        .select('_id fullName profilePicture email bio')
+        .sort({ fullName: 1 })
+        .skip(skip)
+        .limit(limit),
+      this.userModel.countDocuments(query)
+    ]);
+
+    return { friends, totalCount };
+  }
 }
 
 module.exports = FriendRepository;
