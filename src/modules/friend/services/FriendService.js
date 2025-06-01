@@ -54,6 +54,101 @@ class FriendService {
   }
 
   /**
+   * Kiểm tra mối quan hệ giữa người dùng hiện tại và người dùng được chỉ định
+   * @param {string} userId - ID của người dùng hiện tại
+   * @param {string} targetUserId - ID của người dùng cần kiểm tra mối quan hệ
+   * @returns {Promise<Object>} Kết quả chứa thông tin về mối quan hệ
+   */
+  async checkRelationship(userId, targetUserId) {
+    try {
+      // Validate input
+      if (!userId || !targetUserId) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Both user IDs are required"
+        );
+      }
+
+      if (userId === targetUserId) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Cannot check relationship with yourself"
+        );
+      }
+
+      // Validate MongoDB ObjectIds
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(targetUserId)) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Invalid user ID format"
+        );
+      }
+
+      // Check if they are friends
+      const areFriends = await this.friendRepository.checkIfFriends(userId, targetUserId);
+      
+      if (areFriends) {
+        return FriendDto.success(
+          {
+            status: "FRIEND"
+          },
+          "Users are friends"
+        );
+      }
+
+      // Check if there's a pending friend request
+      const pendingRequest = await this.friendRepository.checkFriendRequestExists(userId, targetUserId);
+
+      if (pendingRequest) {
+        if (pendingRequest.status !== this.friendRepository.STATUS.PENDING) {
+          // Request exists but not pending (rejected/cancelled)
+          return FriendDto.success(
+            {
+              status: "NONE",
+              requestId: pendingRequest._id
+            },
+            "A rejected/cancelled friend request exists"
+          );
+        }
+
+        // Determine direction of the request
+        if (pendingRequest.sender.toString() === userId) {
+          return FriendDto.success(
+            {
+              status: "REQUEST_SENT",
+              requestId: pendingRequest._id
+            },
+            "Friend request sent by current user"
+          );
+        } else {
+          return FriendDto.success(
+            {
+              status: "REQUEST_RECEIVED",
+              requestId: pendingRequest._id
+            },
+            "Friend request received from target user"
+          );
+        }
+      }
+
+      // No relationship found
+      return FriendDto.success(
+        {
+          status: "NONE"
+        },
+        "No relationship exists between users"
+      );
+    } catch (error) {
+      console.error("Error in checkRelationship service:", error);
+      return FriendDto.error(
+        errorCode.CHECK_RELATIONSHIP_FAILED,
+        "Failed to check relationship status",
+        error.message
+      );
+    }
+  }
+
+  /**
    * Gửi lời mời kết bạn đến người dùng khác
    * @param {string} senderId - ID của người gửi lời mời
    * @param {string} recipientId - ID của người nhận lời mời

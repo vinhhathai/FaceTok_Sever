@@ -49,6 +49,52 @@ class FriendController {
   };
 
   /**
+   * Check relationship status between the current user and another user
+   * @param {Object} req - Express request object with targetUserId param
+   * @param {Object} res - Express response object
+   * @returns {Promise<void>}
+   */
+  checkRelationship = async (req, res) => {
+    try {
+      const { error, value } = friendshipStatusValidation({ targetUserId: req.params.targetUserId });
+      
+      if (error) {
+        return res.status(400).json(
+          FriendDto.error(
+            errorCode.VALIDATION_FAILED,
+            error.details[0].message
+          )
+        );
+      }
+      
+      const { targetUserId } = value;
+      const userId = req.user.id;
+      
+      const result = await this.friendService.checkRelationship(userId, targetUserId);
+      
+      if (!result.success) {
+        const statusCode = result.error?.code === errorCode.VALIDATION_FAILED ? 400 : 500;
+        
+        return res.status(statusCode).json({
+          ...result,
+          path: req.originalUrl,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("Error in checkRelationship:", error);
+      return res.status(500).json(
+        FriendDto.error(
+          errorCode.CHECK_RELATIONSHIP_FAILED,
+          "Failed to check relationship status"
+        )
+      );
+    }
+  };
+
+  /**
    * Send a friend request to another user
    * @param {Object} req - Request object
    * @param {Object} res - Response object

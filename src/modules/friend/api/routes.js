@@ -20,6 +20,13 @@ router.get('/my-friends', checkLogin, FriendController.getFriendsList);
 router.get('/search', checkLogin, FriendController.searchFriends);
 
 /**
+ * @route GET /api/friends/relationship/:targetUserId
+ * @desc Check relationship status with another user
+ * @access Private
+ */
+router.get('/relationship/:targetUserId', checkLogin, FriendController.checkRelationship);
+
+/**
  * @route POST /api/friends/send-request
  * @desc Send a friend request to another user
  * @access Private
