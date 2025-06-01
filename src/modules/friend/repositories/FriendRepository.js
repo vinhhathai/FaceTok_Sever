@@ -73,7 +73,7 @@ class FriendRepository {
       recipient: userId,
       status: this.STATUS.PENDING
     })
-      .populate('sender', '_id fullName profilePicture email')
+      .populate('sender', '_id fullName profilePicture')
       .sort({ createdAt: -1 });
   }
 
