@@ -4,9 +4,12 @@ const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { ThumbnailService } = require("../services");
 const { ThumbnailDto } = require("../dtos");
 const { thumbnailValidation } = require("../validations");
+const {
+  processAndUploadImage,
+} = require("../../../shared/utils/cloudinaryUpload");
 
 /**
- * Controller xử lý các chức năng liên quan đến thumbnail người dùng
+ * Controller handling user thumbnail/cover photo related functionalities
  */
 class ThumbnailController {
   constructor() {
@@ -14,77 +17,38 @@ class ThumbnailController {
   }
 
   /**
-   * Cập nhật thumbnail người dùng
+   * Update user's cover photo
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
+   * @returns {Promise<void>}
    */
-  updateThumbnailUrl = async (req, res) => {
+  updateThumbnail = async (req, res) => {
     try {
-      console.log("Update thumbnail URL request received");
-      
-      // Validate dữ liệu đầu vào bằng Joi
-      const { error, value } = thumbnailValidation.thumbnailUpdateValidation.validate(req.body);
-      
-      if (error) {
-        return res.status(400).json(
-          ThumbnailDto.error(
-            errorCode.VALIDATION_FAILED,
-            error.details[0].message
-          )
-        );
-      }
-      
-      // Lấy ID người dùng từ token
-      const userId = req.user.id;
-      
-      console.log("User ID:", userId);
-      console.log("Thumbnail URL:", value.thumbnailUrl);
+      const file = req.file;
+      const userId = req.user.id; // Get user ID from auth middleware
 
-      // Kiểm tra ID
-      if (!userId) {
-        return res.status(400).json(
-          ThumbnailDto.error(
-            errorCode.VALIDATION_FAILED,
-            errorMessage.ID_NOT_FOUND
-          )
-        );
-      }
+      const result = await this.thumbnailService.updateThumbnail(
+        userId,
+        file
+      );
 
-
-
-      // Gọi service để cập nhật thumbnail
-      const result = await this.thumbnailService.updateThumbnail(userId, value.thumbnailUrl);
-
-      // Kiểm tra kết quả và trả về response phù hợp
-      if (!result.success) {
-        let statusCode = 500;
-        if (result.error && result.error.code === errorCode.DATA_NOT_FOUND) {
-          statusCode = 404;
-        } else if (result.error && result.error.code === errorCode.VALIDATION_FAILED) {
-          statusCode = 400;
-        }
-        
-        return res.status(statusCode).json({
-          ...result,
-          path: req.originalUrl,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Trả về kết quả thành công
       return res.status(200).json({
         ...result,
+      
       });
     } catch (error) {
-      console.error("Error in updateThumbnailUrl controller:", error);
-      return res.status(500).json(
-        ThumbnailDto.error(
-          errorCode.ERR_UPDATE_THUMBNAIL_FAILED,
-          error.message || "Lỗi khi cập nhật thumbnail"
-        )
-      );
+      console.error("Error in updateCoverPhoto controller:", error);
+      return res.status(500).json({
+        ...ThumbnailDto.error(
+          errorCode.UPDATE_THUMBNAIL_FAILED,
+          error.message || "Failed to update cover photo",
+          error.detail
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString(),
+      });
     }
   };
 }
 
-module.exports = ThumbnailController; 
+module.exports = ThumbnailController;

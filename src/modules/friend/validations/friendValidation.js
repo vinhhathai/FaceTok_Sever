@@ -3,13 +3,13 @@
 const Joi = require('joi');
 
 /**
- * Xác thực dữ liệu khi gửi lời mời kết bạn
+ * Validate data when sending friend request
  */
 const friendRequestValidation = (data) => {
   const schema = Joi.object({
     recipientId: Joi.string().required().messages({
-      'any.required': 'ID người nhận là bắt buộc',
-      'string.empty': 'ID người nhận không được để trống'
+      'any.required': 'Recipient ID is required',
+      'string.empty': 'Recipient ID cannot be empty'
     })
   });
 
@@ -17,13 +17,13 @@ const friendRequestValidation = (data) => {
 };
 
 /**
- * Xác thực ID lời mời kết bạn
+ * Validate friend request ID
  */
 const requestIdValidation = (data) => {
   const schema = Joi.object({
     requestId: Joi.string().required().messages({
-      'any.required': 'ID lời mời kết bạn là bắt buộc',
-      'string.empty': 'ID lời mời kết bạn không được để trống'
+      'any.required': 'Request ID is required',
+      'string.empty': 'Request ID cannot be empty'
     })
   });
 
@@ -31,13 +31,13 @@ const requestIdValidation = (data) => {
 };
 
 /**
- * Xác thực ID bạn bè
+ * Validate friend ID
  */
 const friendIdValidation = (data) => {
   const schema = Joi.object({
     friendId: Joi.string().required().messages({
-      'any.required': 'ID bạn bè là bắt buộc',
-      'string.empty': 'ID bạn bè không được để trống'
+      'any.required': 'Friend ID is required',
+      'string.empty': 'Friend ID cannot be empty'
     })
   });
 
@@ -45,13 +45,40 @@ const friendIdValidation = (data) => {
 };
 
 /**
- * Xác thực dữ liệu khi kiểm tra trạng thái kết bạn
+ * Validate data when checking friendship status
  */
 const friendshipStatusValidation = (data) => {
   const schema = Joi.object({
     targetUserId: Joi.string().required().messages({
-      'any.required': 'ID người dùng cần kiểm tra là bắt buộc',
-      'string.empty': 'ID người dùng cần kiểm tra không được để trống'
+      'any.required': 'Target user ID is required',
+      'string.empty': 'Target user ID cannot be empty'
+    })
+  });
+
+  return schema.validate(data);
+};
+
+/**
+ * Validate search query parameters
+ */
+const searchQueryValidation = (data) => {
+  const schema = Joi.object({
+    query: Joi.string().required().min(1).max(100).messages({
+      'any.required': 'Search query is required',
+      'string.empty': 'Search query cannot be empty',
+      'string.min': 'Search query must be at least 1 character',
+      'string.max': 'Search query cannot exceed 100 characters'
+    }),
+    page: Joi.number().integer().min(1).default(1).messages({
+      'number.base': 'Page must be a number',
+      'number.integer': 'Page must be an integer',
+      'number.min': 'Page must be greater than or equal to 1'
+    }),
+    limit: Joi.number().integer().min(1).max(100).default(10).messages({
+      'number.base': 'Limit must be a number',
+      'number.integer': 'Limit must be an integer',
+      'number.min': 'Limit must be greater than or equal to 1',
+      'number.max': 'Limit cannot exceed 100'
     })
   });
 
@@ -62,5 +89,6 @@ module.exports = {
   friendRequestValidation,
   requestIdValidation,
   friendIdValidation,
-  friendshipStatusValidation
+  friendshipStatusValidation,
+  searchQueryValidation
 }; 

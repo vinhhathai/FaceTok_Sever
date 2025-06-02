@@ -6,7 +6,7 @@ const { UserSearchDto } = require("../dtos");
 const { userSearchValidation } = require("../validations");
 
 /**
- * Controller xử lý các chức năng liên quan đến tìm kiếm người dùng
+ * Controller for handling user search functionality
  */
 class UserSearchController {
   constructor() {
@@ -14,7 +14,7 @@ class UserSearchController {
   }
 
   /**
-   * Tìm kiếm người dùng theo từ khóa
+   * Search for users by keyword
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
@@ -22,14 +22,14 @@ class UserSearchController {
     try {
       console.log("Search users request received");
 
-      // Dữ liệu từ query parameters (cho GET request)
+      // Extract data from query parameters
       const searchData = {
         query: req.query.query,
         page: parseInt(req.query.page) || 1,
-        limit: parseInt(req.query.limit) || 20
+        limit: parseInt(req.query.limit) || 10
       };
 
-      // Validate thông tin đầu vào
+      // Validate input data
       const { error, value } = userSearchValidation(searchData);
       if (error) {
         return res.status(400).json(
@@ -40,8 +40,7 @@ class UserSearchController {
         );
       }
 
-
-      // Gọi service để tìm kiếm người dùng
+      // Call service to search for users
       const result = await this.userSearchService.searchUsers(
         value.query, 
         value.page, 
@@ -49,7 +48,7 @@ class UserSearchController {
         req.user?.id
       );
 
-      // Kiểm tra kết quả và trả về response phù hợp
+      // Check result and return appropriate response
       if (!result.success) {
         let statusCode = 500;
         
@@ -64,7 +63,7 @@ class UserSearchController {
         });
       }
 
-      // Trả về kết quả thành công
+      // Return successful response
       return res.status(200).json({
         ...result
       });
@@ -73,7 +72,7 @@ class UserSearchController {
       return res.status(500).json(
         UserSearchDto.error(
           errorCode.SEARCH_USERS_FAILED,
-          error.message || "Lỗi khi tìm kiếm người dùng"
+          error.message || "Error when searching for users"
         )
       );
     }

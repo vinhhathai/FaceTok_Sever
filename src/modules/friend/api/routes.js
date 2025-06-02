@@ -2,34 +2,77 @@
 //----------------------------------------------------------------
 const express = require('express');
 const router = express.Router();
-const FriendController = require('../controllers/FriendController');
+const { FriendController } = require('../controllers');
 const checkLogin = require('../../../shared/middlewares/checkLogin');
 
-// Friend Management Routes
-router.get('/list', checkLogin, FriendController.getFriendsList);
+/**
+ * @route GET /api/friends/my-friends
+ * @desc Get list of friends for the authenticated user
+ * @access Private
+ */
+router.get('/my-friends', checkLogin, FriendController.getFriendsList);
 
-// Send a friend request
-router.post('/request', checkLogin, FriendController.sendFriendRequest);
+/**
+ * @route GET /api/friends/search
+ * @desc Search friends by name, email, or bio
+ * @access Private
+ */
+router.get('/search', checkLogin, FriendController.searchFriends);
 
-// Get friend requests 
-router.get('/requests', checkLogin, FriendController.getFriendRequests);
+/**
+ * @route GET /api/friends/relationship/:targetUserId
+ * @desc Check relationship status with another user
+ * @access Private
+ */
+router.get('/relationship/:targetUserId', checkLogin, FriendController.checkRelationship);
 
-// // Get a specific user's friends
-// router.get('/user/:userId', checkLogin, FriendController.getUserFriends);
+/**
+ * @route POST /api/friends/send-request
+ * @desc Send a friend request to another user
+ * @access Private
+ */
+router.post('/send-request', checkLogin, FriendController.sendFriendRequest);
 
-// Accept friend request
-router.put('/accept/:requestId', checkLogin, FriendController.acceptFriendRequest);
+/**
+ * @route DELETE /api/friends/cancel-request
+ * @desc Cancel a pending friend request
+ * @access Private
+ */
+router.delete('/cancel-request', checkLogin, FriendController.cancelFriendRequest);
 
-// Reject friend request
-router.put('/reject/:requestId', checkLogin, FriendController.rejectFriendRequest);
+/**
+ * @route POST /api/friends/accept-request
+ * @desc Accept a pending friend request
+ * @access Private
+ */
+router.post('/accept-request', checkLogin, FriendController.acceptFriendRequest);
 
-// Cancel a sent friend request
-router.delete('/cancel/:requestId', checkLogin, FriendController.cancelFriendRequest);
+/**
+ * @route POST /api/friends/reject-request
+ * @desc Reject a pending friend request
+ * @access Private
+ */
+router.post('/reject-request', checkLogin, FriendController.rejectFriendRequest);
 
-// Remove a friend
-router.delete('/remove/:friendId', checkLogin, FriendController.removeFriend);
+/**
+ * @route GET /api/friends/pending-requests
+ * @desc Get list of sent friend requests for the authenticated user
+ * @access Private
+ */
+router.get('/pending-requests', checkLogin, FriendController.getSentFriendRequests);
 
-// // Check friendship status between two users
-// router.post('/status', checkLogin, FriendController.checkFriendshipStatus);
+/**
+ * @route GET /api/friends/received-requests
+ * @desc Get list of received friend requests for the authenticated user
+ * @access Private
+ */
+router.get('/received-requests', checkLogin, FriendController.getReceivedFriendRequests);
+
+/**
+ * @route POST /api/friends/unfriend
+ * @desc Remove a user from the friends list
+ * @access Private
+ */
+router.post('/unfriend', checkLogin, FriendController.unfriend);
 
 module.exports = router; 

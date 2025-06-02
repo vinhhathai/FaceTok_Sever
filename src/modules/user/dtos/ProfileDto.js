@@ -12,11 +12,11 @@ class ProfileDto {
    * @param {Object} user - Dữ liệu người dùng
    * @returns {Object} Dữ liệu profile đã được format
    */
-  static toResponse(user) {
+  static toResponse(user, isOwner = false) {
     return {
       id: user._id,
       fullName: user.fullName,
-      email: user.email,
+      email: isOwner ? user.email : "",
       profilePicture: user.profilePicture || "",
       thumbnail: user.thumbnail || "",
       birthday: user.birthday ? new Date(user.birthday).toISOString().split('T')[0] : null,
@@ -24,9 +24,12 @@ class ProfileDto {
       gender: user.gender,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      location: user.location || "No location"
+      location: user.location || "No location",
+      relationship: user.relationship || "",
+      ...(isOwner && { isOwner: true }),
     };
   }
+  
 
   /**
    * Chuyển đổi response thành định dạng lỗi

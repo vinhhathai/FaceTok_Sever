@@ -4,9 +4,12 @@ const mongoose = require('mongoose');
 const UserRepository = require("../repositories/UserRepository");
 const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { AvatarDto } = require("../dtos");
+const {
+  processAndUploadImage,
+} = require("../../../shared/utils/cloudinaryUpload");
 
 /**
- * Service xử lý các chức năng liên quan đến avatar người dùng
+ * Service handling user avatar related functionalities
  */
 class AvatarService {
   constructor() {
@@ -14,59 +17,75 @@ class AvatarService {
   }
 
   /**
-   * Cập nhật avatar người dùng
-   * @param {string} userId - ID của người dùng cần cập nhật
-   * @param {string} avatarUrl - URL của avatar mới
-   * @returns {Promise<Object>} Kết quả cập nhật avatar
+   * Update user avatar with file upload
+   * @param {string} userId - User ID to update
+   * @param {Object} file - Uploaded file object
+   * @returns {Promise<Object>} Result of avatar update
    */
-  async updateAvatar(userId, avatarUrl) {
+  async updateAvatar(userId, file) {
     try {
-      // Kiểm tra tính hợp lệ của userId
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        return AvatarDto.error(
-          errorCode.VALIDATION_FAILED,
-          "ID người dùng không hợp lệ"
-        );
-      }
-
-      // Kiểm tra tính hợp lệ của avatarUrl
-      if (!avatarUrl) {
-        return AvatarDto.error(
-          errorCode.VALIDATION_FAILED,
-          "URL avatar không được để trống"
-        );
-      }
-
-      // Kiểm tra xem người dùng có tồn tại không
-      const existingUser = await this.userRepository.findById(userId);
-      if (!existingUser) {
+      // Check if file exists
+      if (!file) {
         return AvatarDto.error(
           errorCode.DATA_NOT_FOUND,
-          errorMessage.USER_NOT_FOUND
+          "Profile picture not found"
         );
       }
 
-      // Cập nhật avatar
-      const updatedUser = await this.userRepository.updateAvatar(userId, avatarUrl);
+      // Image processing options for avatar
+      const imageOptions = {
+        width: 400,
+        height: 400,
+        fit: "cover",
+        format: "jpeg",
+        quality: 85,
+      };
+
+      // Upload options for Cloudinary
+      const uploadOptions = {
+        public_id: `user_${userId}_profile_${Date.now()}`, // Unique identifier
+        tags: ["profile_picture", `user_${userId}`],
+        transformation: [
+          { width: 400, height: 400, crop: "fill", gravity: "face" },
+        ],
+      };
+
+      // Process and upload image
+      const result = await processAndUploadImage(
+        file.buffer,
+        "chaotok/avatars", // Cloudinary folder
+        imageOptions,
+        uploadOptions
+      );
       
-      // Kiểm tra kết quả cập nhật
+      if (!result) {
+        return AvatarDto.error(
+          errorCode.ERR_UPDATE_AVATAR_FAILED,
+          "Error saving avatar to server"
+        );
+      }
+      
+      // Update user's avatar URL in database
+      const updatedUser = await this.userRepository.updateAvatar(userId, result.secure_url);
+      
       if (!updatedUser) {
         return AvatarDto.error(
           errorCode.ERR_UPDATE_AVATAR_FAILED,
-          "Không thể cập nhật avatar"
+          "Could not update avatar in database"
         );
       }
-
-      // Format dữ liệu trả về bằng DTO
-      const responseData = AvatarDto.toResponse(updatedUser);
-
-      // Trả về kết quả thành công
-      return AvatarDto.success(responseData, "Cập nhật avatar thành công");
+      
+      return AvatarDto.success(
+        {
+          profilePictureUrl: result.secure_url,
+          publicId: result.public_id
+        }, 
+        "Profile picture updated successfully"
+      );
     } catch (error) {
-      console.error("Error in updateAvatar service:", error);
       return AvatarDto.error(
         errorCode.ERR_UPDATE_AVATAR_FAILED,
-        "Lỗi khi cập nhật avatar",
+        "Error updating profile picture",
         error.message
       );
     }

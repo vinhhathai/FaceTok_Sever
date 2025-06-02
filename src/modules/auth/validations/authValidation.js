@@ -34,9 +34,11 @@ const loginValidation = Joi.object({
 });
 
 const signUpValidation = Joi.object({
-  fullName: Joi.string().required().messages({
+  fullName: Joi.string().min(3).max(30).required().messages({
     'any.required': 'Full name is required',
-    'string.empty': 'Full name cannot be empty'
+    'string.empty': 'Full name cannot be empty',
+    'string.min': 'Full name must be at least 3 characters',
+    'string.max': 'Full name cannot exceed 30 characters'
   }),
   email: Joi.string().email().required().messages({
     'string.email': 'Invalid email format',

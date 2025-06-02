@@ -65,12 +65,27 @@ class UserRepository {
         });
     }
 
+    /**
+     * Update user profile data
+     * @param {string} userId - User ID to update
+     * @param {Object} profileData - Profile data to update
+     * @returns {Promise<Object>} Updated user document
+     */
     async updateProfile(userId, profileData) {
-        return this.model.findByIdAndUpdate(
-            userId,
-            { $set: profileData },
-            { new: true, runValidators: true }
-        );
+        try {
+            return await this.model.findByIdAndUpdate(
+                userId,
+                { $set: profileData },
+                { 
+                    new: true,             // Return updated document
+                    runValidators: true,   // Run schema validators
+                    lean: true             // Return plain JS object for better performance
+                }
+            ).select('-password -__v');    // Exclude sensitive fields
+        } catch (error) {
+            console.error(`Error updating profile for user ${userId}:`, error);
+            throw error; // Propagate error to service layer for proper handling
+        }
     }
 
     async updateAvatar(userId, profilePicture) {
@@ -90,11 +105,11 @@ class UserRepository {
     }
 
     /**
-     * Cập nhật họ tên người dùng và thời gian cập nhật
-     * @param {string} userId - ID của người dùng
-     * @param {string} fullName - Họ tên mới
-     * @param {Date} lastNameUpdateTime - Thời gian cập nhật
-     * @returns {Promise<Object>} Thông tin người dùng sau khi cập nhật
+     * Update user's fullname and update time
+     * @param {string} userId - User ID
+     * @param {string} fullName - New fullname
+     * @param {Date} lastNameUpdateTime - Update timestamp
+     * @returns {Promise<Object>} Updated user information
      */
     async updateFullName(userId, fullName, lastNameUpdateTime) {
         return this.model.findByIdAndUpdate(

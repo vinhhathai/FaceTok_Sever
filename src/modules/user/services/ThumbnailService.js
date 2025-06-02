@@ -1,9 +1,12 @@
 "use strict";
 //----------------------------------------------------------------
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const UserRepository = require("../repositories/UserRepository");
 const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { ThumbnailDto } = require("../dtos");
+const {
+  processAndUploadImage,
+} = require("../../../shared/utils/cloudinaryUpload");
 
 /**
  * Service xử lý các chức năng liên quan đến thumbnail người dùng
@@ -13,60 +16,57 @@ class ThumbnailService {
     this.userRepository = new UserRepository();
   }
 
-  /**
-   * Cập nhật thumbnail người dùng
-   * @param {string} userId - ID của người dùng cần cập nhật
-   * @param {string} thumbnailUrl - URL của thumbnail mới
-   * @returns {Promise<Object>} Kết quả cập nhật thumbnail
-   */
-  async updateThumbnail(userId, thumbnailUrl) {
+  async updateThumbnail(userId, file) {
     try {
-      // Kiểm tra tính hợp lệ của userId
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        return ThumbnailDto.error(
-          errorCode.VALIDATION_FAILED,
-          "ID người dùng không hợp lệ"
-        );
+      // Check if file exists
+      if (!file) {
+        return res
+          .status(400)
+          .json(
+            ThumbnailDto.error(
+              errorCode.DATA_NOT_FOUND,
+              "Không tìm thấy ảnh bìa"
+            )
+          );
       }
 
-      // Kiểm tra tính hợp lệ của thumbnailUrl
-      if (!thumbnailUrl) {
+      // Image processing options for cover photos
+      const imageOptions = {
+        width: 1200,
+        height: 400,
+        fit: "cover",
+        format: "jpeg",
+        quality: 80,
+      };
+
+      // Upload options for Cloudinary
+      const uploadOptions = {
+        public_id: `user_${userId}_thumbnail_${Date.now()}`, // Unique identifier
+        tags: ["thumbnail", `user_${userId}`],
+        transformation: [
+          { width: 1200, height: 400, crop: "fill", gravity: "auto" },
+        ],
+      };
+
+      // Process and upload image
+      const result = await processAndUploadImage(
+        file.buffer,
+        "chaotok/thumbnails", // Cloudinary folder
+        imageOptions,
+        uploadOptions
+      );
+      if (!result) {
         return ThumbnailDto.error(
-          errorCode.VALIDATION_FAILED,
-          "URL thumbnail không được để trống"
+          errorCode.UPDATE_THUMBNAIL_SAVING_FAILED,
+          "Lỗi khi lưu ảnh bìa lên máy chủ"
         );
       }
-
-      // Kiểm tra xem người dùng có tồn tại không
-      const existingUser = await this.userRepository.findById(userId);
-      if (!existingUser) {
-        return ThumbnailDto.error(
-          errorCode.DATA_NOT_FOUND,
-          errorMessage.USER_NOT_FOUND
-        );
-      }
-
-      // Cập nhật thumbnail
-      const updatedUser = await this.userRepository.updateThumbnail(userId, thumbnailUrl);
-      
-      // Kiểm tra kết quả cập nhật
-      if (!updatedUser) {
-        return ThumbnailDto.error(
-          errorCode.ERR_UPDATE_THUMBNAIL_FAILED,
-          "Không thể cập nhật thumbnail"
-        );
-      }
-
-      // Format dữ liệu trả về bằng DTO
-      const responseData = ThumbnailDto.toResponse(updatedUser);
-
-      // Trả về kết quả thành công
-      return ThumbnailDto.success(responseData, "Cập nhật thumbnail thành công");
+      await this.userRepository.updateThumbnail(userId, result.secure_url);
+      return ThumbnailDto.success(result, "Cập nhật ảnh bìa thành công");
     } catch (error) {
-      console.error("Error in updateThumbnail service:", error);
       return ThumbnailDto.error(
-        errorCode.ERR_UPDATE_THUMBNAIL_FAILED,
-        "Lỗi khi cập nhật thumbnail",
+        errorCode.UPDATE_THUMBNAIL_FAILED + "tuntun",
+        "Lỗi không xác định khi cập nhật ảnh bìa",
         error.message
       );
     }

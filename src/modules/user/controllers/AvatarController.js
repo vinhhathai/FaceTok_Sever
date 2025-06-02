@@ -3,10 +3,9 @@
 const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { AvatarService } = require("../services");
 const { AvatarDto } = require("../dtos");
-const { avatarValidation } = require("../validations");
 
 /**
- * Controller xử lý các chức năng liên quan đến avatar người dùng
+ * Controller for user avatar related functionalities
  */
 class AvatarController {
   constructor() {
@@ -14,76 +13,36 @@ class AvatarController {
   }
 
   /**
-   * Cập nhật avatar người dùng
+   * Update user avatar from file upload
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
+   * @returns {Promise<void>}
    */
-  updateAvatarUrl = async (req, res) => {
+  updateAvatar = async (req, res) => {
     try {
-      console.log("Update avatar URL request received");
-      
-      // Validate dữ liệu đầu vào bằng Joi
-      const { error, value } = avatarValidation.avatarUpdateValidation.validate(req.body);
-      
-      if (error) {
-        return res.status(400).json(
-          AvatarDto.error(
-            errorCode.VALIDATION_FAILED,
-            error.details[0].message
-          )
-        );
-      }
-      
-      // Lấy ID người dùng từ token
+      const file = req.file;
       const userId = req.user.id;
-      
-      console.log("User ID:", userId);
-      console.log("Avatar URL:", value.avatarUrl);
 
-      // Kiểm tra ID
-      if (!userId) {
-        return res.status(400).json(
-          AvatarDto.error(
-            errorCode.VALIDATION_FAILED,
-            errorMessage.ID_NOT_FOUND
-          )
-        );
-      }
+      // Call service to handle all the processing and updating
+      const result = await this.avatarService.updateAvatar(
+        userId,
+        file
+      );
 
-      // Format data bằng DTO
-      const avatarData = AvatarDto.toUpdateData(value);
-
-      // Gọi service để cập nhật avatar
-      const result = await this.avatarService.updateAvatar(userId, avatarData.avatarUrl);
-
-      // Kiểm tra kết quả và trả về response phù hợp
-      if (!result.success) {
-        let statusCode = 500;
-        if (result.error && result.error.code === errorCode.DATA_NOT_FOUND) {
-          statusCode = 404;
-        } else if (result.error && result.error.code === errorCode.VALIDATION_FAILED) {
-          statusCode = 400;
-        }
-        
-        return res.status(statusCode).json({
-          ...result,
-          path: req.originalUrl,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Trả về kết quả thành công
       return res.status(200).json({
         ...result,
       });
     } catch (error) {
-      console.error("Error in updateAvatarUrl controller:", error);
-      return res.status(500).json(
-        AvatarDto.error(
+      console.error("Error in updateAvatar controller:", error);
+      return res.status(500).json({
+        ...AvatarDto.error(
           errorCode.ERR_UPDATE_AVATAR_FAILED,
-          error.message || "Lỗi khi cập nhật avatar"
-        )
-      );
+          error.message || "Failed to update profile picture",
+          error.detail
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString(),
+      });
     }
   };
 }

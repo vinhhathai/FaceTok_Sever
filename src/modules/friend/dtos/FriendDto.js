@@ -3,49 +3,48 @@
 const dtoResponse = require("../../../shared/helper/dtoResponse");
 
 /**
- * DTO cho tính năng quản lý bạn bè
+ * DTO for friend management functionality
  */
 class FriendDto {
   /**
-   * Chuyển đổi dữ liệu bạn bè sang định dạng trả về
-   * @param {Object} friend - Dữ liệu người dùng (bạn bè)
-   * @returns {Object} - Dữ liệu đã định dạng
+   * Convert friend data to response format
+   * @param {Object} friend - User data (friend)
+   * @returns {Object} - Formatted data
    */
   static toResponse(friend) {
     return {
       id: friend._id || friend.id,
       fullName: friend.fullName || '',
       profilePicture: friend.profilePicture || '',
-      email: friend.email || '',
       bio: friend.bio || ''
     };
   }
 
   /**
-   * Chuyển đổi danh sách bạn bè sang định dạng trả về
-   * @param {Array} friends - Danh sách bạn bè
-   * @returns {Array} - Danh sách đã định dạng
+   * Convert list of friends to response format
+   * @param {Array} friends - List of friends
+   * @returns {Array} - Formatted list
    */
   static toResponseList(friends) {
     return friends.map(friend => this.toResponse(friend));
   }
 
   /**
-   * Tạo phản hồi lỗi
-   * @param {String} code - Mã lỗi
-   * @param {String} message - Thông báo lỗi
-   * @param {String} detail - Chi tiết lỗi
-   * @returns {Object} - Object lỗi
+   * Create error response
+   * @param {String} code - Error code
+   * @param {String} message - Error message
+   * @param {String} detail - Error detail
+   * @returns {Object} - Error object
    */
   static error(code, message, detail) {
     return dtoResponse.error(code, message, detail);
   }
 
   /**
-   * Tạo phản hồi thành công
-   * @param {Object} data - Dữ liệu trả về
-   * @param {String} message - Thông báo
-   * @returns {Object} - Object thành công
+   * Create success response
+   * @param {Object} data - Return data
+   * @param {String} message - Success message
+   * @returns {Object} - Success object
    */
   static success(data, message) {
     return dtoResponse.success(data, message);

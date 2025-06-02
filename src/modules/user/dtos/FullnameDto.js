@@ -3,14 +3,14 @@
 const { dtoResponse } = require("../../../shared/helper");
 
 /**
- * DTO cho xử lý dữ liệu fullname người dùng
+ * DTO for handling user fullname data
  */
 class FullnameDto {
   
   /**
-   * Format dữ liệu input cho cập nhật fullname
-   * @param {Object} data - Dữ liệu đầu vào
-   * @returns {Object} Dữ liệu đã được format
+   * Format input data for fullname update
+   * @param {Object} data - Input data
+   * @returns {Object} Formatted data
    */
   static toUpdateData(data) {
     return {
@@ -19,9 +19,9 @@ class FullnameDto {
   }
 
   /**
-   * Format dữ liệu response cho fullname
-   * @param {Object} user - Dữ liệu người dùng sau khi cập nhật
-   * @returns {Object} Dữ liệu fullname đã được format
+   * Format response data for fullname
+   * @param {Object} user - User data after update
+   * @returns {Object} Formatted fullname data
    */
   static toResponse(user) {
     return {
@@ -33,21 +33,21 @@ class FullnameDto {
   }
 
   /**
-   * Chuyển đổi response thành định dạng lỗi
-   * @param {string} code - Mã lỗi
-   * @param {string} message - Thông báo lỗi
-   * @param {any} detail - Chi tiết lỗi (nếu có)
-   * @returns {Object} Object chứa thông tin lỗi
+   * Convert response to error format
+   * @param {string} code - Error code
+   * @param {string} message - Error message
+   * @param {any} detail - Error details (optional)
+   * @returns {Object} Object containing error information
    */
   static error(code, message, detail = null) {
     return dtoResponse.error(code, message, detail);
   }
 
   /**
-   * Chuyển đổi response thành định dạng thành công
-   * @param {Object} data - Dữ liệu trả về
-   * @param {string} message - Thông báo thành công
-   * @returns {Object} Object chứa dữ liệu thành công
+   * Convert response to success format
+   * @param {Object} data - Data to return
+   * @param {string} message - Success message
+   * @returns {Object} Object containing success data
    */
   static success(data = {}, message = "Success") {
     return dtoResponse.success(data, message);

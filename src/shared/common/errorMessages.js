@@ -49,6 +49,7 @@ const USER_MESSAGES = {
     GET_PROFILE_FAILED: 'Failed to retrieve profile information',
     SEARCH_USER_FAILED: 'User search failed',
     SEARCH_USERS_FAILED: 'Users search failed',
+    UPDATE_THUMBNAIL_SAVING_FAILED: 'Thumbnail image saving failed',
 };
 
 const POST_MESSAGES = {
@@ -63,6 +64,7 @@ const FRIEND_MESSAGES = {
     ADD_FRIEND_FAILED: 'Friend addition failed',
     REMOVE_FRIEND_FAILED: 'Friend removal failed',
     SEND_FRIEND_REQUEST_FAILED: 'Friend request sending failed',
+    CANCEL_FRIEND_REQUEST_FAILED: 'Friend request cancellation failed',
     ACCEPT_FRIEND_REQUEST_FAILED: 'Friend request acceptance failed',
     REJECT_FRIEND_REQUEST_FAILED: 'Friend request rejection failed',
     GET_FRIENDS_LIST_FAILED: 'Failed to retrieve friends list',

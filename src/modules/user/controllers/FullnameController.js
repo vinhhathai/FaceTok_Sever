@@ -6,23 +6,18 @@ const { FullnameDto } = require("../dtos");
 const { fullnameValidation } = require("../validations");
 
 /**
- * Controller xử lý các chức năng liên quan đến họ tên người dùng
+ * Controller for handling user fullname operations
  */
 class FullnameController {
   constructor() {
     this.fullnameService = new FullnameService();
   }
 
-  /**
-   * Cập nhật họ tên người dùng
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
+
   updateFullName = async (req, res) => {
     try {
-      console.log("Update fullname request received");
       
-      // Validate dữ liệu đầu vào bằng Joi
+      // Validate input data using Joi
       const { error, value } = fullnameValidation.fullnameUpdateValidation.validate(req.body);
       
       if (error) {
@@ -34,29 +29,29 @@ class FullnameController {
         );
       }
       
-      // Lấy ID người dùng từ token
+      // Get user ID from token
       const userId = req.user.id;
       
       console.log("User ID:", userId);
       console.log("New fullname:", value.fullName);
 
-      // Kiểm tra ID
+      // Check user ID
       if (!userId) {
         return res.status(400).json(
           FullnameDto.error(
             errorCode.VALIDATION_FAILED,
-            errorMessage.ID_NOT_FOUND
+            "Cannot get user ID"
           )
         );
       }
 
-      // Format data bằng DTO
+      // Format data using DTO
       const fullnameData = FullnameDto.toUpdateData(value);
 
-      // Gọi service để cập nhật họ tên
+      // Call service to update fullname
       const result = await this.fullnameService.updateFullName(userId, fullnameData.fullName);
 
-      // Kiểm tra kết quả và trả về response phù hợp
+      // Check result and return appropriate response
       if (!result.success) {
         let statusCode = 500;
         
@@ -75,7 +70,7 @@ class FullnameController {
         });
       }
 
-      // Trả về kết quả thành công
+      // Return success result
       return res.status(200).json({
         ...result,
       });
@@ -84,7 +79,7 @@ class FullnameController {
       return res.status(500).json(
         FullnameDto.error(
           errorCode.ERR_UPDATE_PROFILE_FAILED,
-          error.message || "Lỗi khi cập nhật họ tên"
+          error.message || "Error updating fullname"
         )
       );
     }
