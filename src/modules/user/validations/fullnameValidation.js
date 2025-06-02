@@ -4,7 +4,7 @@ const Joi = require('joi');
 
 // Validation schema for fullname update
 const fullnameUpdateValidation = Joi.object({
-  fullName: Joi.string().min(3).max(50).required().messages({
+  fullName: Joi.string().min(3).max(30).required().messages({
     'string.empty': 'Fullname cannot be empty',
     'string.min': 'Fullname must be at least {#limit} characters long',
     'string.max': 'Fullname cannot exceed {#limit} characters',
