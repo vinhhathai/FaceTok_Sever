@@ -76,6 +76,7 @@ const MESSAGE_MESSAGES = {
     SEND_MESSAGE_FAILED: 'Message sending failed',
     GET_MESSAGES_FAILED: 'Failed to retrieve messages',
     GET_CONVERSATIONS_FAILED: 'Failed to retrieve conversations',
+    CREATE_ROOM_FAILED: 'Không thể tạo phòng chat',
 };
 
 const SERVER_MESSAGES = {

@@ -1,9 +1,9 @@
 "use strict";
 //----------------------------------------------------------------
 const MessageController = require('./MessageController');
-const ConversationController = require('./ConversationController');
+const RoomController = require('./RoomController');
 
 module.exports = {
     MessageController,
-    ConversationController
+    RoomController
 }; 
