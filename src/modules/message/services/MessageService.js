@@ -476,6 +476,117 @@ class MessageService {
       };
     }
   }
+
+  /**
+   * Get a room by ID and its messages
+   * @param {String} roomId - Room ID 
+   * @param {String} userId - User ID requesting the room
+   * @returns {Object} Room data and messages
+   */
+  async getRoomById(roomId, userId) {
+    try {
+      // First get the room
+      const roomResult = await this.messageRepository.getRoomById(roomId);
+
+      // If room doesn't exist or there was an error
+      if (!roomResult.success) {
+        return {
+          success: false,
+          statusCode: roomResult.error === 'Invalid room ID format' ? 400 : 500,
+          error: {
+            code: roomResult.error === 'Invalid room ID format' 
+              ? VALIDATION_ERRORS.INVALID_INPUT 
+              : SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: roomResult.error === 'Invalid room ID format'
+              ? 'Invalid room ID format'
+              : SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: roomResult.error
+          }
+        };
+      }
+
+      // If room not found
+      if (!roomResult.data) {
+        return {
+          success: false,
+          statusCode: 404,
+          error: {
+            code: DATA_ERRORS.NOT_FOUND,
+            message: 'Room not found',
+            details: 'No room found with the given ID'
+          }
+        };
+      }
+
+      // Check if user is a member of this room
+      const room = roomResult.data;
+      const isMember = room.members.some(
+        member => member._id.toString() === userId
+      );
+
+      // If user is not a member of this room
+      if (!isMember) {
+        return {
+          success: false,
+          statusCode: 403,
+          error: {
+            code: DATA_ERRORS.FORBIDDEN,
+            message: 'Access denied',
+            details: 'You are not a member of this room'
+          }
+        };
+      }
+
+      // Format room for response
+      const formattedRoom = RoomDto.toResponseRoom(room, userId);
+
+      // Get messages for the room
+      const messagesResult = await this.messageRepository.getMessages(roomId);
+
+      // If there was an error getting messages
+      if (!messagesResult.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: messagesResult.error
+          }
+        };
+      }
+
+      // Mark messages as read
+      await this.messageRepository.markMessagesAsRead(roomId, userId);
+
+      // Format messages for response
+      const formattedMessages = MessageDto.toResponseList(
+        messagesResult.data.messages
+      );
+
+      // Return successful response
+      return {
+        success: true,
+        statusCode: 200,
+        data: {
+          room: formattedRoom,
+          messages: formattedMessages
+        }
+      };
+
+    } catch (error) {
+      console.error('Error in getRoomById service:', error);
+      return {
+        success: false,
+        statusCode: 500,
+        error: {
+          code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+          message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+          details: error.message
+        }
+      };
+    }
+  }
 }
 
 // Export instance instead of class

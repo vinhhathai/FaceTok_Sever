@@ -17,7 +17,16 @@ const getRoomDetailsValidation = Joi.object({
  
 });
 
+const getRoomByIdValidation = Joi.object({
+  roomId: Joi.string().required().regex(/^[0-9a-fA-F]{24}$/).messages({
+    'any.required': 'Room ID is required',
+    'string.empty': 'Room ID cannot be empty',
+    'string.pattern.base': 'Room ID is not in the correct format'
+  })
+});
+
 module.exports = {
   getRoomsValidation,
-  getRoomDetailsValidation
+  getRoomDetailsValidation,
+  getRoomByIdValidation
 }; 

@@ -9,11 +9,10 @@ const RoomSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId, 
       ref: "users" 
     }],
-    messages: {
+    messages: [{
       type: mongoose.Schema.Types.ObjectId,
-      ref: "messages",
-      default: null
-    },
+      ref: "messages"
+    }],
     unreadCount: {
       type: Map,
       of: Number,

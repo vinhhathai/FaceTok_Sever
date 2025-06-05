@@ -152,6 +152,13 @@ class MessageRepository {
      */
     async getMessages(roomId, ) {
         try {
+            // Check if roomId is a valid ObjectId
+            if (!mongoose.Types.ObjectId.isValid(roomId)) {
+                return {
+                    success: false,
+                    error: 'Invalid room ID format'
+                };
+            }
             
             const messages = await this.messageModel
                 .find({ roomId: new ObjectId(roomId) })
@@ -212,6 +219,14 @@ class MessageRepository {
      */
     async getRoomById(roomId) {
         try {
+            // Check if roomId is a valid ObjectId
+            if (!mongoose.Types.ObjectId.isValid(roomId)) {
+                return {
+                    success: false,
+                    error: 'Invalid room ID format'
+                };
+            }
+            
             const room = await this.roomModel
                 .findById(new ObjectId(roomId))
                 .populate('members', 'fullName avatar')
@@ -237,10 +252,16 @@ class MessageRepository {
     //  */
     async checkUserExists(userId) {
         try {
-
+            // Check if userId is a valid ObjectId
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return {
+                    success: false,
+                    error: 'Invalid user ID format'
+                };
+            }
             
             // Check if user exists
-            const user = await  this.userModel.exists({ _id: userId});
+            const user = await this.userModel.exists({ _id: new ObjectId(userId) });
             
             return {
                 success: true,
@@ -308,9 +329,6 @@ class MessageRepository {
      * @returns {Object} Query result with the sent message
      */
     async sendMessage(senderId, receiverId, content) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        
         try {
             // Get or create the room
             let roomResult = await this.getRoomByMembers(senderId, receiverId);
@@ -341,8 +359,8 @@ class MessageRepository {
                 roomId: room._id
             });
             
-            // Save message
-            await message.save({ session });
+            // Save message không sử dụng session
+            await message.save();
             
             // Update room with message and update unread count
             const unreadCount = room.unreadCount || new Map();
@@ -352,15 +370,13 @@ class MessageRepository {
             await this.roomModel.updateOne(
                 { _id: room._id },
                 { 
-                    messages: message._id,
-                    unreadCount: unreadCount,
-                    updatedAt: new Date()
-                },
-                { session }
+                    $push: { messages: message._id },
+                    $set: { 
+                        unreadCount: unreadCount,
+                        updatedAt: new Date()
+                    }
+                }
             );
-            
-            await session.commitTransaction();
-            session.endSession();
             
             // Return message with populated sender
             const populatedMessage = await this.messageModel.findById(message._id)
@@ -382,9 +398,6 @@ class MessageRepository {
                 }
             };
         } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
-            
             console.error('Error sending message:', error);
             return {
                 success: false,

@@ -2,7 +2,7 @@
 //----------------------------------------------------------------
 const MessageService = require('../services/MessageService');
 const { RoomDto } = require('../dtos');
-const { getRoomsValidation, getRoomDetailsValidation } = require('../validations');
+const { getRoomsValidation, getRoomDetailsValidation, getRoomByIdValidation } = require('../validations');
 const { VALIDATION_ERRORS } = require('../../../shared/common/error');
 
 class RoomController {
@@ -123,6 +123,52 @@ class RoomController {
             );
         } catch (error) {
             console.error('Error in getUnreadCount controller:', error);
+            return res.status(500).json(
+                RoomDto.error(
+                    'INTERNAL_SERVER_ERROR',
+                    'Internal server error',
+                    error.message
+                )
+            );
+        }
+    }
+
+    /**
+     * Get room and messages by room ID
+     */
+    getRoomById = async (req, res) => {
+        try {
+            const roomId = req.params.roomId;
+            const userId = req.user.id;
+            
+            // Validate parameters
+            const { error } = getRoomByIdValidation.validate({
+                roomId
+            });
+            
+            if (error) {
+                return res.status(400).json(
+                    RoomDto.error(
+                        VALIDATION_ERRORS.INVALID_INPUT,
+                        error.details[0].message,
+                        error.details
+                    )
+                );
+            }
+            
+            const result = await this.messageService.getRoomById(roomId, userId);
+            
+            return res.status(result.statusCode).json(
+                result.success 
+                    ? RoomDto.success(result.data) 
+                    : RoomDto.error(
+                        result.error.code, 
+                        result.error.message, 
+                        result.error.details
+                    )
+            );
+        } catch (error) {
+            console.error('Error in getRoomById controller:', error);
             return res.status(500).json(
                 RoomDto.error(
                     'INTERNAL_SERVER_ERROR',
