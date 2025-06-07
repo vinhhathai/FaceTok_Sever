@@ -117,7 +117,7 @@ class MessageSocket {
           socket.emit("message_error", { message: result.message });
           return;
         }
-
+//ègdggg
         const { message, room } = result.data;
 
         // Tạo đối tượng tin nhắn để gửi
