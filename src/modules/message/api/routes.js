@@ -8,15 +8,19 @@ const {
 } = require('../controllers');
 const checkLogin = require('../../../shared/middlewares/checkLogin');
 
-// Create direct chat room between two users
-router.post('/room/private/create', checkLogin, MessageController.createRoom);
+// Yêu cầu đăng nhập cho tất cả các API
+router.use(checkLogin);
 
-// Room routes
-router.get('/rooms', checkLogin, RoomController.getRooms);
-router.get('/room/id/:roomId', checkLogin, RoomController.getRoomById);
-router.get('/room/:userId', checkLogin, RoomController.getRoomDetails);
+// Rooms API
+router.get('/rooms', RoomController.getRooms);
+router.get('/room/:roomId', RoomController.getRoomById);
+router.get('/room/user/:userId', RoomController.getRoomDetails);
+router.get('/unread', RoomController.getUnreadCount);
 
-// Message routes
-router.post('/messages', checkLogin, MessageController.sendMessage);
+// Messages API
+router.post('/send', MessageController.sendMessage);
+router.post('/room', MessageController.createRoom);
+router.put('/room/:roomId/read', MessageController.markAsRead);
+router.get('/room/:roomId/messages', MessageController.getMessages);
 
 module.exports = router; 

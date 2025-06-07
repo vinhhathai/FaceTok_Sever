@@ -32,23 +32,29 @@ class MessageController {
             
             const { receiverId, content } = value;
             
-            const result = await this.messageService.sendMessage(
-                senderId,
-                receiverId,
-                content
-            );
-            
-            return res.status(result.statusCode).json(
-                result.success 
-                    ? MessageDto.success(result.data) 
-                    : MessageDto.error(
-                        result.error.code,
-                        result.error.message,
-                        result.error.details
+            try {
+                const result = await this.messageService.sendMessage(
+                    senderId,
+                    receiverId,
+                    content
+                );
+                
+                return res.status(200).json(
+                    MessageDto.success({
+                        message: result.message,
+                        room: result.room
+                    })
+                );
+            } catch (error) {
+                return res.status(500).json(
+                    MessageDto.error(
+                        MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
+                        'Failed to send message',
+                        error.message
                     )
-            );
+                );
+            }
         } catch (error) {
-            console.error('Error in sendMessage controller:', error);
             return res.status(500).json(
                 MessageDto.error(
                     MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
@@ -63,20 +69,32 @@ class MessageController {
      * Mark messages as read in a chat room
      */
     markAsRead = async (req, res) => {
-        const userId = req.user.id;
-        const { roomId } = req.params;
-        
-        const result = await this.messageService.markAsRead(roomId, userId);
-        
-        return res.status(result.statusCode).json(
-            result.success 
-                ? MessageDto.success(result.data) 
-                : MessageDto.error(
-                    result.error.code,
-                    result.error.message,
-                    result.error.details
+        try {
+            const userId = req.user.id;
+            const { roomId } = req.params;
+            
+            if (!roomId) {
+                return res.status(400).json(
+                    MessageDto.error(
+                        VALIDATION_ERRORS.INVALID_INPUT,
+                        'Room ID is required'
+                    )
+                );
+            }
+            
+            // Implement later
+            return res.status(200).json(
+                MessageDto.success({ success: true })
+            );
+        } catch (error) {
+            return res.status(500).json(
+                MessageDto.error(
+                    MESSAGE_ERRORS.MARK_AS_READ_FAILED,
+                    'Failed to mark messages as read',
+                    error.message
                 )
-        );
+            );
+        }
     }
 
     /**
@@ -99,26 +117,39 @@ class MessageController {
                 );
             }
             
-            // Call service to create direct chat room
-            const result = await this.messageService.createDirectRoom(
-                currentUserId,
-                value.targetUserId
-            );
-            
-            return res.status(result.statusCode).json(
-                result.success 
-                    ? MessageDto.success(result.data) 
-                    : MessageDto.error(
-                        result.error.code,
-                        result.error.message,
-                        result.error.details
+            try {
+                // Tìm hoặc tạo phòng chat
+                let room = await this.messageService.getRoomByUsers(
+                    currentUserId,
+                    value.targetUserId
+                );
+                
+                // Nếu phòng chưa tồn tại, tạo phòng mới
+                if (!room) {
+                    room = await this.messageService.createRoom(
+                        currentUserId,
+                        value.targetUserId
+                    );
+                }
+                
+                return res.status(200).json(
+                    MessageDto.success({
+                        room: room
+                    })
+                );
+            } catch (error) {
+                return res.status(500).json(
+                    MessageDto.error(
+                        MESSAGE_ERRORS.CREATE_ROOM_FAILED,
+                        'Failed to create chat room',
+                        error.message
                     )
-            );
+                );
+            }
         } catch (error) {
-            console.error('Error in createRoom controller:', error);
             return res.status(500).json(
                 MessageDto.error(
-                    MESSAGE_ERRORS.GET_CONVERSATIONS_FAILED,
+                    MESSAGE_ERRORS.CREATE_ROOM_FAILED,
                     'Unable to create chat room',
                     error.message
                 )
@@ -126,7 +157,55 @@ class MessageController {
         }
     }
 
-    // Other methods will be added in the future
+    /**
+     * Get messages from a room
+     */
+    getMessages = async (req, res) => {
+        try {
+            const { roomId } = req.params;
+            const { limit = 20, skip = 0 } = req.query;
+            
+            if (!roomId) {
+                return res.status(400).json(
+                    MessageDto.error(
+                        VALIDATION_ERRORS.INVALID_INPUT,
+                        'Room ID is required'
+                    )
+                );
+            }
+            
+            try {
+                const messages = await this.messageService.getMessages(
+                    roomId,
+                    parseInt(limit),
+                    parseInt(skip)
+                );
+                
+                return res.status(200).json(
+                    MessageDto.success({
+                        messages: messages
+                    })
+                );
+            } catch (error) {
+                return res.status(500).json(
+                    MessageDto.error(
+                        MESSAGE_ERRORS.GET_MESSAGES_FAILED,
+                        'Failed to get messages',
+                        error.message
+                    )
+                );
+            }
+        } catch (error) {
+            console.error('Error getting messages:', error);
+            return res.status(500).json(
+                MessageDto.error(
+                    MESSAGE_ERRORS.GET_MESSAGES_FAILED,
+                    'Unable to get messages',
+                    error.message
+                )
+            );
+        }
+    }
 }
 
 module.exports = new MessageController(); 
