@@ -4,19 +4,19 @@ const express = require('express');
 const router = express.Router();
 const { 
     MessageController,
-    ConversationController
+    RoomController
 } = require('../controllers');
-const  checkLogin  = require('../../../shared/middlewares/checkLogin');
+const checkLogin = require('../../../shared/middlewares/checkLogin');
 
+// Create direct chat room between two users
+router.post('/room/private/create', checkLogin, MessageController.createRoom);
 
-// Conversation Routes
-router.get('/conversations', checkLogin, ConversationController.getRecentConversations);
-router.get('/conversation/:userId', checkLogin, ConversationController.getConversation);
-router.get('/unread/count', checkLogin, ConversationController.getUnreadCount);
+// Room routes
+router.get('/rooms', checkLogin, RoomController.getRooms);
+router.get('/room/id/:roomId', checkLogin, RoomController.getRoomById);
+router.get('/room/:userId', checkLogin, RoomController.getRoomDetails);
 
-// Message Routes
-router.get('/messages/:conversationId', checkLogin, MessageController.getMessages);
+// Message routes
 router.post('/messages', checkLogin, MessageController.sendMessage);
-router.put('/read/:messageId', checkLogin, MessageController.markAsRead);
 
 module.exports = router; 

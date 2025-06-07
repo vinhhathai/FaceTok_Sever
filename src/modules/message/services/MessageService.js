@@ -1,261 +1,593 @@
 "use strict";
 //----------------------------------------------------------------
-const MessageRepository = require('../repositories/MessageRepository');
-const SocketService = require('../../../shared/services/SocketService');
-const { errorCode, errorMessage } = require('../../../shared/common/error');
+const MessageRepository = require("../repositories/MessageRepository");
+const {
+  errorCode,
+  errorMessage,
+  VALIDATION_ERRORS,
+  DATA_ERRORS,
+  MESSAGE_ERRORS,
+  SERVER_ERRORS,
+  VALIDATION_MESSAGES,
+  DATA_MESSAGES,
+  MESSAGE_MESSAGES,
+  SERVER_MESSAGES,
+} = require("../../../shared/common/error");
+const { RoomDto, MessageDto } = require("../dtos");
 
 class MessageService {
-    constructor() {
-        this.messageRepository = new MessageRepository();
-    }
+  constructor() {
+    this.messageRepository = new MessageRepository();
+  }
 
-    async getConversationMessages(userId1, userId2, page = 1, limit = 20) {
-        try {
-            const skip = (page - 1) * limit;
-            const messages = await this.messageRepository.findByConversation(
-                userId1, 
-                userId2, 
-                { skip, limit }
-            );
-            
-            // Sau khi lấy tin nhắn, đánh dấu tất cả tin nhắn từ userId2 gửi đến userId1 là đã đọc
-            await this.messageRepository.markAllAsRead(userId2, userId1);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    messages,
-                    page,
-                    limit
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+  /**
+   * Get recent chat rooms for a user
+   * @param {String} userId - User ID
+   * @param {Number} limit - Maximum number of rooms to return
+   * @returns {Object} Query result with list of rooms
+   */
+  async getRooms(userId, limit = 10) {
+    try {
+      const result = await this.messageRepository.getRooms(userId, limit);
 
-    async sendMessage(senderId, receiverId, text) {
-        try {
-            if (!text || text.trim() === '') {
-                return {
-                    success: false,
-                    statusCode: 400,
-                    error: {
-                        code: 'INVALID_INPUT',
-                        message: 'Message text is required'
-                    }
-                };
-            }
-            
-            const newMessage = await this.messageRepository.createMessage({
-                senderId,
-                receiverId,
-                text
-            });
-            
-            // Gửi tin nhắn thông qua Socket.IO
-            const receiverSocketId = SocketService.getUser(receiverId);
-            if (receiverSocketId) {
-                SocketService.io.to(receiverSocketId).emit('receiveMessage', {
-                    senderId,
-                    message: newMessage
-                });
-            }
-            
-            return {
-                success: true,
-                statusCode: 201,
-                data: newMessage
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.SEND_MESSAGE_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+      if (!result.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: result.error,
+          },
+        };
+      }
 
-    async markMessageAsRead(messageId, userId) {
-        try {
-            const message = await this.messageRepository.findById(messageId);
-            
-            if (!message) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: 'MESSAGE_NOT_FOUND',
-                        message: 'Message not found'
-                    }
-                };
-            }
-            
-            // Chỉ người nhận mới có thể đánh dấu tin nhắn là đã đọc
-            if (message.receiverId.toString() !== userId.toString()) {
-                return {
-                    success: false,
-                    statusCode: 403,
-                    error: {
-                        code: errorCode.NOT_PERMISSIONS,
-                        message: errorMessage.NOT_PERMISSIONS
-                    }
-                };
-            }
-            
-            if (message.read) {
-                return {
-                    success: true,
-                    statusCode: 200,
-                    data: message
-                };
-            }
-            
-            const updatedMessage = await this.messageRepository.markAsRead(messageId);
-            
-            // Thông báo qua Socket.IO rằng tin nhắn đã được đọc
-            const senderSocketId = SocketService.getUser(message.senderId.toString());
-            if (senderSocketId) {
-                SocketService.io.to(senderSocketId).emit('messageRead', {
-                    messageId: messageId
-                });
-            }
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: updatedMessage
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+      // Transform rooms using DTO
+      const formattedRooms = RoomDto.toResponseList(result.data, userId);
 
-    async getRecentConversations(userId, limit = 10) {
-        try {
-            const conversations = await this.messageRepository.getLatestMessages(userId, limit);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: conversations
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
+      return {
+        success: true,
+        statusCode: 200,
+        data: formattedRooms,
+      };
+    } catch (error) {
+      console.error("Error in getRooms service:", error);
+      return {
+        success: false,
+        statusCode: 500,
+        error: {
+          code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+          message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+          details: error.message,
+        },
+      };
     }
+  }
 
-    async getUnreadMessagesCount(userId) {
-        try {
-            const count = await this.messageRepository.getUnreadMessagesCount(userId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: { count }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+  /**
+   * Get chat room details and messages between two users
+   * @param {String} currentUserId - Current user ID
+   * @param {String} otherUserId - Other user ID to chat with
+   * @param {Number} page - Page number
+   * @param {Number} limit - Number of messages per page
+   * @returns {Object} Query result with room details and messages
+   */
+  async getRoomDetails(currentUserId, otherUserId) {
+    try {
+      // Get chat room
+      let roomResult = await this.messageRepository.getRoomByMembers(
+        currentUserId,
+        otherUserId
+      );
 
-    // Phương thức cho kiến trúc cũ - lấy tin nhắn theo conversationId
-    async getMessagesByConversationId(conversationId, userId, page = 1, limit = 20) {
-        try {
-            // Kiểm tra xem conversation có tồn tại không
-            const conversation = await this.messageRepository.findConversationById(conversationId);
-            
-            if (!conversation) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: 'CONVERSATION_NOT_FOUND',
-                        message: 'Conversation not found'
-                    }
-                };
-            }
-            
-            // Kiểm tra người dùng có quyền xem tin nhắn không
-            if (conversation.participants.map(p => p.toString()).indexOf(userId.toString()) === -1) {
-                return {
-                    success: false,
-                    statusCode: 403,
-                    error: {
-                        code: errorCode.NOT_PERMISSIONS,
-                        message: errorMessage.NOT_PERMISSIONS
-                    }
-                };
-            }
-            
-            const skip = (page - 1) * limit;
-            const messages = await this.messageRepository.findMessagesByConversationId(
-                conversationId,
-                { skip, limit }
-            );
-            
-            // Đánh dấu tin nhắn là đã đọc
-            const otherParticipantId = conversation.participants.find(
-                p => p.toString() !== userId.toString()
-            );
-            
-            if (otherParticipantId) {
-                await this.messageRepository.markAllAsRead(otherParticipantId, userId);
-            }
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    messages,
-                    page,
-                    limit
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
+      if (!roomResult.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: roomResult.error,
+          },
+        };
+      }
+
+      const room = roomResult.data;
+
+      // If room doesn't exist yet, return empty data
+      if (!room) {
+        return {
+          success: true,
+          statusCode: 200,
+          data: {
+            room: null,
+          },
+        };
+      }
+
+      // Transform room using DTO
+      const formattedRoom = RoomDto.toResponseRoom(room, currentUserId);
+
+      // Get messages for the room
+      const messagesResult = await this.messageRepository.getMessages(room._id);
+
+      if (!messagesResult.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: messagesResult.error,
+          },
+        };
+      }
+
+      // Mark messages as read for current user
+      await this.messageRepository.markMessagesAsRead(room._id, currentUserId);
+
+      // Format messages using DTO
+      const formattedMessages = MessageDto.toResponseList(
+        messagesResult.data.messages
+      );
+
+      return {
+        success: true,
+        statusCode: 200,
+        data: {
+          room: formattedRoom,
+          messages: formattedMessages,
+        },
+      };
+    } catch (error) {
+      console.error("Error in getRoomDetails service:", error);
+      return {
+        success: false,
+        statusCode: 500,
+        error: {
+          code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+          message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+          details: error.message,
+        },
+      };
     }
+  }
+
+  // /**
+  //  * Get unread message count for a user
+  //  * @param {String} userId - User ID
+  //  * @returns {Object} Query result with unread message count
+  //  */
+  // async getUnreadCount(userId) {
+  //     try {
+  //         const result = await this.messageRepository.countUnreadMessages(userId);
+
+  //         if (!result.success) {
+  //             return {
+  //                 success: false,
+  //                 statusCode: 500,
+  //                 error: {
+  //                     code: errorCode.INTERNAL_SERVER_ERROR,
+  //                     message: errorMessage.INTERNAL_SERVER_ERROR,
+  //                     details: result.error
+  //                 }
+  //             };
+  //         }
+
+  //         return {
+  //             success: true,
+  //             statusCode: 200,
+  //             data: result.data
+  //         };
+  //     } catch (error) {
+  //         console.error('Error in getUnreadCount service:', error);
+  //         return {
+  //             success: false,
+  //             statusCode: 500,
+  //             error: {
+  //                 code: errorCode.INTERNAL_SERVER_ERROR,
+  //                 message: errorMessage.INTERNAL_SERVER_ERROR,
+  //                 details: error.message
+  //             }
+  //         };
+  //     }
+  // }
+
+  /**
+   * Send a message from one user to another
+   * @param {String} senderId - Sender user ID
+   * @param {String} receiverId - Receiver user ID
+   * @param {String} content - Message content
+   * @returns {Object} Result with sent message data
+   */
+  async sendMessage(senderId, receiverId, content) {
+    try {
+      // Validate input
+      if (!senderId || !receiverId || !content || content.trim() === "") {
+        return {
+          success: false,
+          statusCode: 400,
+          error: {
+            code: VALIDATION_ERRORS.INVALID_INPUT,
+            message: VALIDATION_MESSAGES.INVALID_INPUT,
+            details: "Sender ID, receiver ID and content are required",
+          },
+        };
+      }
+
+      // Check if sender is trying to send message to self
+      if (senderId === receiverId) {
+        return {
+          success: false,
+          statusCode: 400,
+          error: {
+            code: VALIDATION_ERRORS.INVALID_INPUT,
+            message: VALIDATION_MESSAGES.INVALID_INPUT,
+            details: "Cannot send message to yourself",
+          },
+        };
+      }
+
+      // Check if receiver exists
+      const receiverExists = await this.messageRepository.checkUserExists(receiverId);
+      if (!receiverExists.success || !receiverExists.data) {
+        return {
+          success: false,
+          statusCode: 404,
+          error: {
+            code: DATA_ERRORS.USER_NOT_FOUND,
+            message: DATA_MESSAGES.USER_NOT_FOUND,
+            details: "Receiver not found",
+          },
+        };
+      }
+
+      // Send the message
+      const result = await this.messageRepository.sendMessage(
+        senderId,
+        receiverId,
+        content
+      );
+
+      if (!result.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: result.error,
+          },
+        };
+      }
+
+      // Format the response with DTOs
+      const formattedMessage = MessageDto.toResponse(result.data.message);
+      const formattedRoom = RoomDto.toResponseRoom(result.data.room, senderId);
+
+      return {
+        success: true,
+        statusCode: 201,
+        data: {
+          message: formattedMessage,
+          room: formattedRoom,
+        },
+      };
+    } catch (error) {
+      console.error("Error in sendMessage service:", error);
+      return {
+        success: false,
+        statusCode: 500,
+        error: {
+          code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+          message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+          details: error.message,
+        },
+      };
+    }
+  }
+
+  /**
+   * Mark messages as read in a room
+   * @param {String} roomId - Room ID
+   * @param {String} userId - User ID
+   * @returns {Object} Result with updated unread count
+   */
+  async markAsRead(roomId, userId) {
+    try {
+      // Check if room exists
+      const room = await this.messageRepository.getRoomById(roomId);
+      
+      if (!room.success || !room.data) {
+        return {
+          success: false,
+          statusCode: 404,
+          error: {
+            code: DATA_ERRORS.RESOURCE_NOT_FOUND,
+            message: DATA_MESSAGES.RESOURCE_NOT_FOUND,
+            details: 'The requested chat room does not exist'
+          }
+        };
+      }
+      
+      // Check if user is a member of the room
+      const isMember = room.data.members.some(
+        member => member._id.toString() === userId
+      );
+      
+      if (!isMember) {
+        return {
+          success: false,
+          statusCode: 403,
+          error: {
+            code: VALIDATION_ERRORS.UNAUTHORIZED,
+            message: VALIDATION_MESSAGES.UNAUTHORIZED,
+            details: 'You are not a member of this chat room'
+          }
+        };
+      }
+      
+      // Mark messages as read
+      const result = await this.messageRepository.markMessagesAsRead(roomId, userId);
+      
+      if (!result.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: result.error
+          }
+        };
+      }
+      
+      return {
+        success: true,
+        statusCode: 200,
+        data: {
+          roomId,
+          unreadCount: 0
+        }
+      };
+    } catch (error) {
+      console.error('Error in markAsRead service:', error);
+      return {
+        success: false,
+        statusCode: 500,
+        error: {
+          code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+          message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+          details: error.message
+        }
+      };
+    }
+  }
+
+  /**
+   * Create a direct chat room between two users
+   * @param {String} currentUserId - Current user ID
+   * @param {String} targetUserId - Target user ID to chat with
+   * @returns {Object} Result with the created chat room
+   */
+  async createDirectRoom(currentUserId, targetUserId) {
+    try {
+      // Validate input data
+      if (!currentUserId || !targetUserId) {
+        return {
+          success: false,
+          statusCode: 400,
+          error: {
+            code: VALIDATION_ERRORS.MISSING_FIELDS,
+            message: VALIDATION_MESSAGES.MISSING_FIELDS,
+            details: "Current user ID and target user ID are required",
+          },
+        };
+      }
+
+      // Check if trying to create a chat with yourself
+      if (currentUserId === targetUserId) {
+        return {
+          success: false,
+          statusCode: 400,
+          error: {
+            code: VALIDATION_ERRORS.INVALID_INPUT,
+            message: VALIDATION_MESSAGES.INVALID_INPUT,
+            details: "Cannot create a chat room with yourself",
+          },
+        };
+      }
+
+      // Check if target user exists
+      const userExists = await this.messageRepository.checkUserExists(
+        targetUserId
+      );
+      if (!userExists.success || !userExists.data) {
+        return {
+          success: false,
+          statusCode: 404,
+          error: {
+            code: DATA_ERRORS.USER_NOT_FOUND,
+            message: DATA_MESSAGES.USER_NOT_FOUND,
+            details: "The user you want to chat with does not exist",
+          },
+        };
+      }
+
+      // Check if a chat room already exists between these two users
+      const existingRoom = await this.messageRepository.getRoomByMembers(
+        currentUserId,
+        targetUserId
+      );
+
+      if (existingRoom.success && existingRoom.data) {
+        // Room already exists, return it
+        const room = existingRoom.data;
+        const formattedRoom = RoomDto.toResponseRoom(room, currentUserId);
+
+        return {
+          success: true,
+          statusCode: 200,
+          data: formattedRoom,
+        };
+      }
+
+      // Create a new direct chat room
+      const members = [currentUserId, targetUserId];
+      const createResult = await this.messageRepository.createRoom(
+        members,
+        false, // isGroup = false
+        null, // groupName = null
+        null // groupAvatar = null
+      );
+
+      if (!createResult.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: MESSAGE_ERRORS.CREATE_ROOM_FAILED,
+            message: MESSAGE_MESSAGES.CREATE_ROOM_FAILED,
+            details: createResult.error,
+          },
+        };
+      }
+
+      const formattedRoom = RoomDto.toResponse(
+        createResult.data,
+        currentUserId
+      );
+
+      return {
+        success: true,
+        statusCode: 201,
+        data: formattedRoom,
+      };
+    } catch (error) {
+      console.error("Error in createDirectRoom service:", error);
+      return {
+        success: false,
+        statusCode: 500,
+        error: {
+          code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+          message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+          details: error.message,
+        },
+      };
+    }
+  }
+
+  /**
+   * Get a room by ID and its messages
+   * @param {String} roomId - Room ID 
+   * @param {String} userId - User ID requesting the room
+   * @returns {Object} Room data and messages
+   */
+  async getRoomById(roomId, userId) {
+    try {
+      // First get the room
+      const roomResult = await this.messageRepository.getRoomById(roomId);
+
+      // If room doesn't exist or there was an error
+      if (!roomResult.success) {
+        return {
+          success: false,
+          statusCode: roomResult.error === 'Invalid room ID format' ? 400 : 500,
+          error: {
+            code: roomResult.error === 'Invalid room ID format' 
+              ? VALIDATION_ERRORS.INVALID_INPUT 
+              : SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: roomResult.error === 'Invalid room ID format'
+              ? 'Invalid room ID format'
+              : SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: roomResult.error
+          }
+        };
+      }
+
+      // If room not found
+      if (!roomResult.data) {
+        return {
+          success: false,
+          statusCode: 404,
+          error: {
+            code: DATA_ERRORS.NOT_FOUND,
+            message: 'Room not found',
+            details: 'No room found with the given ID'
+          }
+        };
+      }
+
+      // Check if user is a member of this room
+      const room = roomResult.data;
+      const isMember = room.members.some(
+        member => member._id.toString() === userId
+      );
+
+      // If user is not a member of this room
+      if (!isMember) {
+        return {
+          success: false,
+          statusCode: 403,
+          error: {
+            code: DATA_ERRORS.FORBIDDEN,
+            message: 'Access denied',
+            details: 'You are not a member of this room'
+          }
+        };
+      }
+
+      // Format room for response
+      const formattedRoom = RoomDto.toResponseRoom(room, userId);
+
+      // Get messages for the room
+      const messagesResult = await this.messageRepository.getMessages(roomId);
+
+      // If there was an error getting messages
+      if (!messagesResult.success) {
+        return {
+          success: false,
+          statusCode: 500,
+          error: {
+            code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+            message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+            details: messagesResult.error
+          }
+        };
+      }
+
+      // Mark messages as read
+      await this.messageRepository.markMessagesAsRead(roomId, userId);
+
+      // Format messages for response
+      const formattedMessages = MessageDto.toResponseList(
+        messagesResult.data.messages
+      );
+
+      // Return successful response
+      return {
+        success: true,
+        statusCode: 200,
+        data: {
+          room: formattedRoom,
+          messages: formattedMessages
+        }
+      };
+
+    } catch (error) {
+      console.error('Error in getRoomById service:', error);
+      return {
+        success: false,
+        statusCode: 500,
+        error: {
+          code: SERVER_ERRORS.INTERNAL_SERVER_ERROR,
+          message: SERVER_MESSAGES.INTERNAL_SERVER_ERROR,
+          details: error.message
+        }
+      };
+    }
+  }
 }
 
-// Export instance thay vì class
-module.exports = new MessageService(); 
+// Export instance instead of class
+module.exports = new MessageService();

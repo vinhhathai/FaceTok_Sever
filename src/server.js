@@ -2,25 +2,36 @@
 //----------------------------------------------------------------
 const app = require('./app');
 const http = require('http');
-const SocketService = require('./shared/services/SocketService');
+const socketIo = require('socket.io');
+const MessageSocket = require('./modules/message/socket/MessageSocket');
 require('dotenv').config();
 
-// Lấy port từ biến môi trường hoặc sử dụng port 3000 mặc định
+// Get port from environment or use default port 3000
 const port = process.env.PORT || 3000;
 app.set('port', port);
 
-// Tạo HTTP server
+// Create HTTP server
 const server = http.createServer(app);
 
-// Khởi tạo Socket.IO
-SocketService.initialize(server);
+// Initialize Socket.IO
+const io = socketIo(server, {
+    cors: {
+        origin: process.env.SOCKET_CLIENT_URL || "http://localhost:3001",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
 
-// Khởi chạy server
+// Initialize message socket handler
+const messageSocket = new MessageSocket(io);
+messageSocket.init();
+
+// Start the server
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-// Xử lý sự kiện lỗi
+// Handle error events
 function onError(error) {
     if (error.syscall !== 'listen') {
         throw error;
@@ -30,7 +41,7 @@ function onError(error) {
         ? 'Pipe ' + port
         : 'Port ' + port;
 
-    // Hiển thị thông báo lỗi cụ thể
+    // Display specific error messages
     switch (error.code) {
         case 'EACCES':
             console.error(bind + ' requires elevated privileges');
@@ -45,7 +56,7 @@ function onError(error) {
     }
 }
 
-// Khi server đã sẵn sàng lắng nghe
+// When server is ready to listen
 function onListening() {
     const addr = server.address();
     const bind = typeof addr === 'string'

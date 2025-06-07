@@ -1,8 +1,15 @@
 'use strict';
 //----------------------------------------------------------------
 const messageRoutes = require('./api/routes');
+const MessageSocket = require('./socket/MessageSocket');
+const { RoomDto, MessageDto } = require('./dtos');
 
-// Export các routes API cho module Message
+// Export message module components
 module.exports = {
-    routes: messageRoutes
+    routes: messageRoutes,
+    MessageSocket,
+    dtos: {
+        RoomDto,
+        MessageDto
+    }
 }; 

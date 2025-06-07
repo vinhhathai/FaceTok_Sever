@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const MessageService = require('../services/MessageService');
+const { ConversationDto } = require('../dtos');
 
 class ConversationController {
     constructor() {
@@ -15,12 +16,12 @@ class ConversationController {
         
         return res.status(result.statusCode).json(
             result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: '/message/conversations',
-                    error: result.error 
-                }
+                ? ConversationDto.success(result.data) 
+                : ConversationDto.error(
+                    result.error.code, 
+                    result.error.message, 
+                    result.error.details
+                )
         );
     }
 
@@ -39,12 +40,12 @@ class ConversationController {
         
         return res.status(result.statusCode).json(
             result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: `/message/conversation/${otherUserId}`,
-                    error: result.error 
-                }
+                ? ConversationDto.success(result.data) 
+                : ConversationDto.error(
+                    result.error.code, 
+                    result.error.message, 
+                    result.error.details
+                )
         );
     }
     
@@ -55,12 +56,12 @@ class ConversationController {
         
         return res.status(result.statusCode).json(
             result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: '/message/unread/count',
-                    error: result.error 
-                }
+                ? ConversationDto.success(result.data) 
+                : ConversationDto.error(
+                    result.error.code, 
+                    result.error.message, 
+                    result.error.details
+                )
         );
     }
 }
