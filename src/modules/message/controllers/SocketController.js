@@ -37,34 +37,54 @@ class SocketController {
     }
 
     /**
-     * Gửi tin nhắn
+     * Tạo phòng chat giữa hai người dùng
      */
-    sendMessage = async (senderId, receiverId, content) => {
+    getOrCreateRoom = async (senderId, receiverId) => {
         try {
-            // Kiểm tra dữ liệu đầu vào
-            if (!receiverId || !content) {
+            if (!senderId || !receiverId) {
                 return {
                     success: false,
-                    message: 'Invalid message data'
+                    message: 'User IDs are required'
                 };
             }
 
-            // Gọi đến service để xử lý
-            const result = await this.messageService.sendMessage(
-                senderId,
-                receiverId,
-                content
-            );
+            const room = await this.messageService.getOrCreateRoom(senderId, receiverId);
+            return {
+                success: true,
+                data: room
+            };
+        } catch (error) {
+            console.error("Error in getOrCreateRoom controller:", error);
+            return {
+                success: false,
+                message: 'Failed to get or create room',
+                error: error.message
+            };
+        }
+    }
 
+    /**
+     * Tạo tin nhắn trong phòng đã có
+     */
+    createMessageInRoom = async (senderId, roomId, content) => {
+        try {
+            if (!roomId || !content) {
+                return {
+                    success: false,
+                    message: 'Room ID and content are required'
+                };
+            }
+
+            const result = await this.messageService.createMessageInRoom(senderId, roomId, content);
             return {
                 success: true,
                 data: result
             };
         } catch (error) {
-            console.error("Error in sendMessage controller:", error);
+            console.error("Error in createMessageInRoom controller:", error);
             return {
                 success: false,
-                message: 'Failed to send message',
+                message: 'Failed to create message',
                 error: error.message
             };
         }
@@ -117,6 +137,41 @@ class SocketController {
             return {
                 success: false,
                 message: 'Failed to get messages',
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Lấy thông tin phòng theo ID
+     */
+    getRoomById = async (roomId) => {
+        try {
+            if (!roomId) {
+                return {
+                    success: false,
+                    message: 'Room ID is required'
+                };
+            }
+
+            const room = await this.messageService.getRoomById(roomId);
+            
+            if (!room) {
+                return {
+                    success: false,
+                    message: 'Room not found'
+                };
+            }
+            
+            return {
+                success: true,
+                data: room
+            };
+        } catch (error) {
+            console.error("Error in getRoomById controller:", error);
+            return {
+                success: false,
+                message: 'Failed to get room',
                 error: error.message
             };
         }

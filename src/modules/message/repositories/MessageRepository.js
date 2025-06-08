@@ -45,7 +45,7 @@ class MessageRepository {
       .sort({ createdAt: -1 }) // Sắp xếp theo thời gian, mới nhất trước
       .skip(skip)
       .limit(limit)
-      .populate('senderId', 'username fullName avatar')
+      .populate('senderId', 'fullName profilePicture')
       .lean();
   }
 
@@ -83,7 +83,7 @@ class MessageRepository {
    */
   async findRoomById(roomId) {
     return await this.roomModel.findById(roomId)
-      .populate('members', 'username fullName avatar');
+      .populate('members', 'fullName profilePicture');
   }
 
   /**
@@ -95,7 +95,7 @@ class MessageRepository {
     return await this.roomModel.find({
       members: userId
     })
-    .populate('members', 'username fullName avatar')
+    .populate('members', 'fullName profilePicture')
     .populate('lastMessage')
     .sort({ updatedAt: -1 }); // Sắp xếp theo thời gian cập nhật, mới nhất trước
   }

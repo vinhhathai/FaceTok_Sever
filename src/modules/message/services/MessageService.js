@@ -20,7 +20,7 @@ class MessageService {
     this.messageRepository = new MessageRepository();
   }
 
-  async sendMessage(senderId, receiverId, content) {
+  async getOrCreateRoom(senderId, receiverId) {
     try {
       // Tìm phòng chat giữa hai người dùng
       let room = await this.messageRepository.findRoomByMembers(senderId, receiverId);
@@ -30,11 +30,50 @@ class MessageService {
         room = await this.messageRepository.createRoom(senderId, receiverId);
       }
       
+      return room;
+    } catch (error) {
+      console.error('Error in getOrCreateRoom service:', error);
+      throw error;
+    }
+  }
+
+  async createMessageInRoom(senderId, roomId, content) {
+    try {
+      // Kiểm tra phòng tồn tại và user có quyền gửi tin nhắn
+      const room = await this.getRoomById(roomId);
+      
+      // Kiểm tra người dùng có trong phòng không
+      if (!room.members.some(member => member._id.toString() === senderId.toString())) {
+        throw new Error('User is not a member of this room');
+      }
+      
       // Tạo tin nhắn mới
-      const message = await this.messageRepository.createMessage(senderId, room._id, content);
+      const message = await this.messageRepository.createMessage(senderId, roomId, content);
       
       // Cập nhật tin nhắn cuối cùng và thời gian của phòng
-      await this.messageRepository.updateRoomLastMessage(room._id, message._id);
+      await this.messageRepository.updateRoomLastMessage(roomId, message._id);
+      
+      return {
+        message,
+        room
+      };
+    } catch (error) {
+      console.error('Error in createMessageInRoom service:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * @deprecated Sử dụng getOrCreateRoom + createMessageInRoom thay thế
+   * Phương thức này được giữ lại để tương thích ngược
+   */
+  async sendMessage(senderId, receiverId, content) {
+    try {
+      // Lấy hoặc tạo phòng chat
+      const room = await this.getOrCreateRoom(senderId, receiverId);
+      
+      // Tạo tin nhắn mới trong phòng
+      const message = await this.createMessageInRoom(senderId, room._id, content);
       
       return {
         message,
@@ -103,6 +142,23 @@ class MessageService {
       return room;
     } catch (error) {
       console.error('Error in createRoom service:', error);
+      throw error;
+    }
+  }
+
+  async getRoomById(roomId) {
+    try {
+      if (!roomId) {
+        throw new Error('Room ID is required');
+      }
+      
+      const room = await this.messageRepository.findRoomById(roomId);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+      return room;
+    } catch (error) {
+      console.error('Error in getRoomById service:', error);
       throw error;
     }
   }

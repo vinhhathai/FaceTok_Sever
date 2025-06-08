@@ -11,58 +11,16 @@ class MessageController {
     }
 
     /**
+     * @deprecated Use getOrCreateRoom and createMessageInRoom instead
      * Send a message to another user
      */
     sendMessage = async (req, res) => {
-        try {
-            const senderId = req.user.id; // Get from authenticated user
-            
-            // Validate input data using Joi schema
-            const { error, value } = sendMessageValidation.validate(req.body);
-            
-            // If validation fails, return error message
-            if (error) {
-                return res.status(400).json(
-                    MessageDto.error(
-                        VALIDATION_ERRORS.INVALID_INPUT,
-                        error.details[0].message
-                    )
-                );
-            }
-            
-            const { receiverId, content } = value;
-            
-            try {
-                const result = await this.messageService.sendMessage(
-                    senderId,
-                    receiverId,
-                    content
-                );
-                
-                return res.status(200).json(
-                    MessageDto.success({
-                        message: result.message,
-                        room: result.room
-                    })
-                );
-            } catch (error) {
-                return res.status(500).json(
-                    MessageDto.error(
-                        MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
-                        'Failed to send message',
-                        error.message
-                    )
-                );
-            }
-        } catch (error) {
-            return res.status(500).json(
-                MessageDto.error(
-                    MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
-                    'Unable to send message',
-                    error.message
-                )
-            );
-        }
+        return res.status(400).json(
+            MessageDto.error(
+                VALIDATION_ERRORS.INVALID_INPUT,
+                'This endpoint is deprecated. Please use GET /room/get-or-create to get a room, then POST /room/:roomId/message to send messages.'
+            )
+        );
     }
     
     /**
@@ -98,6 +56,7 @@ class MessageController {
     }
 
     /**
+     * @deprecated Use getOrCreateRoom instead
      * Create a new chat room between the current user and another user
      */
     createRoom = async (req, res) => {
@@ -119,18 +78,10 @@ class MessageController {
             
             try {
                 // Tìm hoặc tạo phòng chat
-                let room = await this.messageService.getRoomByUsers(
+                const room = await this.messageService.getOrCreateRoom(
                     currentUserId,
                     value.targetUserId
                 );
-                
-                // Nếu phòng chưa tồn tại, tạo phòng mới
-                if (!room) {
-                    room = await this.messageService.createRoom(
-                        currentUserId,
-                        value.targetUserId
-                    );
-                }
                 
                 return res.status(200).json(
                     MessageDto.success({
@@ -163,7 +114,7 @@ class MessageController {
     getMessages = async (req, res) => {
         try {
             const { roomId } = req.params;
-            const { limit = 20, skip = 0 } = req.query;
+            const { limit = 10, skip = 0 } = req.query;
             
             if (!roomId) {
                 return res.status(400).json(
@@ -201,6 +152,108 @@ class MessageController {
                 MessageDto.error(
                     MESSAGE_ERRORS.GET_MESSAGES_FAILED,
                     'Unable to get messages',
+                    error.message
+                )
+            );
+        }
+    }
+
+    /**
+     * Tìm hoặc tạo phòng chat giữa người dùng hiện tại và người dùng khác
+     */
+    getOrCreateRoom = async (req, res) => {
+        try {
+            const currentUserId = req.user.id;
+            
+            // Validate input data
+            const { targetUserId } = req.body;
+            
+            if (!targetUserId) {
+                return res.status(400).json(
+                    MessageDto.error(
+                        VALIDATION_ERRORS.INVALID_INPUT,
+                        'Target user ID is required'
+                    )
+                );
+            }
+            
+            try {
+                // Tìm hoặc tạo phòng chat
+                const room = await this.messageService.getOrCreateRoom(
+                    currentUserId,
+                    targetUserId
+                );
+                
+                return res.status(200).json(
+                    MessageDto.success({
+                        room: room
+                    })
+                );
+            } catch (error) {
+                return res.status(500).json(
+                    MessageDto.error(
+                        MESSAGE_ERRORS.CREATE_ROOM_FAILED,
+                        'Failed to get or create chat room',
+                        error.message
+                    )
+                );
+            }
+        } catch (error) {
+            return res.status(500).json(
+                MessageDto.error(
+                    MESSAGE_ERRORS.CREATE_ROOM_FAILED,
+                    'Unable to get or create chat room',
+                    error.message
+                )
+            );
+        }
+    }
+
+    /**
+     * Tạo tin nhắn trong phòng đã tồn tại
+     */
+    createMessageInRoom = async (req, res) => {
+        try {
+            const senderId = req.user.id;
+            const { roomId } = req.params;
+            const { content } = req.body;
+            
+            if (!roomId || !content) {
+                return res.status(400).json(
+                    MessageDto.error(
+                        VALIDATION_ERRORS.INVALID_INPUT,
+                        'Room ID and content are required'
+                    )
+                );
+            }
+            
+            try {
+                const result = await this.messageService.createMessageInRoom(
+                    senderId,
+                    roomId,
+                    content
+                );
+                
+                return res.status(200).json(
+                    MessageDto.success({
+                        message: result.message,
+                        room: result.room
+                    })
+                );
+            } catch (error) {
+                return res.status(500).json(
+                    MessageDto.error(
+                        MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
+                        'Failed to create message',
+                        error.message
+                    )
+                );
+            }
+        } catch (error) {
+            return res.status(500).json(
+                MessageDto.error(
+                    MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
+                    'Unable to create message',
                     error.message
                 )
             );

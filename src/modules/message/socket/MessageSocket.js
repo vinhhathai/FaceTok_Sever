@@ -12,7 +12,6 @@ class MessageSocket {
     this.userSocketMap = new Map(); // Map userId to socketId
     this.socketIdMap = new Map(); // Map socketId to userId
   }
-
   /**
    * Initialize socket events
    */
@@ -20,6 +19,11 @@ class MessageSocket {
     const messageNamespace = this.io.of("/message");
 
     messageNamespace.on("connection", (socket) => {
+      console.log(
+        `Socket connected: ${socket.id} (total active: ${
+          this.socketIdMap.size + 1
+        })`
+      );
       // Handle user authentication
       socket.on("authenticate", async (accessToken) => {
         if (!accessToken.accessToken) {
@@ -59,11 +63,15 @@ class MessageSocket {
 
         // Join phòng cá nhân để nhận tin nhắn trực tiếp
         socket.join(`user:${userId}`);
+
+        // Kiểm tra các phòng mà socket đã tham gia
         socket.emit("auth_success", { userId });
       });
 
       // Xử lý tham gia phòng chat
-      socket.on("join_room", (roomId) => {
+      socket.on("join_room", (data) => {
+        console.log("join_room", data.roomId);
+        let roomId = data.roomId;
         if (!socket.userId) {
           socket.emit("room_error", { message: "Not authenticated" });
           return;
@@ -77,6 +85,7 @@ class MessageSocket {
             socket.join(roomName);
             socket.emit("room_joined", { roomId });
           }
+          console.log("rooms", rooms);
         }
       });
 
@@ -106,10 +115,16 @@ class MessageSocket {
           return;
         }
 
-        // Gọi đến SocketController để gửi tin nhắn
-        const result = await this.socketController.sendMessage(
+        // Yêu cầu phải có roomId
+        if (!data.roomId) {
+          socket.emit("message_error", { message: "Room ID is required" });
+          return;
+        }
+
+        // Gửi tin nhắn trực tiếp vào phòng đã tồn tại
+        const result = await this.socketController.createMessageInRoom(
           socket.userId,
-          data.receiverId,
+          data.roomId,
           data.content
         );
 
@@ -117,7 +132,8 @@ class MessageSocket {
           socket.emit("message_error", { message: result.message });
           return;
         }
-//ègdggg
+
+        // Kết quả đã bao gồm cả message và room
         const { message, room } = result.data;
 
         // Tạo đối tượng tin nhắn để gửi
@@ -134,11 +150,12 @@ class MessageSocket {
 
         // Gửi tin nhắn đến phòng
         socket.to(`room:${room._id}`).emit("message_received", messageData);
+        console.log("meme bẻ: " + room)
 
         // Gửi thông báo đến các thành viên khác trong phòng
         const otherMembers = room.members
-          .filter((member) => member.toString() !== socket.userId)
-          .map((member) => member.toString());
+          .filter((member) => member._id.toString() !== socket.userId)
+          .map((member) => member._id.toString());
 
         for (const memberId of otherMembers) {
           const receiverSocketId = this.userSocketMap.get(memberId);
@@ -148,62 +165,7 @@ class MessageSocket {
               .to(`user:${memberId}`)
               .emit("new_message_notification", {
                 message: messageData,
-                room: room._id,
               });
-          }
-        }
-      });
-
-      // Lấy danh sách phòng chat của người dùng
-      socket.on("get_rooms", async () => {
-        if (!socket.userId) {
-          socket.emit("rooms_error", { message: "Not authenticated" });
-          return;
-        }
-
-        const result = await this.socketController.getUserRooms(socket.userId);
-
-        if (!result.success) {
-          socket.emit("rooms_error", { message: result.message });
-          return;
-        }
-
-        socket.emit("rooms_list", result.data);
-      });
-
-      // Lấy tin nhắn trong phòng
-      socket.on("get_messages", async (data) => {
-        if (!socket.userId) {
-          socket.emit("messages_error", { message: "Not authenticated" });
-          return;
-        }
-
-        const result = await this.socketController.getMessages(
-          data.roomId,
-          data.limit,
-          data.skip
-        );
-
-        if (!result.success) {
-          socket.emit("messages_error", { message: result.message });
-          return;
-        }
-
-        socket.emit("messages_list", result.data);
-      });
-
-      // Xử lý ngắt kết nối
-      socket.on("disconnect", () => {
-        const userId = this.socketIdMap.get(socket.id);
-
-        if (userId) {
-          this.socketIdMap.delete(socket.id);
-
-          // Kiểm tra xem người dùng còn socket nào khác không
-          const currentSocketForUser = this.userSocketMap.get(userId);
-          if (currentSocketForUser === socket.id) {
-            // Nếu socket hiện tại là socket duy nhất của user, xóa user khỏi map
-            this.userSocketMap.delete(userId);
           }
         }
       });

@@ -147,6 +147,7 @@ class RoomController {
         try {
             const roomId = req.params.roomId;
             const userId = req.user.id;
+
             
             // Validate parameters
             const { error } = getRoomByIdValidation.validate({
