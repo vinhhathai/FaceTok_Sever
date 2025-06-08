@@ -2,8 +2,10 @@
 //----------------------------------------------------------------
 const MessageController = require('./MessageController');
 const RoomController = require('./RoomController');
+const SocketController = require('./SocketController');
 
 module.exports = {
     MessageController,
-    RoomController
+    RoomController,
+    SocketController
 }; 

@@ -22,8 +22,8 @@ const MessageSchema = new Schema(
     },
   },
   {
-    timestamps: true,
     collection: "messages",
+    timestamps: true,
   }
 );
 
