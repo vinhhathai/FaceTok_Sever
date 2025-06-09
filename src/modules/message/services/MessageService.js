@@ -22,14 +22,9 @@ class MessageService {
 
   async getOrCreateRoom(senderId, receiverId) {
     try {
-      // Tìm phòng chat giữa hai người dùng
-      let room = await this.messageRepository.findRoomByMembers(senderId, receiverId);
-      
-      // Nếu phòng chưa tồn tại, tạo phòng mới
-      if (!room) {
-        room = await this.messageRepository.createRoom(senderId, receiverId);
-      }
-      
+      // Sử dụng findOneAndUpdate để tránh race condition
+      // Tìm phòng hoặc tạo mới nếu không tồn tại
+      const room = await this.messageRepository.findRoomByMembersOrCreate(senderId, receiverId);
       return room;
     } catch (error) {
       console.error('Error in getOrCreateRoom service:', error);

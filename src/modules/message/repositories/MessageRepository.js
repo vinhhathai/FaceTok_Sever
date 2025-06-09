@@ -77,6 +77,39 @@ class MessageRepository {
   }
 
   /**
+   * Tìm phòng chat giữa hai người dùng, nếu không tồn tại thì tạo mới
+   * Phương thức này giúp tránh race condition khi nhiều yêu cầu đồng thời
+   * @param {string} userId1 - ID người dùng thứ nhất
+   * @param {string} userId2 - ID người dùng thứ hai
+   * @returns {Promise<Object>} - Phòng chat đã tìm hoặc tạo
+   */
+  async findRoomByMembersOrCreate(userId1, userId2) {
+    // Tìm phòng trước
+    const existingRoom = await this.findRoomByMembers(userId1, userId2);
+    
+    // Nếu đã tồn tại, trả về phòng đó
+    if (existingRoom) {
+      return await this.roomModel.findById(existingRoom._id)
+        .populate('members', 'fullName profilePicture');
+    }
+    
+    // Nếu không tìm thấy, tạo phòng mới với cơ chế atomic
+    const newRoom = new this.roomModel({
+      members: [userId1, userId2],
+      isGroup: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    // Lưu phòng mới và trả về kết quả
+    await newRoom.save();
+    
+    // Trả về phòng với dữ liệu đã populate
+    return await this.roomModel.findById(newRoom._id)
+      .populate('members', 'fullName profilePicture');
+  }
+
+  /**
    * Tìm phòng chat theo ID
    * @param {string} roomId - ID phòng chat
    * @returns {Promise<Object>} - Phòng chat với thông tin người dùng
