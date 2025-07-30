@@ -27,7 +27,6 @@ class MessageService {
       const room = await this.messageRepository.findRoomByMembersOrCreate(senderId, receiverId);
       return room;
     } catch (error) {
-      console.error('Error in getOrCreateRoom service:', error);
       throw error;
     }
   }

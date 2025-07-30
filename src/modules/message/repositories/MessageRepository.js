@@ -45,7 +45,7 @@ class MessageRepository {
       .sort({ createdAt: -1 }) // Sắp xếp theo thời gian, mới nhất trước
       .skip(skip)
       .limit(limit)
-      .populate('senderId', 'fullName profilePicture')
+      .populate("senderId", "fullName profilePicture")
       .lean();
   }
 
@@ -86,27 +86,27 @@ class MessageRepository {
   async findRoomByMembersOrCreate(userId1, userId2) {
     // Tìm phòng trước
     const existingRoom = await this.findRoomByMembers(userId1, userId2);
-    
+
     // Nếu đã tồn tại, trả về phòng đó
     if (existingRoom) {
-      return await this.roomModel.findById(existingRoom._id)
-        .populate('members', 'fullName profilePicture');
+      return await this.roomModel
+        .findById(existingRoom._id)
+        .populate("members", "fullName profilePicture");
     }
-    
+
     // Nếu không tìm thấy, tạo phòng mới với cơ chế atomic
     const newRoom = new this.roomModel({
       members: [userId1, userId2],
       isGroup: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
     });
-    
+
     // Lưu phòng mới và trả về kết quả
     await newRoom.save();
-    
+
     // Trả về phòng với dữ liệu đã populate
-    return await this.roomModel.findById(newRoom._id)
-      .populate('members', 'fullName profilePicture');
+    return await this.roomModel
+      .findById(newRoom._id)
+      .populate("members", "fullName profilePicture");
   }
 
   /**
@@ -115,8 +115,9 @@ class MessageRepository {
    * @returns {Promise<Object>} - Phòng chat với thông tin người dùng
    */
   async findRoomById(roomId) {
-    return await this.roomModel.findById(roomId)
-      .populate('members', 'fullName profilePicture');
+    return await this.roomModel
+      .findById(roomId)
+      .populate("members", "fullName profilePicture");
   }
 
   /**
@@ -125,12 +126,13 @@ class MessageRepository {
    * @returns {Promise<Array>} - Danh sách phòng chat
    */
   async getUserRooms(userId) {
-    return await this.roomModel.find({
-      members: userId
-    })
-    .populate('members', 'fullName profilePicture')
-    .populate('lastMessage')
-    .sort({ updatedAt: -1 }); // Sắp xếp theo thời gian cập nhật, mới nhất trước
+    return await this.roomModel
+      .find({
+        members: userId,
+      })
+      .populate("members", "fullName profilePicture")
+      .populate("lastMessage")
+      .sort({ updatedAt: -1 }); // Sắp xếp theo thời gian cập nhật, mới nhất trước
   }
 
   /**

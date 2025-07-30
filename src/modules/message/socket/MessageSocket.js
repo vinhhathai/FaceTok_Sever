@@ -25,7 +25,7 @@ class MessageSocket {
           this.socketIdMap.size + 1
         })`
       );
-      
+
       // Xử lý khi socket ngắt kết nối
       socket.on("disconnect", () => {
         const userId = this.socketIdMap.get(socket.id);
@@ -33,16 +33,16 @@ class MessageSocket {
           // Xóa khỏi các maps
           this.socketIdMap.delete(socket.id);
           this.userSocketMap.delete(userId);
-          
+
           // Xóa khỏi userRoomsMap
           this.userRoomsMap.delete(userId);
-          
+
           console.log(`Socket disconnected: ${socket.id} (userId: ${userId})`);
         } else {
           console.log(`Socket disconnected: ${socket.id} (unknown user)`);
         }
       });
-      
+
       // Handle user authentication
       socket.on("authenticate", async (accessToken) => {
         if (!accessToken.accessToken) {
@@ -97,20 +97,22 @@ class MessageSocket {
 
         if (roomId) {
           const roomName = `room:${roomId}`;
-          
+
           // Lấy hoặc tạo set phòng của người dùng
           let userRooms = this.userRoomsMap.get(socket.userId);
           if (!userRooms) {
             userRooms = new Set();
             this.userRoomsMap.set(socket.userId, userRooms);
           }
-          
+
           // Kiểm tra xem đã theo dõi phòng này chưa
           if (userRooms.has(roomId)) {
-            console.log(`User ${socket.userId} already tracked in room: ${roomId}`);
+            console.log(
+              `User ${socket.userId} already tracked in room: ${roomId}`
+            );
             return;
           }
-          
+
           // Chỉ tham gia nếu chưa trong phòng
           const rooms = Array.from(socket.rooms);
           if (!rooms.includes(roomName)) {
@@ -138,13 +140,15 @@ class MessageSocket {
         let roomId = data.roomId || data;
         if (roomId) {
           const roomName = `room:${roomId}`;
-          
+
           // Lấy set phòng của người dùng
           let userRooms = this.userRoomsMap.get(socket.userId);
           if (userRooms) {
             // Kiểm tra xem có theo dõi phòng này không
             if (!userRooms.has(roomId)) {
-              console.log(`User ${socket.userId} not tracking room: ${roomId}, ignore leave request`);
+              console.log(
+                `User ${socket.userId} not tracking room: ${roomId}, ignore leave request`
+              );
               return;
             }
             // Xóa khỏi danh sách phòng đã theo dõi
@@ -158,7 +162,9 @@ class MessageSocket {
             console.log(`User ${socket.userId} left room: ${roomId}`);
             socket.emit("room_left", { roomId });
           } else {
-            console.log(`User ${socket.userId} not in room: ${roomId}, cannot leave`);
+            console.log(
+              `User ${socket.userId} not in room: ${roomId}, cannot leave`
+            );
           }
         }
       });
@@ -192,8 +198,8 @@ class MessageSocket {
         const { message, room } = result.data;
 
         // Tìm thông tin người gửi từ danh sách members của phòng
-        const sender = room.members.find(member => 
-          member._id.toString() === socket.userId.toString()
+        const sender = room.members.find(
+          (member) => member._id.toString() === socket.userId.toString()
         );
 
         // Tạo đối tượng tin nhắn để gửi
@@ -204,11 +210,13 @@ class MessageSocket {
           roomId: message.roomId,
           createdAt: message.createdAt,
           // Thêm thông tin người gửi để client hiển thị ngay không cần query
-          sender: sender ? {
-            _id: sender._id,
-            fullName: sender.fullName,
-            profilePicture: sender.profilePicture
-          } : undefined
+          sender: sender
+            ? {
+                _id: sender._id,
+                fullName: sender.fullName,
+                profilePicture: sender.profilePicture,
+              }
+            : undefined,
         };
 
         // Gửi tin nhắn đến người gửi
@@ -233,7 +241,7 @@ class MessageSocket {
               });
           }
         }
-        console.log(messageData)
+        console.log(messageData);
       });
     });
   }
