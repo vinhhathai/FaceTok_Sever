@@ -2,7 +2,7 @@
 //----------------------------------------------------------------
 const MessageService = require("../services/MessageService");
 const RoomService = require("../services/RoomService");
-const { RoomDto } = require("../dtos");
+const { RoomDto, MessageDto } = require("../dtos");
 const {
   getRoomsValidation,
   getRoomDetailsValidation,

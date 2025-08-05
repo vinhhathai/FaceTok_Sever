@@ -71,6 +71,7 @@ class RoomRepository {
     return await this.roomModel
       .find({
         members: userId,
+        deleteBy: { $ne: userId }
       })
       .populate("members", "fullName profilePicture")
       .populate("lastMessage")
