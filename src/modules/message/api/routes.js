@@ -5,11 +5,14 @@ const router = express.Router();
 const { MessageController, RoomController } = require("../controllers");
 const checkLogin = require("../../../shared/middlewares/checkLogin");
 
+// Room API
+router.delete("/room/:roomId", checkLogin, RoomController.deleteConversation);
+
 // Lấy hoặc tạo phòng chat
 router.post(
   "/room/get-or-create",
   checkLogin,
-  MessageController.getOrCreateRoom
+  RoomController.getOrCreateRoom
 );
 
 // Lấy thông tin phòng 2 user

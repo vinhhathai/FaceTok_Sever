@@ -1,6 +1,6 @@
 "use strict";
 //----------------------------------------------------------------
-const MessageController = require('./MessageController');
+const MessageController = require('./messageController');
 const RoomController = require('./RoomController');
 const SocketController = require('./SocketController');
 

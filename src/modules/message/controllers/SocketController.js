@@ -1,12 +1,14 @@
 "use strict";
 //----------------------------------------------------------------
 const MessageService = require('../services/MessageService');
+const RoomService = require('../services/RoomService');
 const { MessageDto } = require('../dtos');
 const jwt = require('jsonwebtoken');
 
 class SocketController {
     constructor() {
         this.messageService = MessageService;
+        this.roomService = RoomService;
     }
 
     /**
@@ -48,7 +50,7 @@ class SocketController {
                 };
             }
 
-            const room = await this.messageService.getOrCreateRoom(senderId, receiverId);
+            const room = await this.roomService.getOrCreateRoom(senderId, receiverId);
             return {
                 success: true,
                 data: room
@@ -95,7 +97,7 @@ class SocketController {
      */
     getUserRooms = async (userId) => {
         try {
-            const rooms = await this.messageService.getUserRooms(userId);
+            const rooms = await this.roomService.getUserRooms(userId);
             return {
                 success: true,
                 data: rooms
@@ -154,7 +156,7 @@ class SocketController {
                 };
             }
 
-            const room = await this.messageService.getRoomById(roomId);
+            const room = await this.roomService.getRoomById(roomId);
             
             if (!room) {
                 return {

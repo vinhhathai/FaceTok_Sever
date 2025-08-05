@@ -14,6 +14,12 @@ const RoomSchema = new Schema(
       type: Boolean,
       default: false,
     },
+
+    deleteBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+      default: null
+    }],
     
     // Lưu tin nhắn cuối cùng để hiển thị trong danh sách chat
     lastMessage: {
