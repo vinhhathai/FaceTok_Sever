@@ -16,6 +16,13 @@ class RoomRepository {
     this.userModel = UserModel;
   }
 
+  async createGroupChat(userId, groupName) {
+    const room = new this.roomModel({
+      members: [userId],
+      groupName,
+    });
+  }
+
   async deleteConversation(roomId, userId) {
     return await this.roomModel.findByIdAndUpdate(
       roomId,
@@ -24,7 +31,6 @@ class RoomRepository {
     );
   }
 
- 
   async createMessage(senderId, roomId, content) {
     const message = new this.messageModel({
       senderId,
@@ -34,24 +40,26 @@ class RoomRepository {
     return await message.save();
   }
 
-
-
   async createRoom(userId1, userId2) {
     const room = new this.roomModel({
       members: [userId1, userId2],
-      isGroup: false,
     });
     return await room.save();
   }
 
+  async createRoomForGroup(members = []) {
+    const room = new this.roomModel({
+      members: [...members],
+    });
+    return await room.save();
+  }
   // Tìm phòng chat giữa hai người dùng
   async findRoomByMembers(userId1, userId2) {
     return await this.roomModel.findOne({
       members: { $all: [userId1, userId2] },
-      isGroup: false,
+      groupId: { $exists: false },
     });
   }
-
 
   async findRoomById(roomId) {
     return await this.roomModel
@@ -60,21 +68,20 @@ class RoomRepository {
   }
 
   async backupConversation(roomId) {
-    return await this.roomModel.findByIdAndUpdate(
-      roomId,
-      { deleteBy: [] },
-      { new: true }
-    ).populate("members", "fullName profilePicture");
+    return await this.roomModel
+      .findByIdAndUpdate(roomId, { deleteBy: [] }, { new: true })
+      .populate("members", "fullName profilePicture");
   }
 
   async getUserRooms(userId) {
     return await this.roomModel
       .find({
         members: userId,
-        deleteBy: { $ne: userId }
+        deleteBy: { $ne: userId },
       })
       .populate("members", "fullName profilePicture")
       .populate("lastMessage")
+      .populate("groupId", "name avatar ownerId") // Populate group info
       .sort({ updatedAt: -1 }); // Sắp xếp theo thời gian cập nhật, mới nhất trước
   }
 
@@ -90,6 +97,24 @@ class RoomRepository {
       { lastMessage: messageId, updatedAt: new Date() },
       { new: true }
     );
+  }
+
+  /**
+   * Cập nhật groupId cho room
+   * @param {string} roomId - ID phòng chat
+   * @param {string} groupId - ID nhóm
+   * @returns {Promise<Object>} - Room đã cập nhật
+   */
+  async updateRoomWithGroupId(roomId, groupId) {
+    try {
+      return await this.roomModel.findByIdAndUpdate(
+        roomId,
+        { groupId: groupId },
+        { new: true }
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

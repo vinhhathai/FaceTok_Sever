@@ -30,7 +30,11 @@ const NewRoomSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'users'
   }],
-  isGroup: Boolean,
+  groupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'groups',
+    unique: true
+  },
   lastMessage: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'messages',
@@ -63,7 +67,7 @@ async function migrateRooms() {
       const newRoom = new NewRoom({
         _id: oldRoom._id, // Giữ nguyên _id
         members: members,
-        isGroup: oldRoom.isGroup,
+        // Bỏ isGroup field, chỉ giữ groupId nếu cần
         createdAt: oldRoom.createdAt,
         updatedAt: oldRoom.updatedAt
       });

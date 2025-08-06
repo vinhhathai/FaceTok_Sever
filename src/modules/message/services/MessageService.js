@@ -50,7 +50,7 @@ class MessageService {
         throw new Error("User is not a member of this room");
       }
 
-      if (!room.isGroup) {
+      if (!room.groupId) {
         const receiverId = room.members.find(
           (member) => member._id.toString() !== senderId.toString()
         );

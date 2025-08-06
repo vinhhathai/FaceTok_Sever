@@ -98,6 +98,7 @@ class RoomService {
   async getUserRooms(userId) {
     try {
       const rooms = await this.roomRepository.getUserRooms(userId);
+      
       return rooms;
     } catch (error) {
       throw error;

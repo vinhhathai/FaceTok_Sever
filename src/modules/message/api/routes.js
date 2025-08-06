@@ -4,11 +4,14 @@ const express = require("express");
 const router = express.Router();
 const { MessageController, RoomController } = require("../controllers");
 const checkLogin = require("../../../shared/middlewares/checkLogin");
+const GroupController = require("../controllers/GroupController");
+
+// Group API
+router.post("/group", checkLogin, GroupController.createGroup);
+router.get("/group/:id", checkLogin, GroupController.getGroupById);
 
 
 // Room API
-// Revoke message
-
 // Delete conversation
 router.delete("/room/:roomId", checkLogin, RoomController.deleteConversation);
 

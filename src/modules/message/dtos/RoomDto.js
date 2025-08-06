@@ -17,7 +17,7 @@ class RoomDto {
     if (!room) return null;
 
     // Handle group chat
-    if (room.isGroup) {
+    if (room.groupId) {
       return {
         id: room._id,
         isGroup: true,
