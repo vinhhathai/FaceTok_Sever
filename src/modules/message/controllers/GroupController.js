@@ -14,11 +14,13 @@ const {
   MESSAGE_ERRORS,
 } = require("../../../shared/common/error");
 const GroupDto = require("../dtos/GroupDto");
+const { renameGroupValidation } = require("../validations/groupValidation");
 
 class GroupController {
   constructor() {
     this.groupService = GroupService;
   }
+
 
   createGroup = async (req, res) => {
     try {

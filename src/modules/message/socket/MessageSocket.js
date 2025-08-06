@@ -182,7 +182,7 @@ class MessageSocket {
 
         const result = await this.socketController.revokeMessage(
           data.messageId,
-          socket.userId,
+          socket.userId
         );
 
         if (!result.success) {
@@ -195,12 +195,19 @@ class MessageSocket {
 
         // Emit message_revoked to all users in the room
         // First, we need to find the room that contains this message
-        const message = await this.socketController.messageService.messageRepository.messageModel.findById(data.messageId);
+        const message =
+          await this.socketController.messageService.messageRepository.messageModel.findById(
+            data.messageId
+          );
         if (message && message.roomId) {
-          const room = await this.socketController.roomService.getRoomById(message.roomId.toString());
+          const room = await this.socketController.roomService.getRoomById(
+            message.roomId.toString()
+          );
           if (room) {
             // Emit to all users in the room
-            socket.to(`room:${room._id}`).emit("message_revoked", { messageId: data.messageId });
+            socket
+              .to(`room:${room._id}`)
+              .emit("message_revoked", { messageId: data.messageId });
           }
         }
       });
@@ -218,7 +225,6 @@ class MessageSocket {
           return;
         }
 
-        
         // Gửi tin nhắn trực tiếp vào phòng đã tồn tại
         const result = await this.socketController.createMessageInRoom(
           socket.userId,
@@ -279,6 +285,70 @@ class MessageSocket {
           }
         }
         console.log(messageData);
+      });
+
+      // Xử lý đổi tên nhóm
+      socket.on("rename_group", async (data) => {
+        if (!socket.userId) {
+          socket.emit("group_error", { message: "Not authenticated" });
+          return;
+        }
+
+        if (!data.groupId || !data.name) {
+          socket.emit("group_error", {
+            message: "Group ID and name are required",
+          });
+          return;
+        }
+
+        try {
+          // Gọi service để đổi tên nhóm
+          const result = await this.socketController.renameGroup(
+            data.groupId,
+            data.name,
+            socket.userId
+          );
+
+          if (!result.success) {
+            socket.emit("group_error", { message: result.message });
+            return;
+          }
+
+          const { group, room } = result.data;
+
+          // Tạo data để gửi cho tất cả thành viên
+          const groupData = {
+            groupId: group._id,
+            newName: group.name,
+            updatedAt: group.updatedAt,
+            updatedBy: socket.userId,
+          };
+
+          // Gửi thông báo thành công cho người đổi tên
+          socket.emit("group_renamed", groupData);
+
+          // Gửi thông báo cho tất cả thành viên trong nhóm
+          if (room && room.members) {
+            for (const member of room.members) {
+              const memberSocketId = this.userSocketMap.get(
+                member._id.toString()
+              );
+              if (memberSocketId && member._id.toString() !== socket.userId) {
+                this.io
+                  .of("/message")
+                  .to(`user:${member._id}`)
+                  .emit("group_renamed", groupData);
+              }
+            }
+          }
+
+          console.log(`Group renamed: ${group._id} -> ${group.name}`);
+        } catch (error) {
+          console.error("Error renaming group:", error);
+          socket.emit("group_error", {
+            message: error.message || "Failed to rename group",
+          });
+        }
       });
     });
   }

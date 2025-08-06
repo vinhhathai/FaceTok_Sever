@@ -10,18 +10,12 @@ const GroupController = require("../controllers/GroupController");
 router.post("/group", checkLogin, GroupController.createGroup);
 router.get("/group/:id", checkLogin, GroupController.getGroupById);
 
-
 // Room API
 // Delete conversation
 router.delete("/room/:roomId", checkLogin, RoomController.deleteConversation);
 
 // Get or create room
-router.post(
-  "/room/get-or-create",
-  checkLogin,
-  RoomController.getOrCreateRoom
-);
-
+router.post("/room/get-or-create", checkLogin, RoomController.getOrCreateRoom);
 
 // Lấy thông tin phòng 2 user
 // router.get("/room/:roomId", checkLogin, RoomController.getRoomById);
@@ -37,6 +31,5 @@ router.post(
   checkLogin,
   MessageController.createMessageInRoom
 );
-
 
 module.exports = router;

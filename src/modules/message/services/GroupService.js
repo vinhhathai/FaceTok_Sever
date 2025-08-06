@@ -24,6 +24,37 @@ class GroupService {
     this.groupRepository = new GroupRepository();
   }
 
+  async renameGroup(groupId, name, currentUserId) {
+    try {
+      const group = await this.groupRepository.renameGroup(groupId, name, currentUserId);
+      return group;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async renameGroupByRoomId(roomId, name, currentUserId) {
+    try {
+      console.log('GroupService.renameGroupByRoomId called with:', { roomId, name, currentUserId });
+      
+      // Tìm group bằng roomId
+      const group = await this.groupRepository.getGroupByRoomId(roomId);
+      console.log('Group found by roomId:', group);
+      
+      if (!group) {
+        throw new Error('Group not found');
+      }
+      
+      // Rename group
+      const updatedGroup = await this.groupRepository.renameGroup(group._id, name, currentUserId);
+      console.log('Group renamed successfully:', updatedGroup);
+      return updatedGroup;
+    } catch (error) {
+      console.error('Error in renameGroupByRoomId:', error);
+      throw error;
+    }
+  }
+
   async createGroup(name, ownerId, members = []) {
     try {
       // 1. Tạo room trước
