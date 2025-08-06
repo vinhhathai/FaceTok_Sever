@@ -3,8 +3,8 @@
 const MessageService = require("../services/MessageService");
 const { MessageDto } = require("../dtos");
 const {
-  createDirectRoomValidation,
   sendMessageValidation,
+  revokeMessageValidation,
 } = require("../validations");
 const {
   VALIDATION_ERRORS,
@@ -16,6 +16,7 @@ class MessageController {
     this.messageService = MessageService;
   }
 
+  
   /**
    * Get messages from a room
    */

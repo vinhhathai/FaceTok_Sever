@@ -2,6 +2,7 @@
 //----------------------------------------------------------------
 const MessageRepository = require("../repositories/MessageRepository");
 const RoomRepository = require("../repositories/RoomRepository");
+const UserRepository = require("../../user/repositories/UserRepository");
 const {
   errorCode,
   errorMessage,
@@ -20,6 +21,19 @@ class MessageService {
   constructor() {
     this.messageRepository = new MessageRepository();
     this.roomRepository = new RoomRepository();
+    this.userRepository = new UserRepository();
+  }
+
+  async revokeMessage(messageId, senderId) {
+    try {
+      const message = await this.messageRepository.revokeMessage(
+        messageId,
+        senderId
+      );
+      return message;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async createMessageInRoom(senderId, roomId, content) {
@@ -34,6 +48,27 @@ class MessageService {
         )
       ) {
         throw new Error("User is not a member of this room");
+      }
+
+      if (!room.isGroup) {
+        const receiverId = room.members.find(
+          (member) => member._id.toString() !== senderId.toString()
+        );
+        const receiver = await this.userRepository.findById(receiverId);
+        if (
+          receiver.blockedUsers.some(
+            (blockedUser) => blockedUser.toString() === senderId.toString()
+          )
+        ) {
+          throw new Error(
+            "Bạn không thể gửi tin nhắn cho người dùng này vì đã bị chặn"
+          );
+        }
+        if (receiver.isBlocked) {
+          throw new Error(
+            "Bạn không thể gửi tin nhắn cho người dùng này vì đã bị chặn"
+          );
+        }
       }
 
       // Tạo tin nhắn mới
@@ -55,7 +90,10 @@ class MessageService {
         room,
       };
     } catch (error) {
-      console.error("Error in createMessageInRoom service:", error);
+      // Không log lỗi block user vì đây là business logic bình thường
+      if (!error.message.includes('blocked')) {
+        console.error("Error in createMessageInRoom service:", error);
+      }
       throw error;
     }
   }
@@ -67,7 +105,10 @@ class MessageService {
   async sendMessage(senderId, receiverId, content) {
     try {
       // Lấy hoặc tạo phòng chat
-      const room = await this.roomRepository.getOrCreateRoom(senderId, receiverId);
+      const room = await this.roomRepository.getOrCreateRoom(
+        senderId,
+        receiverId
+      );
 
       // Tạo tin nhắn mới trong phòng
       const message = await this.messageRepository.createMessage(

@@ -13,6 +13,141 @@ class ProfileService {
     this.userRepository = new UserRepository();
   }
 
+  async getBlockedUsers(userId) {
+    try {
+      const result = await this.userRepository.getBlockedUsers(userId);
+      
+      if (!result) {
+        return ProfileDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "User not found"
+        );
+      }
+      
+      return ProfileDto.success(
+        { blockedUsers: result.blockedUsers || [] },
+        "Blocked users retrieved successfully"
+      );
+    } catch (error) {
+      console.error("Error getting blocked users:", error);
+      return ProfileDto.error(
+        errorCode.ERR_RETRIEVE_PROFILE_FAILED,
+        "Error retrieving blocked users",
+        error.message
+      );
+    }
+  }
+
+  async unblockUser(userId, blockedUserId) {
+    try {
+      // Check if both users exist
+      const user = await this.userRepository.findById(userId);
+      const blockedUser = await this.userRepository.findById(blockedUserId);
+      
+      if (!user) {
+        return ProfileDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "User not found"
+        );
+      }
+      
+      if (!blockedUser) {
+        return ProfileDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "User to unblock not found"
+        );
+      }
+      
+      // Check if not blocked
+      if (!user.blockedUsers || !user.blockedUsers.includes(blockedUserId)) {
+        return ProfileDto.error(
+          errorCode.VALIDATION_FAILED,
+          "User is not blocked"
+        );
+      }
+      
+      const result = await this.userRepository.unblockUser(userId, blockedUserId);
+      
+      if (!result) {
+        return ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          "Failed to unblock user"
+        );
+      }
+      
+      return ProfileDto.success(
+        { blockedUserId },
+        "User unblocked successfully"
+      );
+    } catch (error) {
+      console.error("Error unblocking user:", error);
+      return ProfileDto.error(
+        errorCode.UPDATE_PROFILE_FAILED,
+        "Error unblocking user",
+        error.message
+      );
+    }
+  }
+
+  async blockUser(userId, blockedUserId) {
+    try {
+      // Check if both users exist
+      const user = await this.userRepository.findById(userId);
+      const blockedUser = await this.userRepository.findById(blockedUserId);
+      
+      if (!user) {
+        return ProfileDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "User not found"
+        );
+      }
+      
+      if (!blockedUser) {
+        return ProfileDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "User to block not found"
+        );
+      }
+      
+      // Prevent self-blocking
+      if (userId === blockedUserId) {
+        return ProfileDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Cannot block yourself"
+        );
+      }
+      
+      // Check if already blocked
+      if (user.blockedUsers && user.blockedUsers.includes(blockedUserId)) {
+        return ProfileDto.error(
+          errorCode.VALIDATION_FAILED,
+          "User is already blocked"
+        );
+      }
+      
+      const result = await this.userRepository.blockUser(userId, blockedUserId);
+      
+      if (!result) {
+        return ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          "Failed to block user"
+        );
+      }
+      
+      return ProfileDto.success(
+        { blockedUserId },
+        "User blocked successfully"
+      );
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      return ProfileDto.error(
+        errorCode.UPDATE_PROFILE_FAILED,
+        "Error blocking user",
+        error.message
+      );
+    }
+  }
+
   async getProfile(viewingUserId, logingUserId) {
     try {
       // Tìm người dùng theo ID, loại bỏ password và __v
@@ -21,13 +156,6 @@ class ProfileService {
         __v: 0,
       });
 
-      // Kiểm tra người dùng có tồn tại không
-      if (!user) {
-        return ProfileDto.error(
-          errorCode.DATA_NOT_FOUND,
-          errorMessage.USER_NOT_FOUND
-        );
-      }
       // So sánh để xác định có phải chủ sở hữu không
       const isOwner = viewingUserId.toString() === logingUserId.toString();
 
@@ -78,7 +206,7 @@ class ProfileService {
         .filter(([key, value]) => value !== undefined)
         .reduce((acc, [key, value]) => {
           // Special handling for birthday
-          if (key === 'birthday' && value) {
+          if (key === "birthday" && value) {
             acc[key] = new Date(value);
           } else {
             acc[key] = value;
@@ -95,14 +223,17 @@ class ProfileService {
       }
 
       // Update profile
-      const updatedUser = await this.userRepository.updateProfile(userId, updateData);
+      const updatedUser = await this.userRepository.updateProfile(
+        userId,
+        updateData
+      );
       if (!updatedUser) {
         return ProfileDto.error(
           errorCode.UPDATE_PROFILE_FAILED,
           "Failed to update profile"
         );
       }
-      
+
       console.log("Updated user data (including relationship):", updatedUser);
 
       // Return success response with updated data

@@ -66,6 +66,7 @@ const UserSchema = new Schema(
         default: null
       }
     },
+    blockedUsers: [{ type: mongoose.Types.ObjectId, ref: "users" }],
 
   },
   {

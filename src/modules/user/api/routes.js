@@ -13,7 +13,12 @@ const {
 const checkLogin = require("../../../shared/middlewares/checkLogin");
 const uploadImageMiddleware = require("../../../shared/middlewares/uploadImageMiddleware");
 
+
+
 // Profile Routes
+router.get("/blocked-users", checkLogin, ProfileController.getBlockedUsers);
+router.put("/unblock-user", checkLogin, ProfileController.unblockUser);
+router.put("/block-user", checkLogin, ProfileController.blockUser);
 router.get("/profile/:id", checkLogin, ProfileController.getProfile);
 router.put("/update-profile", checkLogin, ProfileController.updateProfile);
 router.put("/update-fullname", checkLogin, FullnameController.updateFullName);

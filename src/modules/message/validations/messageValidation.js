@@ -15,6 +15,18 @@ const sendMessageValidation = Joi.object({
   })
 });
 
+const revokeMessageValidation = Joi.object({
+  messageId: Joi.string().required().messages({
+    'any.required': 'Message ID is required',
+    'string.empty': 'Message ID cannot be empty'
+  }),
+  senderId: Joi.string().required().messages({
+    'any.required': 'Sender ID is required',
+    'string.empty': 'Sender ID cannot be empty'
+  })
+});
+
 module.exports = {
-  sendMessageValidation
+  sendMessageValidation,
+  revokeMessageValidation
 };

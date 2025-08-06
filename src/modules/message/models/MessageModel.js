@@ -20,6 +20,10 @@ const MessageSchema = new Schema(
       ref: "rooms",
       required: true,
     },
+    isRevoked: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     collection: "messages",

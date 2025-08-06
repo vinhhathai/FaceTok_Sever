@@ -169,6 +169,42 @@ class MessageSocket {
         }
       });
 
+      socket.on("revoke_message", async (data) => {
+        if (!socket.userId) {
+          socket.emit("message_error", { message: "Not authenticated" });
+          return;
+        }
+
+        if (!data.messageId) {
+          socket.emit("message_error", { message: "Message ID is required" });
+          return;
+        }
+
+        const result = await this.socketController.revokeMessage(
+          data.messageId,
+          socket.userId,
+        );
+
+        if (!result.success) {
+          socket.emit("message_error", { message: result.message });
+          return;
+        }
+
+        // Emit message_revoked to the sender
+        socket.emit("message_revoked", { messageId: data.messageId });
+
+        // Emit message_revoked to all users in the room
+        // First, we need to find the room that contains this message
+        const message = await this.socketController.messageService.messageRepository.messageModel.findById(data.messageId);
+        if (message && message.roomId) {
+          const room = await this.socketController.roomService.getRoomById(message.roomId.toString());
+          if (room) {
+            // Emit to all users in the room
+            socket.to(`room:${room._id}`).emit("message_revoked", { messageId: data.messageId });
+          }
+        }
+      });
+
       // Xử lý gửi tin nhắn
       socket.on("send_message", async (data) => {
         if (!socket.userId) {
@@ -182,6 +218,7 @@ class MessageSocket {
           return;
         }
 
+        
         // Gửi tin nhắn trực tiếp vào phòng đã tồn tại
         const result = await this.socketController.createMessageInRoom(
           socket.userId,

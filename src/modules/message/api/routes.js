@@ -5,43 +5,35 @@ const router = express.Router();
 const { MessageController, RoomController } = require("../controllers");
 const checkLogin = require("../../../shared/middlewares/checkLogin");
 
+
 // Room API
+// Revoke message
+
+// Delete conversation
 router.delete("/room/:roomId", checkLogin, RoomController.deleteConversation);
 
-// Lấy hoặc tạo phòng chat
+// Get or create room
 router.post(
   "/room/get-or-create",
   checkLogin,
   RoomController.getOrCreateRoom
 );
 
+
 // Lấy thông tin phòng 2 user
 // router.get("/room/:roomId", checkLogin, RoomController.getRoomById);
-// Lấy danh sách tin nhắn phòng chat của 2 user
+// Get messages in room
 router.get("/room/:roomId/messages", checkLogin, MessageController.getMessages);
 
-// Lấy danh sách phòng chat của user
+// Get rooms of user
 router.get("/rooms", checkLogin, RoomController.getRooms);
 
-// Tạo tin nhắn trong phòng đã tồn tại
+// Create message in room
 router.post(
   "/room/:roomId/message",
   checkLogin,
   MessageController.createMessageInRoom
 );
 
-//Tạo phòng
-// router.post('/room', checkLogin, MessageController.createRoom);
-
-// Gửi tin nhắn
-// router.post('/send', checkLogin, MessageController.sendMessage);
-
-// Rooms API
-// router.get('/room/user/:userId', RoomController.getRoomDetails);
-
-// router.get('/unread', RoomController.getUnreadCount);
-
-// Messages API
-// router.put('/room/:roomId/read', MessageController.markAsRead);
 
 module.exports = router;

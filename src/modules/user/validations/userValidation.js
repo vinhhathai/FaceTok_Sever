@@ -30,7 +30,16 @@ const profileValidation = (data) => {
   return schema.validate(data);
 };
 
+const blockUserValidation = (data) => {
+  const schema = Joi.object({
+    blockedUserId: Joi.string().required().regex(/^[0-9a-fA-F]{24}$/).message('Invalid user ID format'),
+  });
+
+  return schema.validate(data);
+};
+
 module.exports = {
   updateProfileValidation,
-  profileValidation
+  profileValidation,
+  blockUserValidation
 }; 

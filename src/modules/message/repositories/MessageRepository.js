@@ -16,6 +16,17 @@ class MessageRepository {
     this.userModel = UserModel;
   }
 
+  async revokeMessage(messageId, senderId) {
+    return await this.messageModel.findOneAndUpdate(
+      {
+        _id: messageId,
+        senderId: senderId,
+      },
+      { isRevoked: true },
+      { new: true }
+    );
+  }
+
   async createMessage(senderId, roomId, content) {
     const message = new this.messageModel({
       senderId,
