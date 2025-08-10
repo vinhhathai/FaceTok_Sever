@@ -12,7 +12,7 @@ class DBConnection {
                 useNewUrlParser: true,
                 useUnifiedTopology: true
             });
-            console.log('Connected to MongoDB');
+            // debug removed
             return true; // Trả về true nếu kết nối thành công
         } catch (error) {
             console.error('Error while connecting to MongoDB:', error);

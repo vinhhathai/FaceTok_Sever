@@ -20,11 +20,7 @@ class MessageSocket {
     const messageNamespace = this.io.of("/message");
 
     messageNamespace.on("connection", (socket) => {
-      console.log(
-        `Socket connected: ${socket.id} (total active: ${
-          this.socketIdMap.size + 1
-        })`
-      );
+      // debug removed
 
       // Xử lý khi socket ngắt kết nối
       socket.on("disconnect", () => {
@@ -37,9 +33,9 @@ class MessageSocket {
           // Xóa khỏi userRoomsMap
           this.userRoomsMap.delete(userId);
 
-          console.log(`Socket disconnected: ${socket.id} (userId: ${userId})`);
+          // debug removed
         } else {
-          console.log(`Socket disconnected: ${socket.id} (unknown user)`);
+          // debug removed
         }
       });
 
@@ -107,9 +103,7 @@ class MessageSocket {
 
           // Kiểm tra xem đã theo dõi phòng này chưa
           if (userRooms.has(roomId)) {
-            console.log(
-              `User ${socket.userId} already tracked in room: ${roomId}`
-            );
+            // debug removed
             return;
           }
 
@@ -119,13 +113,13 @@ class MessageSocket {
             socket.join(roomName);
             // Thêm vào danh sách phòng đã theo dõi
             userRooms.add(roomId);
-            console.log(`User ${socket.userId} joined room: ${roomId}`);
+            // debug removed
             socket.emit("room_joined", { roomId });
           } else {
             // Đã trong phòng, không cần join lại
             // Thêm vào danh sách phòng đã theo dõi
             userRooms.add(roomId);
-            console.log(`User ${socket.userId} already in room: ${roomId}`);
+            // debug removed
           }
         }
       });
@@ -146,9 +140,7 @@ class MessageSocket {
           if (userRooms) {
             // Kiểm tra xem có theo dõi phòng này không
             if (!userRooms.has(roomId)) {
-              console.log(
-                `User ${socket.userId} not tracking room: ${roomId}, ignore leave request`
-              );
+              // debug removed
               return;
             }
             // Xóa khỏi danh sách phòng đã theo dõi
@@ -159,12 +151,10 @@ class MessageSocket {
           const rooms = Array.from(socket.rooms);
           if (rooms.includes(roomName)) {
             socket.leave(roomName);
-            console.log(`User ${socket.userId} left room: ${roomId}`);
+            // debug removed
             socket.emit("room_left", { roomId });
           } else {
-            console.log(
-              `User ${socket.userId} not in room: ${roomId}, cannot leave`
-            );
+            // debug removed
           }
         }
       });
@@ -284,7 +274,7 @@ class MessageSocket {
               });
           }
         }
-        console.log(messageData);
+        // debug removed
       });
 
       // Xử lý đổi tên nhóm
@@ -294,9 +284,10 @@ class MessageSocket {
           return;
         }
 
-        if (!data.groupId || !data.name) {
+        const roomId = data.roomId || data.groupId; // tạm hỗ trợ groupId để tránh gãy client cũ
+        if (!roomId || !data.name) {
           socket.emit("group_error", {
-            message: "Group ID and name are required",
+            message: "Room ID and name are required",
           });
           return;
         }
@@ -304,7 +295,7 @@ class MessageSocket {
         try {
           // Gọi service để đổi tên nhóm
           const result = await this.socketController.renameGroup(
-            data.groupId,
+            roomId,
             data.name,
             socket.userId
           );
@@ -314,11 +305,12 @@ class MessageSocket {
             return;
           }
 
-          const { group, room } = result.data;
+          const { group, room, message } = result.data;
 
-          // Tạo data để gửi cho tất cả thành viên
+          // Tạo data để gửi cho tất cả thành viên (kèm roomId để FE map conversation nhanh)
           const groupData = {
             groupId: group._id,
+            roomId: room && room._id ? room._id.toString() : undefined,
             newName: group.name,
             updatedAt: group.updatedAt,
             updatedBy: socket.userId,
@@ -342,7 +334,36 @@ class MessageSocket {
             }
           }
 
-          console.log(`Group renamed: ${group._id} -> ${group.name}`);
+          // Nếu đã tạo được tin nhắn hệ thống (đổi tên nhóm), emit ngay message_received tới phòng
+          if (message && room) {
+            // Tìm thông tin người gửi
+            const sender = room.members.find(
+              (m) => m._id.toString() === socket.userId.toString()
+            );
+
+            const messageData = {
+              _id: message._id,
+              senderId: message.senderId,
+              content: message.content,
+              roomId: message.roomId,
+              createdAt: message.createdAt,
+              sender: sender
+                ? {
+                    _id: sender._id,
+                    fullName: sender.fullName,
+                    profilePicture: sender.profilePicture,
+                  }
+                : undefined,
+            };
+
+            // Gửi tới người đổi tên (để hiện ngay trong khung chat của họ)
+            socket.emit("message_received", messageData);
+
+            // Gửi tới toàn bộ phòng
+            socket.to(`room:${room._id}`).emit("message_received", messageData);
+          }
+
+          // debug removed
         } catch (error) {
           console.error("Error renaming group:", error);
           socket.emit("group_error", {

@@ -10,7 +10,7 @@ const UserModel = require("../../../modules/user/models/UserModel");
 /**
  * Repository cho các thao tác với tin nhắn và phòng chat
  */
-class MessageRepository {
+class GroupRepository {
   constructor() {
     this.messageModel = MessageModel;
     this.roomModel = RoomModel;
@@ -18,19 +18,16 @@ class MessageRepository {
     this.groupModel = GroupModel;
   }
 
-  async renameGroup(groupId, name, currentUserId) {
-    // Kiểm tra group tồn tại
-    const group = await this.groupModel.findById(groupId);
-    if (!group) {
-      throw new Error('Group not found');
-    }
-    
-    // Kiểm tra user có phải là thành viên của nhóm không
-    const room = await this.roomModel.findOne({ groupId: groupId });
-    if (!room || !room.members.includes(currentUserId)) {
-      throw new Error('You are not a member of this group');
-    }
-    
+  async checkGroupOwner(groupId, userId) {
+    return await this.groupModel.findOne({ _id: groupId, ownerId: userId });
+  }
+
+  async deleteGroup(groupId) {
+    return await this.groupModel.findByIdAndDelete(groupId);
+  }
+
+  async renameGroup(groupId, name) {
+    // Repository chỉ cập nhật DB; kiểm tra hợp lệ chuyển lên service
     return await this.groupModel.findByIdAndUpdate(
       groupId,
       { name },
@@ -45,6 +42,14 @@ class MessageRepository {
     } catch (error) {
       throw error;
     }
+  }
+  async checkGroupMember(groupId, userId) {
+    const exists = await this.roomModel.exists({
+      groupId: groupId,
+      members: userId,
+    });
+
+    return !!exists;
   }
   async getGroupById(id) {
     try {
@@ -61,7 +66,7 @@ class MessageRepository {
       if (!room || !room.groupId) {
         return null;
       }
-      
+
       // Tìm group bằng groupId từ room
       return await this.groupModel.findById(room.groupId);
     } catch (error) {
@@ -70,4 +75,4 @@ class MessageRepository {
   }
 }
 
-module.exports = MessageRepository;
+module.exports = GroupRepository;

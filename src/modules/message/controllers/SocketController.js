@@ -198,47 +198,41 @@ class SocketController {
   /**
    * Đổi tên nhóm qua socket
    */
-  renameGroup = async (groupId, name, currentUserId) => {
+  // Tối ưu: chỉ nhận Room ID, tìm group qua roomId rồi đổi tên
+  renameGroup = async (roomId, name, currentUserId) => {
     try {
-      console.log('SocketController.renameGroup called with:', { groupId, name, currentUserId });
-      
-      if (!groupId || !name || !currentUserId) {
+      if (!roomId || !name || !currentUserId) {
         return {
           success: false,
-          message: "Group ID, name and user ID are required",
+          message: "Room ID, name and user ID are required",
         };
       }
 
-      // Thử rename bằng groupId trước, nếu không được thì thử bằng roomId
-      let group;
-      try {
-        console.log('Trying to rename group by groupId:', groupId);
-        group = await this.groupService.renameGroup(groupId, name, currentUserId);
-        console.log('Group renamed successfully by groupId:', group);
-      } catch (error) {
-        console.log('Error renaming by groupId:', error.message);
-        if (error.message === 'Group not found') {
-          // Nếu không tìm thấy group, thử tìm bằng roomId
-          console.log('Trying to rename group by roomId:', groupId);
-          group = await this.groupService.renameGroupByRoomId(groupId, name, currentUserId);
-          console.log('Group renamed successfully by roomId:', group);
-        } else {
-          throw error;
-        }
-      }
+      const group = await this.groupService.renameGroupByRoomId(
+        roomId,
+        name,
+        currentUserId
+      );
       
       // Lấy thông tin room để gửi cho tất cả thành viên
-      // Sử dụng groupId (thực chất là roomId) mà chúng ta đã có
-      const room = await this.roomService.getRoomById(groupId);
-      console.log('Room found:', room._id);
+      const room = await this.roomService.getRoomById(roomId);
+      // debug removed
 
       // Tạo tin nhắn thông báo đổi tên nhóm
       const notificationMessage = `Nhóm đã được đổi tên thành: ${group.name}`;
-      await this.createMessageInRoom(currentUserId, groupId, notificationMessage);
+      const createdMsgResult = await this.createMessageInRoom(
+        currentUserId,
+        roomId,
+        notificationMessage
+      );
+
+      const createdMessage = createdMsgResult && createdMsgResult.success
+        ? createdMsgResult.data.message
+        : undefined;
 
       return {
         success: true,
-        data: { group, room },
+        data: { group, room, message: createdMessage },
       };
     } catch (error) {
       console.error("Error in renameGroup controller:", error);

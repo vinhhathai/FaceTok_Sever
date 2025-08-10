@@ -24,10 +24,17 @@ class GroupService {
     this.groupRepository = new GroupRepository();
   }
 
-  async renameGroup(groupId, name, currentUserId) {
+  async deleteGroup(groupId, currentUserId) {
     try {
-      const group = await this.groupRepository.renameGroup(groupId, name, currentUserId);
-      return group;
+      const isOwner = await this.groupRepository.checkGroupOwner(
+        groupId,
+        currentUserId
+      );
+      if (!isOwner) {
+        throw new Error("You are not the owner of this group");
+      }
+      const deletedGroup = await this.groupRepository.deleteGroup(groupId);
+      return deletedGroup;
     } catch (error) {
       throw error;
     }
@@ -35,22 +42,28 @@ class GroupService {
 
   async renameGroupByRoomId(roomId, name, currentUserId) {
     try {
-      console.log('GroupService.renameGroupByRoomId called with:', { roomId, name, currentUserId });
-      
       // Tìm group bằng roomId
       const group = await this.groupRepository.getGroupByRoomId(roomId);
-      console.log('Group found by roomId:', group);
-      
       if (!group) {
-        throw new Error('Group not found');
+        throw new Error("Group not found");
       }
-      
+
+      // Kiểm tra quyền thành viên
+      const isMember = await this.groupRepository.checkGroupMember(
+        group._id,
+        currentUserId
+      );
+      if (!isMember) {
+        throw new Error("You are not a member of this group");
+      }
       // Rename group
-      const updatedGroup = await this.groupRepository.renameGroup(group._id, name, currentUserId);
-      console.log('Group renamed successfully:', updatedGroup);
+      const updatedGroup = await this.groupRepository.renameGroup(
+        group._id,
+        name
+      );
+      // debug removed
       return updatedGroup;
     } catch (error) {
-      console.error('Error in renameGroupByRoomId:', error);
       throw error;
     }
   }

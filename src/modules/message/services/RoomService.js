@@ -51,7 +51,7 @@ class RoomService {
       if (room.deleteBy && room.deleteBy.includes(senderId)) {
         // Khôi phục conversation cho sender
         await this.roomRepository.backupConversation(room._id);
-        console.log(`Restored conversation ${room._id} for user ${senderId}`);
+      // debug removed
       }
       
       return room;
@@ -117,7 +117,7 @@ class RoomService {
         throw new Error("Cannot create a room with yourself");
       }
 
-      console.log(`Creating room between users: ${userId1} and ${userId2}`);
+      // debug removed
 
       const room = await this.roomRepository.createRoom(userId1, userId2);
       return room;
