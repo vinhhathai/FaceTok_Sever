@@ -19,6 +19,11 @@ const GroupSchema = new Schema(
       ref: "users",
       required: true,
     },
+
+    isDissolved: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

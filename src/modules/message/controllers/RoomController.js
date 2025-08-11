@@ -16,6 +16,21 @@ class RoomController {
     this.roomService = RoomService;
   }
 
+  leaveGroup = async (req, res) => {
+    try {
+      const { error, value } = leaveGroupValidation.validate(req.body);
+      if (error) {
+        return res.status(400).json(RoomDto.error(error.details[0].message));
+      }
+      const { id } = value;
+      const currentUserId = req.user.id;
+      const group = await this.roomService.leaveGroup(id, currentUserId);
+      return res.status(200).json(RoomDto.success(group));
+    } catch (error) {
+      return res.status(500).json(RoomDto.error(error));
+    }
+  };
+
   deleteConversation = async (req, res) => {
     try {
       const { roomId } = req.params;

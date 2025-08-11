@@ -22,6 +22,8 @@ class RoomService {
     this.roomRepository = new RoomRepository();
   }
 
+
+
   async deleteConversation(roomId, userId) {
     try {
       const room = await this.roomRepository.deleteConversation(roomId, userId);
@@ -60,17 +62,6 @@ class RoomService {
     }
   }
 
-  async getRoom(roomId) {
-    try {
-      const room = await this.roomRepository.findRoomById(roomId);
-      if (!room) {
-        throw new Error("Room not found");
-      }
-      return room;
-    } catch (error) {
-      throw error;
-    }
-  }
   async getRoom(roomId) {
     try {
       const room = await this.roomRepository.findRoomById(roomId);
@@ -140,6 +131,28 @@ class RoomService {
       return room;
     } catch (error) {
       console.error("Error in getRoomById service:", error);
+      throw error;
+    }
+  }
+
+  async leaveGroup(roomId, userId) {
+    try {
+      const room = await this.roomRepository.findRoomById(roomId);
+      if (!room) throw new Error("Room not found");
+      // Kiểm tra là thành viên
+      const isMember = room.members.some(
+        (m) => m._id.toString() === userId.toString()
+      );
+      if (!isMember) throw new Error("You are not a member of this group");
+
+      // Ngăn owner tự rời nếu chưa chuyển quyền
+      if (room.groupId && room.groupId.ownerId?.toString?.() === userId.toString()) {
+        throw new Error("Owner cannot leave the group. Transfer ownership first");
+      }
+
+      await this.roomRepository.leaveRoom(roomId, userId);
+      return await this.roomRepository.findRoomById(roomId);
+    } catch (error) {
       throw error;
     }
   }

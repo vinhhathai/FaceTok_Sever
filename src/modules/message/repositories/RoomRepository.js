@@ -16,6 +16,12 @@ class RoomRepository {
     this.userModel = UserModel;
   }
 
+  async leaveRoom(roomId, userId) {
+    return await this.roomModel.findByIdAndUpdate(roomId, {
+      $pull: { members: userId },
+    });
+  }
+
   async createGroupChat(userId, groupName) {
     const room = new this.roomModel({
       members: [userId],
@@ -64,7 +70,8 @@ class RoomRepository {
   async findRoomById(roomId) {
     return await this.roomModel
       .findById(roomId)
-      .populate("members", "fullName profilePicture");
+      .populate("members", "fullName profilePicture")
+      .populate("groupId");
   }
 
   async backupConversation(roomId) {

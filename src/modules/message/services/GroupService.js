@@ -24,17 +24,36 @@ class GroupService {
     this.groupRepository = new GroupRepository();
   }
 
-  async deleteGroup(groupId, currentUserId) {
+  
+  async changeGroupOwner(roomId, currentUserId, newOwnerId) {
     try {
-      const isOwner = await this.groupRepository.checkGroupOwner(
-        groupId,
-        currentUserId
-      );
-      if (!isOwner) {
+      const group = await this.groupRepository.getGroupByRoomId(roomId);
+      if (!group) throw new Error("Group not found");
+      if (group.ownerId.toString() !== currentUserId.toString()) {
         throw new Error("You are not the owner of this group");
       }
-      const deletedGroup = await this.groupRepository.deleteGroup(groupId);
-      return deletedGroup;
+      const updatedGroup = await this.groupRepository.changeGroupOwner(
+        group._id,
+        newOwnerId
+      );
+      return updatedGroup;
+    } catch (error) {
+      throw error;
+    }
+  }
+ 
+
+  async dissolveGroupByRoomId(roomId, currentUserId) {
+    try {
+      // Tìm group từ roomId
+      const group = await this.groupRepository.getGroupByRoomId(roomId);
+      if (!group) throw new Error("Group not found");
+      if (group.ownerId.toString() !== currentUserId.toString()) {
+        throw new Error("You are not the owner of this group");
+      }
+      // Đánh dấu isDissolved thay vì xóa cứng
+      const dissolved = await this.groupRepository.deleteGroup(group._id);
+      return dissolved;
     } catch (error) {
       throw error;
     }

@@ -371,6 +371,207 @@ class MessageSocket {
           });
         }
       });
+
+      // Giải tán nhóm (owner only)
+      socket.on("dissolve_group", async (data) => {
+        if (!socket.userId) {
+          socket.emit("group_error", { message: "Not authenticated" });
+          return;
+        }
+
+        const roomId = data.roomId;
+        if (!roomId) {
+          socket.emit("group_error", { message: "Room ID is required" });
+          return;
+        }
+
+        try {
+          const result = await this.socketController.dissolveGroup(
+            roomId,
+            socket.userId
+          );
+          if (!result.success) {
+            socket.emit("group_error", { message: result.message });
+            return;
+          }
+
+          const room = result.data.room;
+          // Thông báo tới tất cả thành viên: group_dissolved
+          const payload = { roomId };
+          // gửi cho owner
+          socket.emit("group_dissolved", payload);
+          // gửi các thành viên khác
+          if (room && room.members) {
+            for (const member of room.members) {
+              if (member._id.toString() === socket.userId.toString()) continue;
+              this.io
+                .of("/message")
+                .to(`user:${member._id}`)
+                .emit("group_dissolved", payload);
+            }
+          }
+        } catch (error) {
+          socket.emit("group_error", {
+            message: error.message || "Failed to dissolve group",
+          });
+        }
+      });
+
+      // Chuyển quyền trưởng nhóm (owner only)
+      socket.on("change_group_owner", async (data) => {
+        if (!socket.userId) {
+          socket.emit("group_error", { message: "Not authenticated" });
+          return;
+        }
+
+        const roomId = data?.roomId;
+        const newOwnerId = data?.newOwnerId;
+        if (!roomId || !newOwnerId) {
+          socket.emit("group_error", { message: "Room ID and new owner ID are required" });
+          return;
+        }
+
+        try {
+          const result = await this.socketController.changeGroupOwner(
+            roomId,
+            socket.userId,
+            newOwnerId
+          );
+
+          if (!result.success) {
+            socket.emit("group_error", { message: result.message });
+            return;
+          }
+
+          const { group, room, message } = result.data;
+
+          const payload = {
+            roomId,
+            groupId: group?._id?.toString?.() || group?._id || undefined,
+            newOwnerId: group?.ownerId?.toString?.() || newOwnerId,
+            updatedAt: group?.updatedAt,
+          };
+
+          // Thông báo tới người thực hiện
+          socket.emit("group_owner_changed", payload);
+          if (message) {
+            // Gửi message ngay tới người thực hiện
+            socket.emit("message_received", {
+              _id: message._id,
+              senderId: message.senderId,
+              content: message.content,
+              roomId: message.roomId,
+              createdAt: message.createdAt,
+            });
+          }
+
+          // Thông báo tới toàn bộ thành viên phòng
+          if (room && room.members) {
+            for (const member of room.members) {
+              const memberId = member._id.toString();
+              if (memberId === socket.userId.toString()) continue;
+              this.io.of("/message").to(`user:${memberId}`).emit("group_owner_changed", payload);
+              if (message) {
+                this.io.of("/message").to(`user:${memberId}`).emit("message_received", {
+                  _id: message._id,
+                  senderId: message.senderId,
+                  content: message.content,
+                  roomId: message.roomId,
+                  createdAt: message.createdAt,
+                });
+              }
+            }
+          }
+        } catch (error) {
+          socket.emit("group_error", { message: error.message || "Failed to change group owner" });
+        }
+      });
+
+      // Thành viên rời nhóm
+      socket.on("leave_group", async (data) => {
+        if (!socket.userId) {
+          socket.emit("group_error", { message: "Not authenticated" });
+          return;
+        }
+
+        const roomId = data?.roomId;
+        if (!roomId) {
+          socket.emit("group_error", { message: "Room ID is required" });
+          return;
+        }
+
+        try {
+          const result = await this.socketController.leaveGroup(
+            roomId,
+            socket.userId
+          );
+          if (!result.success) {
+            socket.emit("group_error", { message: result.message });
+            return;
+          }
+
+          // Emit tới chính user: đã rời nhóm
+          socket.emit("group_left", { roomId });
+          // Rời socket room
+          const roomName = `room:${roomId}`;
+          const rooms = Array.from(socket.rooms);
+          if (rooms.includes(roomName)) {
+            socket.leave(roomName);
+          }
+
+          const room = result.data.room;
+          // Thông báo tới các thành viên còn lại và gửi message hệ thống
+          // Lấy tên người rời nhóm
+          let actorName = "Một thành viên";
+          try {
+            const user = await this.socketController.messageService.userRepository.findById(
+              socket.userId
+            );
+            if (user && user.fullName) actorName = user.fullName;
+          } catch {}
+
+          const systemMessage = `${actorName} đã rời nhóm`;
+
+          // Chọn một thành viên còn lại làm sender cho message hệ thống để vượt qua kiểm tra membership
+          const remainingMemberId = room.members?.[0]?._id?.toString?.();
+          let createdMsg = null;
+          if (remainingMemberId) {
+            createdMsg = await this.socketController.createMessageInRoom(
+              remainingMemberId,
+              roomId,
+              systemMessage
+            );
+          }
+          const message = createdMsg?.success ? createdMsg.data.message : null;
+
+          if (room && room.members) {
+            for (const member of room.members) {
+              const memberId = member._id.toString();
+              if (memberId === socket.userId.toString()) continue;
+              this.io
+                .of("/message")
+                .to(`user:${memberId}`)
+                .emit("group_member_left", { roomId, userId: socket.userId });
+              if (message) {
+                this.io
+                  .of("/message")
+                  .to(`user:${memberId}`)
+                  .emit("message_received", {
+                    _id: message._id,
+                    senderId: message.senderId,
+                    content: message.content,
+                    roomId: message.roomId,
+                    createdAt: message.createdAt,
+                  });
+              }
+            }
+          }
+        } catch (error) {
+          socket.emit("group_error", {
+            message: error.message || "Failed to leave group",
+          });
+        }
+      });
     });
   }
 }

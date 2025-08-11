@@ -7,6 +7,7 @@ const checkLogin = require("../../../shared/middlewares/checkLogin");
 const GroupController = require("../controllers/GroupController");
 
 // Group API
+// router.put("/group/change-owner", checkLogin, GroupController.changeGroupOwner);
 router.post("/group", checkLogin, GroupController.createGroup);
 router.get("/group/:id", checkLogin, GroupController.getGroupById);
 
@@ -14,11 +15,13 @@ router.get("/group/:id", checkLogin, GroupController.getGroupById);
 // Delete conversation
 router.delete("/room/:roomId", checkLogin, RoomController.deleteConversation);
 
+router.post("/room/leave", checkLogin, RoomController.leaveGroup);
+
 // Get or create room
 router.post("/room/get-or-create", checkLogin, RoomController.getOrCreateRoom);
 
-// Lấy thông tin phòng 2 user
-// router.get("/room/:roomId", checkLogin, RoomController.getRoomById);
+// Get room by id
+router.get("/room/:roomId", checkLogin, RoomController.getRoomById);
 // Get messages in room
 router.get("/room/:roomId/messages", checkLogin, MessageController.getMessages);
 

@@ -97,7 +97,7 @@ class SocketController {
       };
     } catch (error) {
       // Không log lỗi block user vì đây là business logic bình thường
-      if (!error.message.includes('blocked')) {
+      if (!error.message.includes("blocked")) {
         console.error("Error in createMessageInRoom controller:", error);
       }
       return {
@@ -195,6 +195,21 @@ class SocketController {
     }
   };
 
+  leaveGroup = async (roomId, currentUserId) => {
+    try {
+      if (!roomId || !currentUserId) {
+        return { success: false, message: "Room ID and user ID are required" };
+      }
+      const updatedRoom = await this.roomService.leaveGroup(roomId, currentUserId);
+      return { success: true, data: { room: updatedRoom } };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to leave group",
+      };
+    }
+  };
+
   /**
    * Đổi tên nhóm qua socket
    */
@@ -213,7 +228,7 @@ class SocketController {
         name,
         currentUserId
       );
-      
+
       // Lấy thông tin room để gửi cho tất cả thành viên
       const room = await this.roomService.getRoomById(roomId);
       // debug removed
@@ -226,9 +241,10 @@ class SocketController {
         notificationMessage
       );
 
-      const createdMessage = createdMsgResult && createdMsgResult.success
-        ? createdMsgResult.data.message
-        : undefined;
+      const createdMessage =
+        createdMsgResult && createdMsgResult.success
+          ? createdMsgResult.data.message
+          : undefined;
 
       return {
         success: true,
@@ -239,6 +255,90 @@ class SocketController {
       return {
         success: false,
         message: error.message || "Failed to rename group",
+      };
+    }
+  };
+
+  /**
+   * Chuyển quyền trưởng nhóm qua roomId
+   */
+  changeGroupOwner = async (roomId, currentUserId, newOwnerId) => {
+    try {
+      if (!roomId || !currentUserId || !newOwnerId) {
+        return {
+          success: false,
+          message: "Room ID, current user ID and new owner ID are required",
+        };
+      }
+
+      const updatedGroup = await this.groupService.changeGroupOwner(
+        roomId,
+        currentUserId,
+        newOwnerId
+      );
+
+      // Lấy room để emit cho các thành viên
+      const room = await this.roomService.getRoomById(roomId);
+
+      // Tạo tin nhắn hệ thống thông báo chuyển quyền
+      try {
+        const actor = room?.members?.find?.(
+          (m) => m._id.toString() === currentUserId.toString()
+        );
+        const newOwner = room?.members?.find?.(
+          (m) => m._id.toString() === newOwnerId.toString()
+        );
+        const actorName = actor?.fullName || "Một thành viên";
+        const newOwnerName = newOwner?.fullName || "thành viên khác";
+        const systemMessage = `${actorName} đã chuyển quyền trưởng nhóm cho ${newOwnerName}`;
+        const createdMsgResult = await this.createMessageInRoom(
+          currentUserId,
+          roomId,
+          systemMessage
+        );
+        const createdMessage =
+          createdMsgResult && createdMsgResult.success
+            ? createdMsgResult.data.message
+            : undefined;
+
+        return {
+          success: true,
+          data: { group: updatedGroup, room, message: createdMessage },
+        };
+      } catch (e) {
+        // Không chặn flow nếu tin nhắn hệ thống tạo thất bại
+        return {
+          success: true,
+          data: { group: updatedGroup, room },
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to change group owner",
+      };
+    }
+  };
+
+  dissolveGroup = async (roomId, currentUserId) => {
+    try {
+      if (!roomId || !currentUserId) {
+        return { success: false, message: "Room ID and user ID are required" };
+      }
+
+      const result = await this.groupService.dissolveGroupByRoomId(
+        roomId,
+        currentUserId
+      );
+
+      // Lấy room để lấy danh sách members emit
+      const room = await this.roomService.getRoomById(roomId);
+
+      return { success: true, data: { room } };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to dissolve group",
       };
     }
   };

@@ -34,8 +34,28 @@ const renameGroupValidation = Joi.object({
   }),
 });
 
+const changeGroupOwnerValidation = Joi.object({
+  id: Joi.string().required().messages({
+    "any.required": "Room ID is required",
+    "string.empty": "Room ID cannot be empty",
+  }),
+  newOwnerId: Joi.string().required().messages({
+    "any.required": "New owner ID is required",
+    "string.empty": "New owner ID cannot be empty",
+  }),
+});
+
+const leaveGroupValidation = Joi.object({
+  id: Joi.string().required().messages({
+    "any.required": "Room ID is required",
+    "string.empty": "Room ID cannot be empty",
+  }),
+});
+
+
 module.exports = {
   createGroupValidation,
   getGroupByIdValidation,
   renameGroupValidation,
+  changeGroupOwnerValidation,
 };

@@ -18,12 +18,16 @@ class GroupRepository {
     this.groupModel = GroupModel;
   }
 
-  async checkGroupOwner(groupId, userId) {
-    return await this.groupModel.findOne({ _id: groupId, ownerId: userId });
+  async changeGroupOwner(groupId, newOwnerId) {
+    return await this.groupModel.findByIdAndUpdate(groupId, {
+      ownerId: newOwnerId,
+    });
   }
 
   async deleteGroup(groupId) {
-    return await this.groupModel.findByIdAndDelete(groupId);
+    return await this.groupModel.findByIdAndUpdate(groupId, {
+      isDissolved: true,
+    });
   }
 
   async renameGroup(groupId, name) {
