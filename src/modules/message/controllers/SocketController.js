@@ -195,6 +195,58 @@ class SocketController {
     }
   };
 
+  /**
+   * Kick a member from group by roomId (owner only)
+   */
+  kickOutMember = async (roomId, currentUserId, kickOutUserId) => {
+    try {
+      if (!roomId || !currentUserId || !kickOutUserId) {
+        return {
+          success: false,
+          message: "Room ID, current user ID and target user ID are required",
+        };
+      }
+
+      // Thực hiện kick
+      await this.roomService.kickOutMember(roomId, currentUserId, kickOutUserId);
+
+      // Lấy room đã cập nhật (populate members) để emit
+      const room = await this.roomService.getRoomById(roomId);
+
+      // Tạo tin nhắn hệ thống thông báo kick
+      try {
+        const actor = room?.members?.find?.(
+          (m) => m._id.toString() === currentUserId.toString()
+        );
+        const kicked = room?.members?.find?.(
+          (m) => m._id.toString() === kickOutUserId.toString()
+        );
+        const actorName = actor?.fullName || "Một thành viên";
+        const kickedName = kicked?.fullName || "một thành viên";
+        const systemMessage = `${actorName} đã xoá ${kickedName} khỏi nhóm`;
+        const createdMsgResult = await this.createMessageInRoom(
+          currentUserId,
+          roomId,
+          systemMessage
+        );
+        const createdMessage =
+          createdMsgResult && createdMsgResult.success
+            ? createdMsgResult.data.message
+            : undefined;
+
+        return { success: true, data: { room, message: createdMessage } };
+      } catch (e) {
+        // Không chặn flow nếu không tạo được message hệ thống
+        return { success: true, data: { room } };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to kick member",
+      };
+    }
+  };
+
   leaveGroup = async (roomId, currentUserId) => {
     try {
       if (!roomId || !currentUserId) {

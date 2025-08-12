@@ -52,10 +52,22 @@ const leaveGroupValidation = Joi.object({
   }),
 });
 
+const kickOutMemberValidation = Joi.object({
+  roomId: Joi.string().required().messages({
+    "any.required": "Room ID is required",
+    "string.empty": "Room ID cannot be empty",
+  }),
+  kickOutUserId: Joi.string().required().messages({
+    "any.required": "User ID is required",
+    "string.empty": "User ID cannot be empty",
+  }),
+});
 
 module.exports = {
   createGroupValidation,
   getGroupByIdValidation,
   renameGroupValidation,
   changeGroupOwnerValidation,
+  leaveGroupValidation,
+  kickOutMemberValidation,
 };

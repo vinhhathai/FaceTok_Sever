@@ -22,6 +22,25 @@ class RoomService {
     this.roomRepository = new RoomRepository();
   }
 
+  async kickOutMember(roomId, userId, kickOutUserId) {
+    try {
+      const room = await this.roomRepository.findRoomById(roomId);
+      // Chỉ áp dụng cho phòng nhóm có groupId và có owner
+      const ownerId = room?.groupId?.ownerId;
+      if (!ownerId) {
+        throw new Error("This room is not a group or group has no owner");
+      }
+      if (ownerId.toString() !== userId.toString()) {
+        throw new Error("You are not the owner of this group");
+      }
+
+      const newRoom = await this.roomRepository.kickOutMember(roomId, kickOutUserId);
+
+      return newRoom;
+    } catch (error) {
+      throw error;
+    }
+  }
 
 
   async deleteConversation(roomId, userId) {

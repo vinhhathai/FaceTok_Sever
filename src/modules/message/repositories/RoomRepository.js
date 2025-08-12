@@ -16,6 +16,14 @@ class RoomRepository {
     this.userModel = UserModel;
   }
 
+  async kickOutMember(roomId, userId) {
+    return await this.roomModel.findByIdAndUpdate(
+      roomId,
+      { $pull: { members: userId } },
+      { new: true }
+    );
+  }
+
   async leaveRoom(roomId, userId) {
     return await this.roomModel.findByIdAndUpdate(roomId, {
       $pull: { members: userId },

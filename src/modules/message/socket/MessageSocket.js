@@ -572,6 +572,88 @@ class MessageSocket {
           });
         }
       });
+
+      // Owner kick a member from group
+      socket.on("kick_member", async (data) => {
+        if (!socket.userId) {
+          socket.emit("group_error", { message: "Not authenticated" });
+          return;
+        }
+
+        const roomId = data?.roomId;
+        const targetUserId = data?.userId || data?.kickOutUserId;
+        if (!roomId || !targetUserId) {
+          socket.emit("group_error", { message: "Room ID and user ID are required" });
+          return;
+        }
+
+        try {
+          const result = await this.socketController.kickOutMember(
+            roomId,
+            socket.userId,
+            targetUserId
+          );
+
+          if (!result.success) {
+            socket.emit("group_error", { message: result.message });
+            return;
+          }
+
+          const { room, message } = result.data;
+
+          // Thông báo tới owner (người kick)
+          socket.emit("group_member_kicked", { roomId, userId: targetUserId });
+
+          // Buộc target rời khỏi socket room và nhận thông báo
+          const targetSocketId = this.userSocketMap.get(targetUserId);
+          if (targetSocketId) {
+            // thông báo riêng đến nạn nhân
+            this.io
+              .of("/message")
+              .to(`user:${targetUserId}`)
+              .emit("group_member_kicked", { roomId, userId: targetUserId });
+
+            // đảm bảo socket target rời khỏi room
+            const targetSocket = this.io.of("/message").sockets.get(targetSocketId);
+            if (targetSocket) {
+              const roomName = `room:${roomId}`;
+              const rooms = Array.from(targetSocket.rooms);
+              if (rooms.includes(roomName)) {
+                targetSocket.leave(roomName);
+              }
+            }
+          }
+
+          // Emit tới các thành viên còn lại trong nhóm
+          if (room && room.members) {
+            for (const member of room.members) {
+              const memberId = member._id.toString();
+              if (memberId === socket.userId.toString()) continue;
+              this.io
+                .of("/message")
+                .to(`user:${memberId}`)
+                .emit("group_member_kicked", { roomId, userId: targetUserId });
+
+              if (message) {
+                this.io
+                  .of("/message")
+                  .to(`user:${memberId}`)
+                  .emit("message_received", {
+                    _id: message._id,
+                    senderId: message.senderId,
+                    content: message.content,
+                    roomId: message.roomId,
+                    createdAt: message.createdAt,
+                  });
+              }
+            }
+          }
+        } catch (error) {
+          socket.emit("group_error", {
+            message: error.message || "Failed to kick member",
+          });
+        }
+      });
     });
   }
 }

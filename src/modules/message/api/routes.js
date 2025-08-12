@@ -14,6 +14,8 @@ router.get("/group/:id", checkLogin, GroupController.getGroupById);
 // Room API
 // Delete conversation
 router.delete("/room/:roomId", checkLogin, RoomController.deleteConversation);
+// Kick out member
+router.post("/room/kick-out", checkLogin, RoomController.kickOutMember);
 
 router.post("/room/leave", checkLogin, RoomController.leaveGroup);
 

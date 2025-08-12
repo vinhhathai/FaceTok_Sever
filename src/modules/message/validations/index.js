@@ -5,7 +5,7 @@
 const { sendMessageValidation } = require('./messageValidation');
 const { createDirectRoomValidation } = require('./directRoomValidation');
 const { getRoomsValidation, getRoomDetailsValidation, getRoomByIdValidation } = require('./roomListValidation');
-const { createGroupValidation, getGroupByIdValidation, renameGroupValidation } = require('./groupValidation');
+const { createGroupValidation, getGroupByIdValidation, renameGroupValidation, leaveGroupValidation, kickOutMemberValidation } = require('./groupValidation');
 
 // Export all validations
 module.exports = {
@@ -16,5 +16,7 @@ module.exports = {
     getRoomByIdValidation,
     createGroupValidation,
     getGroupByIdValidation,
-    renameGroupValidation
+  renameGroupValidation,
+  leaveGroupValidation,
+  kickOutMemberValidation
 }; 
