@@ -11,12 +11,29 @@ const {
   leaveGroupValidation,
 } = require("../validations");
 const { VALIDATION_ERRORS } = require("../../../shared/common/error");
+const { inviteToGroupValidation } = require("../validations/groupValidation");
 
 class RoomController {
   constructor() {
     this.messageService = MessageService;
     this.roomService = RoomService;
   }
+
+  inviteToGroup = async (req, res) => {
+    try {
+      const { error, value } = inviteToGroupValidation.validate(req.body);
+      if (error) {
+        return res.status(400).json(RoomDto.error(error.details[0].message));
+      }
+      const { roomId, userId } = value;
+      const inviterId = req.user.id;
+      const room = await this.roomService.inviteToGroup(roomId, userId, inviterId);
+      return res.status(200).json(RoomDto.success(room));
+    } catch (error) {
+      return res.status(500).json(RoomDto.error(error));
+    }
+  };
+
   kickOutMember = async (req, res) => {
     try {
       const { error, value } = kickOutMemberValidation.validate(req.body);
@@ -25,7 +42,11 @@ class RoomController {
       }
       const { roomId, kickOutUserId } = value;
       const currentUserId = req.user.id;
-      const room = await this.roomService.kickOutMember(roomId, currentUserId, kickOutUserId);
+      const room = await this.roomService.kickOutMember(
+        roomId,
+        currentUserId,
+        kickOutUserId
+      );
       return res.status(200).json(RoomDto.success(room));
     } catch (error) {
       return res.status(500).json(RoomDto.error(error));

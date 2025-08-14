@@ -16,6 +16,14 @@ class RoomRepository {
     this.userModel = UserModel;
   }
 
+  async inviteToGroup(roomId, userId) {
+    return await this.roomModel.findByIdAndUpdate(
+      roomId,
+      { $addToSet: { members: userId } },
+      { new: true }
+    );
+  }
+
   async kickOutMember(roomId, userId) {
     return await this.roomModel.findByIdAndUpdate(
       roomId,

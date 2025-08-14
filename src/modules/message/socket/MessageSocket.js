@@ -654,6 +654,169 @@ class MessageSocket {
           });
         }
       });
+
+      // Invite member to group
+      socket.on("invite_member", async (data) => {
+        if (!socket.userId) {
+          socket.emit("group_error", { message: "Not authenticated" });
+          return;
+        }
+
+        const roomId = data?.roomId;
+        const targetUserId = data?.userId || data?.targetUserId;
+        if (!roomId || !targetUserId) {
+          socket.emit("group_error", { message: "Room ID and user ID are required" });
+          return;
+        }
+
+        try {
+          const result = await this.socketController.inviteMember(
+            roomId,
+            socket.userId,
+            targetUserId
+          );
+
+          if (!result.success) {
+            socket.emit("group_error", { message: result.message });
+            return;
+          }
+
+          const { room, message } = result.data;
+
+          // Thông báo tới người mời
+          socket.emit("group_member_invited", { roomId, userId: targetUserId });
+
+          // Gửi message hệ thống tới người mời để hiển thị realtime
+          if (message) {
+            socket.emit("message_received", {
+              _id: message._id,
+              senderId: message.senderId,
+              content: message.content,
+              roomId: message.roomId,
+              createdAt: message.createdAt,
+            });
+          }
+
+          // Nếu người được mời đang online, đưa họ join socket room
+          const targetSocketId = this.userSocketMap.get(targetUserId);
+          if (targetSocketId) {
+            this.io
+              .of("/message")
+              .to(`user:${targetUserId}`)
+              .emit("group_member_invited", { roomId, userId: targetUserId });
+            const targetSocket = this.io.of("/message").sockets.get(targetSocketId);
+            if (targetSocket) {
+              const roomName = `room:${roomId}`;
+              const rooms = Array.from(targetSocket.rooms);
+              if (!rooms.includes(roomName)) {
+                targetSocket.join(roomName);
+              }
+            }
+          }
+
+          // Emit tới các thành viên hiện tại trong nhóm
+          if (room && room.members) {
+            for (const member of room.members) {
+              const memberId = member._id.toString();
+              if (memberId === socket.userId.toString()) continue;
+              this.io
+                .of("/message")
+                .to(`user:${memberId}`)
+                .emit("group_member_invited", { roomId, userId: targetUserId });
+
+              if (message) {
+                this.io
+                  .of("/message")
+                  .to(`user:${memberId}`)
+                  .emit("message_received", {
+                    _id: message._id,
+                    senderId: message.senderId,
+                    content: message.content,
+                    roomId: message.roomId,
+                    createdAt: message.createdAt,
+                  });
+              }
+            }
+          }
+        } catch (error) {
+          socket.emit("group_error", {
+            message: error.message || "Failed to invite member",
+          });
+        }
+      });
+
+      // Update group avatar (socket event expects avatarUrl already uploaded)
+      socket.on("update_group_avatar", async (data) => {
+        if (!socket.userId) {
+          socket.emit("group_error", { message: "Not authenticated" });
+          return;
+        }
+
+        const roomId = data?.roomId;
+        const avatarUrl = data?.avatarUrl;
+        if (!roomId || !avatarUrl) {
+          socket.emit("group_error", { message: "Room ID and avatar URL are required" });
+          return;
+        }
+
+        try {
+          const result = await this.socketController.updateGroupAvatar(
+            roomId,
+            socket.userId,
+            avatarUrl
+          );
+
+          if (!result.success) {
+            socket.emit("group_error", { message: result.message });
+            return;
+          }
+
+          const { group, room, message } = result.data;
+
+          // Notify updater
+          socket.emit("group_avatar_updated", { roomId, avatar: group?.avatar });
+
+          // Broadcast to members
+          if (room && room.members) {
+            for (const member of room.members) {
+              const memberId = member._id.toString();
+              if (memberId === socket.userId.toString()) continue;
+              this.io
+                .of("/message")
+                .to(`user:${memberId}`)
+                .emit("group_avatar_updated", { roomId, avatar: group?.avatar });
+
+              if (message) {
+                this.io
+                  .of("/message")
+                  .to(`user:${memberId}`)
+                  .emit("message_received", {
+                    _id: message._id,
+                    senderId: message.senderId,
+                    content: message.content,
+                    roomId: message.roomId,
+                    createdAt: message.createdAt,
+                  });
+              }
+            }
+          }
+
+          // Also deliver the system message to the updater
+          if (message) {
+            socket.emit("message_received", {
+              _id: message._id,
+              senderId: message.senderId,
+              content: message.content,
+              roomId: message.roomId,
+              createdAt: message.createdAt,
+            });
+          }
+        } catch (error) {
+          socket.emit("group_error", {
+            message: error.message || "Failed to update group avatar",
+          });
+        }
+      });
     });
   }
 }

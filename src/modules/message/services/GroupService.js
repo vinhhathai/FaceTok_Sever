@@ -87,6 +87,30 @@ class GroupService {
     }
   }
 
+  async updateGroupAvatarByRoomId(roomId, currentUserId, avatarUrl) {
+    try {
+      const group = await this.groupRepository.getGroupByRoomId(roomId);
+      if (!group) throw new Error("Group not found");
+
+      // Cho phép bất kỳ thành viên cập nhật ảnh đại diện nhóm
+      const isMember = await this.groupRepository.checkGroupMember(
+        group._id,
+        currentUserId
+      );
+      if (!isMember) {
+        throw new Error("You are not a member of this group");
+      }
+
+      const updatedGroup = await this.groupRepository.updateGroupAvatar(
+        group._id,
+        avatarUrl
+      );
+      return updatedGroup;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async createGroup(name, ownerId, members = []) {
     try {
       // 1. Tạo room trước

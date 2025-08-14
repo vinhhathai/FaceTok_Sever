@@ -18,6 +18,7 @@ class GroupRepository {
     this.groupModel = GroupModel;
   }
 
+
   async changeGroupOwner(groupId, newOwnerId) {
     return await this.groupModel.findByIdAndUpdate(groupId, {
       ownerId: newOwnerId,
@@ -35,6 +36,14 @@ class GroupRepository {
     return await this.groupModel.findByIdAndUpdate(
       groupId,
       { name },
+      { new: true }
+    );
+  }
+
+  async updateGroupAvatar(groupId, avatarUrl) {
+    return await this.groupModel.findByIdAndUpdate(
+      groupId,
+      { avatar: avatarUrl },
       { new: true }
     );
   }

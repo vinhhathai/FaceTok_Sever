@@ -34,6 +34,13 @@ const renameGroupValidation = Joi.object({
   }),
 });
 
+const updateGroupAvatarValidation = Joi.object({
+  id: Joi.string().required().messages({
+    "any.required": "Group ID is required",
+    "string.empty": "Group ID cannot be empty",
+  }),
+});
+
 const changeGroupOwnerValidation = Joi.object({
   id: Joi.string().required().messages({
     "any.required": "Room ID is required",
@@ -63,6 +70,17 @@ const kickOutMemberValidation = Joi.object({
   }),
 });
 
+const inviteToGroupValidation = Joi.object({
+  roomId: Joi.string().required().messages({
+    "any.required": "Room ID is required",
+    "string.empty": "Room ID cannot be empty",
+  }),
+  userId: Joi.string().required().messages({
+    "any.required": "User ID is required",
+    "string.empty": "User ID cannot be empty",
+  }),
+});
+
 module.exports = {
   createGroupValidation,
   getGroupByIdValidation,
@@ -70,4 +88,6 @@ module.exports = {
   changeGroupOwnerValidation,
   leaveGroupValidation,
   kickOutMemberValidation,
+  inviteToGroupValidation,
+  updateGroupAvatarValidation,
 };

@@ -372,6 +372,107 @@ class SocketController {
     }
   };
 
+  /**
+   * Mời thành viên vào nhóm qua roomId (bất kỳ thành viên đều có thể mời)
+   */
+  inviteMember = async (roomId, currentUserId, targetUserId) => {
+    try {
+      if (!roomId || !currentUserId || !targetUserId) {
+        return {
+          success: false,
+          message: "Room ID, current user ID and target user ID are required",
+        };
+      }
+
+      await this.roomService.inviteToGroup(roomId, targetUserId, currentUserId);
+
+      // Lấy room đã cập nhật (populate members) để emit
+      const room = await this.roomService.getRoomById(roomId);
+
+      // Tạo tin nhắn hệ thống thông báo mời thành viên
+      try {
+        const actor = room?.members?.find?.(
+          (m) => m._id.toString() === currentUserId.toString()
+        );
+        const invited = room?.members?.find?.(
+          (m) => m._id.toString() === targetUserId.toString()
+        );
+        const actorName = actor?.fullName || "Một thành viên";
+        const invitedName = invited?.fullName || "một thành viên";
+        const systemMessage = `${actorName} đã thêm ${invitedName} vào nhóm`;
+        const createdMsgResult = await this.createMessageInRoom(
+          currentUserId,
+          roomId,
+          systemMessage
+        );
+        const createdMessage =
+          createdMsgResult && createdMsgResult.success
+            ? createdMsgResult.data.message
+            : undefined;
+
+        return { success: true, data: { room, message: createdMessage } };
+      } catch (e) {
+        // Không chặn flow nếu không tạo được message hệ thống
+        return { success: true, data: { room } };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to invite member",
+      };
+    }
+  };
+
+  /**
+   * Cập nhật ảnh avatar nhóm qua socket (avatarUrl đã được upload trước)
+   */
+  updateGroupAvatar = async (roomId, currentUserId, avatarUrl) => {
+    try {
+      if (!roomId || !currentUserId || !avatarUrl) {
+        return {
+          success: false,
+          message: "Room ID, user ID and avatar URL are required",
+        };
+      }
+
+      const group = await this.groupService.updateGroupAvatarByRoomId(
+        roomId,
+        currentUserId,
+        avatarUrl
+      );
+
+      // Lấy room để emit
+      const room = await this.roomService.getRoomById(roomId);
+
+      // Tạo tin nhắn hệ thống thông báo cập nhật avatar
+      try {
+        const actor = room?.members?.find?.(
+          (m) => m._id.toString() === currentUserId.toString()
+        );
+        const actorName = actor?.fullName || "Một thành viên";
+        const systemMessage = `${actorName} đã cập nhật ảnh nhóm`;
+        const createdMsgResult = await this.createMessageInRoom(
+          currentUserId,
+          roomId,
+          systemMessage
+        );
+        const createdMessage =
+          createdMsgResult && createdMsgResult.success
+            ? createdMsgResult.data.message
+            : undefined;
+
+        return { success: true, data: { group, room, message: createdMessage } };
+      } catch (e) {
+        return { success: true, data: { group, room } };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to update group avatar",
+      };
+    }
+  };
+
   dissolveGroup = async (roomId, currentUserId) => {
     try {
       if (!roomId || !currentUserId) {

@@ -10,6 +10,13 @@ const GroupController = require("../controllers/GroupController");
 // router.put("/group/change-owner", checkLogin, GroupController.changeGroupOwner);
 router.post("/group", checkLogin, GroupController.createGroup);
 router.get("/group/:id", checkLogin, GroupController.getGroupById);
+router.post("/group/invite", checkLogin, RoomController.inviteToGroup);
+// Update group avatar by roomId (id=roomId)
+router.post(
+  "/group/update-avatar",
+  checkLogin,
+  GroupController.updateAvatar
+);
 
 // Room API
 // Delete conversation
