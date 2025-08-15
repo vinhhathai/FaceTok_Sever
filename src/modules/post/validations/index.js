@@ -1,16 +1,8 @@
-'use strict';
+"use strict";
 //----------------------------------------------------------------
 
 // Import all validations
-const { 
-    createPostValidation,
-    updatePostValidation,
-    createCommentValidation
-} = require('./postValidation');
+const {} = require("./postValidation");
 
 // Export all validations
-module.exports = {
-    createPostValidation,
-    updatePostValidation,
-    createCommentValidation
-}; 
+module.exports = {};
