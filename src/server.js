@@ -4,6 +4,7 @@ const app = require('./app');
 const http = require('http');
 const socketIo = require('socket.io');
 const MessageSocket = require('./modules/message/socket/MessageSocket');
+const SocketBus = require('./shared/socket/SocketBus');
 require('dotenv').config();
 
 // Get port from environment or use default port 3000
@@ -25,6 +26,9 @@ const io = socketIo(server, {
 // Initialize message socket handler
 const messageSocket = new MessageSocket(io);
 messageSocket.init();
+
+// Expose io instance to HTTP controllers via SocketBus
+SocketBus.setIo(io);
 
 // Start the server
 server.listen(port);

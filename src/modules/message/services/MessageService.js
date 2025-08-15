@@ -3,19 +3,6 @@
 const MessageRepository = require("../repositories/MessageRepository");
 const RoomRepository = require("../repositories/RoomRepository");
 const UserRepository = require("../../user/repositories/UserRepository");
-const {
-  errorCode,
-  errorMessage,
-  VALIDATION_ERRORS,
-  DATA_ERRORS,
-  MESSAGE_ERRORS,
-  SERVER_ERRORS,
-  VALIDATION_MESSAGES,
-  DATA_MESSAGES,
-  MESSAGE_MESSAGES,
-  SERVER_MESSAGES,
-} = require("../../../shared/common/error");
-const { RoomDto, MessageDto } = require("../dtos");
 
 class MessageService {
   constructor() {
@@ -51,22 +38,26 @@ class MessageService {
       }
 
       if (!room.groupId) {
-        const receiverId = room.members.find(
+        // Direct message: enforce mutual block policy (either side blocked => prevent sending)
+        const receiverMember = room.members.find(
           (member) => member._id.toString() !== senderId.toString()
         );
-        const receiver = await this.userRepository.findById(receiverId);
+        const receiverUserId = receiverMember?._id?.toString?.() || receiverMember?.toString?.() || receiverMember;
+        
+        const [receiver, sender] = await Promise.all([
+          this.userRepository.findById(receiverUserId),
+          this.userRepository.findById(senderId),
+        ]);
+
+        const receiverBlockedList = (receiver?.blockedUsers || []).map((u) => u.toString());
+        const senderBlockedList = (sender?.blockedUsers || []).map((u) => u.toString());
+
         if (
-          receiver.blockedUsers.some(
-            (blockedUser) => blockedUser.toString() === senderId.toString()
-          )
+          receiverBlockedList.includes(senderId.toString()) ||
+          senderBlockedList.includes(receiverUserId?.toString?.() || String(receiverUserId))
         ) {
           throw new Error(
-            "Bạn không thể gửi tin nhắn cho người dùng này vì đã bị chặn"
-          );
-        }
-        if (receiver.isBlocked) {
-          throw new Error(
-            "Bạn không thể gửi tin nhắn cho người dùng này vì đã bị chặn"
+            "You cannot send message to this user because they have blocked you"
           );
         }
       }
@@ -94,35 +85,6 @@ class MessageService {
       if (!error.message.includes('blocked')) {
         console.error("Error in createMessageInRoom service:", error);
       }
-      throw error;
-    }
-  }
-
-  /**
-   * @deprecated Sử dụng getOrCreateRoom + createMessageInRoom thay thế
-   * Phương thức này được giữ lại để tương thích ngược
-   */
-  async sendMessage(senderId, receiverId, content) {
-    try {
-      // Lấy hoặc tạo phòng chat
-      const room = await this.roomRepository.getOrCreateRoom(
-        senderId,
-        receiverId
-      );
-
-      // Tạo tin nhắn mới trong phòng
-      const message = await this.messageRepository.createMessage(
-        senderId,
-        room._id,
-        content
-      );
-
-      return {
-        message,
-        room,
-      };
-    } catch (error) {
-      console.error("Error in sendMessage service:", error);
       throw error;
     }
   }

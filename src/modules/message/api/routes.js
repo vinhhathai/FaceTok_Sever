@@ -7,16 +7,14 @@ const checkLogin = require("../../../shared/middlewares/checkLogin");
 const GroupController = require("../controllers/GroupController");
 
 // Group API
-// router.put("/group/change-owner", checkLogin, GroupController.changeGroupOwner);
+router.put("/group/change-owner", checkLogin, GroupController.changeGroupOwner);
+router.put("/group/rename", checkLogin, GroupController.renameGroup);
 router.post("/group", checkLogin, GroupController.createGroup);
 router.get("/group/:id", checkLogin, GroupController.getGroupById);
 router.post("/group/invite", checkLogin, RoomController.inviteToGroup);
+router.post("/group/dissolve", checkLogin, GroupController.dissolveGroup);
 // Update group avatar by roomId (id=roomId)
-router.post(
-  "/group/update-avatar",
-  checkLogin,
-  GroupController.updateAvatar
-);
+router.post("/group/update-avatar", checkLogin, GroupController.updateAvatar);
 
 // Room API
 // Delete conversation
@@ -43,5 +41,8 @@ router.post(
   checkLogin,
   MessageController.createMessageInRoom
 );
+
+// Revoke message
+router.post("/revoke", checkLogin, MessageController.revokeMessage);
 
 module.exports = router;

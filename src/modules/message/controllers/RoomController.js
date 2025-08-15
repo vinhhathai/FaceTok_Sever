@@ -12,6 +12,7 @@ const {
 } = require("../validations");
 const { VALIDATION_ERRORS } = require("../../../shared/common/error");
 const { inviteToGroupValidation } = require("../validations/groupValidation");
+const SocketBus = require("../../../shared/socket/SocketBus");
 
 class RoomController {
   constructor() {
@@ -28,6 +29,11 @@ class RoomController {
       const { roomId, userId } = value;
       const inviterId = req.user.id;
       const room = await this.roomService.inviteToGroup(roomId, userId, inviterId);
+      // Broadcast via socket
+      try {
+        SocketBus.emitToRoom(roomId, "group_member_invited", { roomId, userId });
+        SocketBus.emitToUser(userId, "group_member_invited", { roomId, userId });
+      } catch {}
       return res.status(200).json(RoomDto.success(room));
     } catch (error) {
       return res.status(500).json(RoomDto.error(error));
@@ -47,6 +53,11 @@ class RoomController {
         currentUserId,
         kickOutUserId
       );
+      // Broadcast via socket
+      try {
+        SocketBus.emitToRoom(roomId, "group_member_kicked", { roomId, userId: kickOutUserId });
+        SocketBus.emitToUser(kickOutUserId, "group_member_kicked", { roomId, userId: kickOutUserId });
+      } catch {}
       return res.status(200).json(RoomDto.success(room));
     } catch (error) {
       return res.status(500).json(RoomDto.error(error));
@@ -62,6 +73,11 @@ class RoomController {
       const { id } = value;
       const currentUserId = req.user.id;
       const group = await this.roomService.leaveGroup(id, currentUserId);
+      // Broadcast via socket
+      try {
+        SocketBus.emitToUser(currentUserId, "group_left", { roomId: id });
+        SocketBus.emitToRoom(id, "group_member_left", { roomId: id, userId: currentUserId });
+      } catch {}
       return res.status(200).json(RoomDto.success(group));
     } catch (error) {
       return res.status(500).json(RoomDto.error(error));

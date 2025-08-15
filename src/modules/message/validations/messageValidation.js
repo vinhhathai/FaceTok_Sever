@@ -16,14 +16,26 @@ const sendMessageValidation = Joi.object({
 });
 
 const revokeMessageValidation = Joi.object({
-  messageId: Joi.string().required().messages({
-    'any.required': 'Message ID is required',
-    'string.empty': 'Message ID cannot be empty'
-  }),
-  senderId: Joi.string().required().messages({
-    'any.required': 'Sender ID is required',
-    'string.empty': 'Sender ID cannot be empty'
-  })
+  messageId: Joi.string()
+    .length(24)
+    .hex()
+    .required()
+    .messages({
+      'any.required': 'Message ID is required',
+      'string.empty': 'Message ID cannot be empty',
+      'string.length': 'Message ID must be a 24-character hex string',
+      'string.hex': 'Message ID must be a valid hex string'
+    }),
+  senderId: Joi.string()
+    .length(24)
+    .hex()
+    .required()
+    .messages({
+      'any.required': 'Sender ID is required',
+      'string.empty': 'Sender ID cannot be empty',
+      'string.length': 'Sender ID must be a 24-character hex string',
+      'string.hex': 'Sender ID must be a valid hex string'
+    })
 });
 
 module.exports = {
