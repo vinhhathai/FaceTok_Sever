@@ -2,7 +2,9 @@
 //----------------------------------------------------------------
 
 // Import all validations
-const {} = require("./postValidation");
+const { createPostValidation } = require("./postValidation");
 
 // Export all validations
-module.exports = {};
+module.exports = {
+    createPostValidation
+};
