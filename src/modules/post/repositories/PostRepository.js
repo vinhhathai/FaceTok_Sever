@@ -119,6 +119,31 @@ class PostRepository {
     }
   }
 
+  // Update a post ensuring ownership (author must match)
+  async updatePostOwnedBy(postId, authorId, updateData) {
+    try {
+      // If media array provided, set it; otherwise only set allowed fields
+      const update = { updatedAt: new Date() };
+      if (Object.prototype.hasOwnProperty.call(updateData, 'content')) {
+        update.content = updateData.content;
+      }
+      if (Object.prototype.hasOwnProperty.call(updateData, 'privacy')) {
+        update.privacy = updateData.privacy;
+      }
+      if (Array.isArray(updateData.media)) {
+        update.media = updateData.media;
+      }
+
+      return await PostModel.findOneAndUpdate(
+        { _id: postId, author: authorId, isDeleted: false },
+        update,
+        { new: true, runValidators: true }
+      ).populate("author", "fullName profilePicture").lean();
+    } catch (error) {
+      throw new Error(`Failed to update owned post: ${error.message}`);
+    }
+  }
+
   // Soft delete a post
   async deletePost(postId) {
     try {
@@ -129,6 +154,19 @@ class PostRepository {
       );
     } catch (error) {
       throw new Error(`Failed to delete post: ${error.message}`);
+    }
+  }
+
+  // Soft delete a post with ownership check
+  async softDeleteOwned(postId, authorId) {
+    try {
+      const res = await PostModel.updateOne(
+        { _id: postId, author: authorId, isDeleted: false },
+        { $set: { isDeleted: true, updatedAt: new Date() } }
+      );
+      return res.modifiedCount > 0;
+    } catch (error) {
+      throw new Error(`Failed to delete owned post: ${error.message}`);
     }
   }
 

@@ -6,6 +6,7 @@ const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { AvatarDto } = require("../dtos");
 const {
   processAndUploadImage,
+  deleteFromCloudinary
 } = require("../../../shared/utils/cloudinaryUpload");
 
 /**
@@ -30,6 +31,20 @@ class AvatarService {
           errorCode.DATA_NOT_FOUND,
           "Profile picture not found"
         );
+      }
+
+      // Get current user to check if there's an existing avatar to delete
+      const currentUser = await this.userRepository.findById(userId);
+      const oldPublicId = currentUser?.profilePicturePublicId;
+
+      // Delete old avatar from Cloudinary if exists
+      if (oldPublicId) {
+        try {
+          await deleteFromCloudinary(oldPublicId, 'image');
+        } catch (error) {
+          console.warn(`Failed to delete old avatar ${oldPublicId}:`, error.message);
+          // Continue with upload even if deletion fails
+        }
       }
 
       // Image processing options for avatar
@@ -65,8 +80,12 @@ class AvatarService {
         );
       }
       
-      // Update user's avatar URL in database
-      const updatedUser = await this.userRepository.updateAvatar(userId, result.secure_url);
+      // Update user's avatar URL and publicId in database
+      const updatedUser = await this.userRepository.updateAvatar(
+        userId, 
+        result.secure_url,
+        result.public_id
+      );
       
       if (!updatedUser) {
         return AvatarDto.error(

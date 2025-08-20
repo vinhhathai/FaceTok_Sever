@@ -100,10 +100,37 @@ class PostController {
   // PUT /post/:id
   update = async (req, res) => {
     try {
+      const currentUserId = req.user.id;
+      // Attach uploaded files and normalize mediaRemove
+      const files = Array.isArray(req.files) ? req.files : [];
+      const body = { ...req.body, __files: files };
+
+      // Normalize mediaRemove: accept JSON string or repeated fields
+      if (typeof body.mediaRemove === 'string') {
+        try {
+          body.mediaRemove = JSON.parse(body.mediaRemove);
+        } catch (_) {
+          body.mediaRemove = [body.mediaRemove];
+        }
+      }
+      if (Array.isArray(body['mediaRemove[]'])) {
+        body.mediaRemove = body['mediaRemove[]'];
+        delete body['mediaRemove[]'];
+      }
+
       const updated = await this.postService.updatePost(
         req.params.id,
-        req.body
+        body,
+        currentUserId
       );
+
+      if (!updated) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You can only edit your own posts"
+        });
+      }
+
       return res.status(200).json({ success: true, data: updated });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });
@@ -113,8 +140,12 @@ class PostController {
   // DELETE /post/:id
   remove = async (req, res) => {
     try {
-      const deleted = await this.postService.deletePost(req.params.id);
-      return res.status(200).json({ success: true, data: deleted });
+      const currentUserId = req.user.id;
+      const deleted = await this.postService.deletePostOwned(req.params.id, currentUserId);
+      if (!deleted) {
+        return res.status(403).json({ success: false, message: 'Forbidden: You can only delete your own posts' });
+      }
+      return res.status(200).json({ success: true, data: { _id: req.params.id, deleted: true } });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });
     }

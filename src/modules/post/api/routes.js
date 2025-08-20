@@ -15,10 +15,10 @@ router.get("/author/:authorId", checkLogin, PostController.getByAuthor);
 // Get timeline posts (for newsfeed)
 router.get("/timeline", checkLogin, PostController.getTimeline);
 
-// Temporarily disabled routes while focusing on core features
+// Post manage
 // router.get("/:id", checkLogin, PostController.getById);
-// router.put("/:id", checkLogin, PostController.update);
-// router.delete("/:id", checkLogin, PostController.remove);
+router.put("/:id", checkLogin, mediaArray('media', 5), PostController.update);
+router.delete("/:id", checkLogin, PostController.remove);
 
 // // Comments
 // router.post("/:postId/comment", checkLogin, CommentController.create);

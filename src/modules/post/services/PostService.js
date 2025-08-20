@@ -1,12 +1,15 @@
 const { PostRepository } = require('../repositories');
 const {
   uploadBufferToCloudinary,
-  processAndUploadImage
+  processAndUploadImage,
+  deleteFromCloudinary
 } = require('../../../shared/utils/cloudinaryUpload');
+const FriendRepository = require('../../friend/repositories/FriendRepository');
 
 class PostService {
   constructor() {
     this.postRepository = new PostRepository();
+    this.friendRepository = new FriendRepository();
   }
 
   // Create a new post
@@ -47,7 +50,11 @@ class PostService {
           );
         }
         
-        uploadedMedia.push({ type: isVideo ? 'video' : 'image', url: result.secure_url });
+        uploadedMedia.push({
+          type: isVideo ? 'video' : 'image',
+          url: result.secure_url,
+          publicId: result.public_id
+        });
       }
     }
 
@@ -92,20 +99,137 @@ class PostService {
 
   // Timeline for a user (newsfeed)
   async getTimeline(currentUserId, options) {
-    // TODO: Get friend IDs from friend service/repository
-    const friendIds = []; // For now, empty array
-    
+    // Fetch friend IDs to include friends-only posts in the feed
+    let friendIds = [];
+    try {
+      const friends = await this.friendRepository.getFriendsList(currentUserId);
+      if (Array.isArray(friends)) {
+        friendIds = friends
+          .map((f) => (f && (f._id?.toString?.() || f._id || f.id)))
+          .filter(Boolean);
+      }
+    } catch (e) {
+      // Fallback to empty list if friend fetching fails
+      friendIds = [];
+    }
+
     return this.postRepository.findTimelinePosts(currentUserId, friendIds, options);
   }
 
   // Update post
-  async updatePost(postId, payload) {
-    return this.postRepository.updatePost(postId, payload);
+  async updatePost(postId, payload, currentUserId) {
+    // Allowed top-level fields
+    const allowedFields = ["content", "privacy"];
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(payload, key)) {
+        updateData[key] = payload[key];
+      }
+    }
+
+    // Handle media changes:
+    // - payload.mediaAdd: files from multer (req.files) mapped to payload.__files
+    // - payload.mediaRemove: array of publicId or url to remove
+
+    // Collect existing media updates if provided directly
+    if (Array.isArray(payload.media)) {
+      updateData.media = payload.media;
+    }
+
+    // Upload new files if present (via req.files injected as __files)
+    const newUploadedMedia = [];
+    if (payload.__files && Array.isArray(payload.__files)) {
+      for (const file of payload.__files) {
+        const isVideo = file.mimetype.startsWith('video/');
+        const folder = isVideo ? 'chaotok/posts/videos' : 'chaotok/posts/images';
+        let result;
+        if (isVideo) {
+          result = await uploadBufferToCloudinary(file.buffer, {
+            folder,
+            resource_type: 'video',
+            quality: 'auto',
+            fetch_format: 'auto'
+          });
+        } else {
+          result = await processAndUploadImage(
+            file.buffer,
+            folder,
+            {
+              width: 1200,
+              height: 1200,
+              fit: 'inside',
+              quality: 85,
+              format: 'jpeg'
+            },
+            {
+              quality: 'auto',
+              fetch_format: 'auto'
+            }
+          );
+        }
+        newUploadedMedia.push({
+          type: isVideo ? 'video' : 'image',
+          url: result.secure_url,
+          publicId: result.public_id
+        });
+      }
+    }
+
+    // Determine final media set and deletions
+    let finalMediaArray = null;
+    let mediaToDelete = [];
+
+    // Fetch existing post to compare media
+    const existing = await this.postRepository.findPostById(postId);
+
+    if (Array.isArray(updateData.media)) {
+      // Full replacement mode: use provided media array as baseline
+      finalMediaArray = Array.isArray(updateData.media) ? [...updateData.media] : [];
+      // Compute deletions: items present in existing but not in final
+      const existingKeys = (existing?.media || []).map(m => m.publicId || m.url);
+      const finalKeys = finalMediaArray.map(m => m.publicId || m.url);
+      mediaToDelete = (existing?.media || []).filter(m => !finalKeys.includes(m.publicId || m.url));
+    } else {
+      // Incremental mode: start from existing, remove items listed in mediaRemove, then append new uploads
+      const existingMedia = Array.isArray(existing?.media) ? [...existing.media] : [];
+      const mediaRemove = Array.isArray(payload.mediaRemove) ? payload.mediaRemove : [];
+      const removeKeys = new Set(mediaRemove);
+      mediaToDelete = existingMedia.filter(m => removeKeys.has(m.publicId || m.url));
+      finalMediaArray = existingMedia.filter(m => !removeKeys.has(m.publicId || m.url));
+    }
+
+    // Append newly uploaded media
+    if (newUploadedMedia.length > 0) {
+      finalMediaArray = [...(finalMediaArray || []), ...newUploadedMedia];
+    }
+
+    // Assign computed media to update
+    updateData.media = finalMediaArray || [];
+
+    // Enforce ownership by requiring author = currentUserId
+    const updated = await this.postRepository.updatePostOwnedBy(postId, currentUserId, updateData);
+
+    // Fire-and-forget deletion on Cloudinary for removed items (if any)
+    if (mediaToDelete.length > 0) {
+      for (const m of mediaToDelete) {
+        if (m.publicId) {
+          const resourceType = m.type === 'video' ? 'video' : 'image';
+          deleteFromCloudinary(m.publicId, resourceType).catch(() => {});
+        }
+      }
+    }
+
+    return updated;
   }
 
   // Soft delete
   async deletePost(postId) {
     return this.postRepository.deletePost(postId);
+  }
+
+  // Soft delete with ownership check
+  async deletePostOwned(postId, currentUserId) {
+    return this.postRepository.softDeleteOwned(postId, currentUserId);
   }
 }
 

@@ -6,6 +6,7 @@ const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { ThumbnailDto } = require("../dtos");
 const {
   processAndUploadImage,
+  deleteFromCloudinary
 } = require("../../../shared/utils/cloudinaryUpload");
 
 /**
@@ -20,14 +21,24 @@ class ThumbnailService {
     try {
       // Check if file exists
       if (!file) {
-        return res
-          .status(400)
-          .json(
-            ThumbnailDto.error(
-              errorCode.DATA_NOT_FOUND,
-              "Không tìm thấy ảnh bìa"
-            )
-          );
+        return ThumbnailDto.error(
+          errorCode.DATA_NOT_FOUND,
+          "Không tìm thấy ảnh bìa"
+        );
+      }
+
+      // Get current user to check if there's an existing thumbnail to delete
+      const currentUser = await this.userRepository.findById(userId);
+      const oldPublicId = currentUser?.thumbnailPublicId;
+
+      // Delete old thumbnail from Cloudinary if exists
+      if (oldPublicId) {
+        try {
+          await deleteFromCloudinary(oldPublicId, 'image');
+        } catch (error) {
+          console.warn(`Failed to delete old thumbnail ${oldPublicId}:`, error.message);
+          // Continue with upload even if deletion fails
+        }
       }
 
       // Image processing options for cover photos
@@ -61,7 +72,14 @@ class ThumbnailService {
           "Lỗi khi lưu ảnh bìa lên máy chủ"
         );
       }
-      await this.userRepository.updateThumbnail(userId, result.secure_url);
+      
+      // Update user's thumbnail URL and publicId in database
+      await this.userRepository.updateThumbnail(
+        userId, 
+        result.secure_url,
+        result.public_id
+      );
+      
       return ThumbnailDto.success(result, "Cập nhật ảnh bìa thành công");
     } catch (error) {
       return ThumbnailDto.error(

@@ -140,18 +140,28 @@ class UserRepository {
         }
     }
 
-    async updateAvatar(userId, profilePicture) {
+    async updateAvatar(userId, profilePicture, profilePicturePublicId) {
         return this.model.findByIdAndUpdate(
             userId,
-            { $set: { profilePicture } },
+            { 
+                $set: { 
+                    profilePicture,
+                    profilePicturePublicId: profilePicturePublicId || ""
+                } 
+            },
             { new: true }
         );
     }
 
-    async updateThumbnail(userId, thumbnail) {
+    async updateThumbnail(userId, thumbnail, thumbnailPublicId) {
         return this.model.findByIdAndUpdate(
             userId,
-            { $set: { thumbnail } },
+            { 
+                $set: { 
+                    thumbnail,
+                    thumbnailPublicId: thumbnailPublicId || ""
+                } 
+            },
             { new: true }
         );
     }
