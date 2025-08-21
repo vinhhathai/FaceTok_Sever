@@ -1,4 +1,5 @@
 const { PostRepository } = require('../repositories');
+const LikeRepository = require('../repositories/LikeRepository');
 const {
   uploadBufferToCloudinary,
   processAndUploadImage,
@@ -10,6 +11,7 @@ class PostService {
   constructor() {
     this.postRepository = new PostRepository();
     this.friendRepository = new FriendRepository();
+    this.likeRepository = new LikeRepository();
   }
 
   // Create a new post
@@ -87,6 +89,16 @@ class PostService {
         currentUserId,
         includePrivate
       });
+      // Attach isLiked at service layer
+      if (Array.isArray(result.posts) && result.posts.length > 0) {
+        const postIds = result.posts.map(p => p._id);
+        const likedIds = await this.likeRepository.findLikedPostIdsForUser(currentUserId, postIds);
+        const likedSet = new Set(likedIds);
+        result.posts = result.posts.map(p => ({
+          ...p,
+          isLiked: likedSet.has(p._id.toString())
+        }));
+      }
       
       console.log('✅ Repository result:', { postsCount: result.posts?.length, total: result.total });
       return result;
@@ -113,7 +125,18 @@ class PostService {
       friendIds = [];
     }
 
-    return this.postRepository.findTimelinePosts(currentUserId, friendIds, options);
+    const result = await this.postRepository.findTimelinePosts(currentUserId, friendIds, options);
+    // Attach isLiked at service layer
+    if (Array.isArray(result.posts) && result.posts.length > 0) {
+      const postIds = result.posts.map(p => p._id);
+      const likedIds = await this.likeRepository.findLikedPostIdsForUser(currentUserId, postIds);
+      const likedSet = new Set(likedIds);
+      result.posts = result.posts.map(p => ({
+        ...p,
+        isLiked: likedSet.has(p._id.toString())
+      }));
+    }
+    return result;
   }
 
   // Update post

@@ -3,12 +3,11 @@ const { PostModel, CommentModel, LikeModel, ShareModel } = require("../models");
 class PostRepository {
   // Create a new post
   async createPost(postData) {
-    try {
-      const post = new PostModel(postData);
-      return await post.save();
-    } catch (error) {
-      throw new Error(`Failed to create post: ${error.message}`);
-    }
+    const post = new PostModel(postData);
+    const saved = await post.save();
+    return await PostModel.findById(saved._id)
+      .populate("author", "fullName profilePicture")
+      .lean();
   }
 
   // Find post by id
@@ -25,8 +24,12 @@ class PostRepository {
   // Find posts by author with privacy control
   async findPostsByAuthor(authorId, options = {}, privacyOptions = {}) {
     try {
-      console.log('🔍 PostRepository.findPostsByAuthor called with:', { authorId, options, privacyOptions });
-      
+      console.log("🔍 PostRepository.findPostsByAuthor called with:", {
+        authorId,
+        options,
+        privacyOptions,
+      });
+
       const { page = 1, limit = 10 } = options;
       const { currentUserId, includePrivate = false } = privacyOptions;
       const skip = (page - 1) * limit;
@@ -42,9 +45,9 @@ class PostRepository {
         query.privacy = { $in: ["public"] };
         // TODO: Add "friends" if currentUserId is friend with authorId
       }
-      
-      console.log('🔍 Final query:', JSON.stringify(query, null, 2));
-      console.log('📊 Pagination:', { page, limit, skip });
+
+      console.log("🔍 Final query:", JSON.stringify(query, null, 2));
+      console.log("📊 Pagination:", { page, limit, skip });
 
       const [posts, total] = await Promise.all([
         PostModel.find(query)
@@ -53,21 +56,26 @@ class PostRepository {
           .skip(skip)
           .limit(limit)
           .lean(),
-        PostModel.countDocuments(query)
+        PostModel.countDocuments(query),
       ]);
-      
-      console.log('✅ Query results:', { postsCount: posts?.length, total });
-      console.log('📝 First post sample:', posts?.[0] ? {
-        _id: posts[0]._id,
-        author: posts[0].author,
-        content: posts[0].content?.substring(0, 50) + '...',
-        privacy: posts[0].privacy
-      } : 'No posts found');
+
+      console.log("✅ Query results:", { postsCount: posts?.length, total });
+      console.log(
+        "📝 First post sample:",
+        posts?.[0]
+          ? {
+              _id: posts[0]._id,
+              author: posts[0].author,
+              content: posts[0].content?.substring(0, 50) + "...",
+              privacy: posts[0].privacy,
+            }
+          : "No posts found"
+      );
 
       return { posts, total };
     } catch (error) {
-      console.error('❌ PostRepository.findPostsByAuthor error:', error);
-      console.error('❌ Error stack:', error.stack);
+      console.error("❌ PostRepository.findPostsByAuthor error:", error);
+      console.error("❌ Error stack:", error.stack);
       throw new Error(`Failed to find posts by author: ${error.message}`);
     }
   }
@@ -97,7 +105,7 @@ class PostRepository {
           .skip(skip)
           .limit(limit)
           .lean(),
-        PostModel.countDocuments(query)
+        PostModel.countDocuments(query),
       ]);
 
       return { posts, total };
@@ -124,10 +132,10 @@ class PostRepository {
     try {
       // If media array provided, set it; otherwise only set allowed fields
       const update = { updatedAt: new Date() };
-      if (Object.prototype.hasOwnProperty.call(updateData, 'content')) {
+      if (Object.prototype.hasOwnProperty.call(updateData, "content")) {
         update.content = updateData.content;
       }
-      if (Object.prototype.hasOwnProperty.call(updateData, 'privacy')) {
+      if (Object.prototype.hasOwnProperty.call(updateData, "privacy")) {
         update.privacy = updateData.privacy;
       }
       if (Array.isArray(updateData.media)) {
@@ -138,7 +146,9 @@ class PostRepository {
         { _id: postId, author: authorId, isDeleted: false },
         update,
         { new: true, runValidators: true }
-      ).populate("author", "fullName profilePicture").lean();
+      )
+        .populate("author", "fullName profilePicture")
+        .lean();
     } catch (error) {
       throw new Error(`Failed to update owned post: ${error.message}`);
     }
@@ -206,6 +216,19 @@ class PostRepository {
       );
     } catch (error) {
       throw new Error(`Failed to increment comment count: ${error.message}`);
+    }
+  }
+
+  // Decrement comment count
+  async decrementCommentCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { commentsCount: -1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement comment count: ${error.message}`);
     }
   }
 

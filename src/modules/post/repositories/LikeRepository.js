@@ -110,6 +110,17 @@ class LikeRepository {
       throw new Error(`Failed to toggle like: ${error.message}`);
     }
   }
+
+  // Get list of postIds liked by a user among a set of postIds
+  async findLikedPostIdsForUser(userId, postIds) {
+    try {
+      if (!userId || !Array.isArray(postIds) || postIds.length === 0) return [];
+      const likedIds = await LikeModel.find({ postId: { $in: postIds }, userId }).distinct('postId');
+      return likedIds.map((id) => id.toString());
+    } catch (error) {
+      throw new Error(`Failed to fetch liked post ids: ${error.message}`);
+    }
+  }
 }
 
 module.exports = LikeRepository;

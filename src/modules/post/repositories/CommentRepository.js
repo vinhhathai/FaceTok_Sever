@@ -15,7 +15,7 @@ class CommentRepository {
   async findCommentById(commentId) {
     try {
       return await CommentModel.findById(commentId)
-        .populate("author", "name avatar")
+        .populate("author", "fullName profilePicture")
         .lean();
     } catch (error) {
       throw new Error(`Failed to find comment: ${error.message}`);
@@ -28,16 +28,44 @@ class CommentRepository {
       const { page = 1, limit = 50 } = options;
       const skip = (page - 1) * limit;
 
-      return await CommentModel.find({
+      // 1) Fetch root comments (parentId = null)
+      const roots = await CommentModel.find({
         postId,
-        parentId: null, // only root comments
+        parentId: null,
         isDeleted: false,
       })
-        .populate("author", "name avatar")
+        .populate('author', 'fullName profilePicture')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean();
+
+      if (roots.length === 0) return roots;
+
+      // 2) Fetch replies for these roots and group by parentId
+      const rootIds = roots.map((c) => c._id);
+      const replies = await CommentModel.find({
+        parentId: { $in: rootIds },
+        isDeleted: false,
+      })
+        .populate('author', 'fullName profilePicture')
+        .sort({ createdAt: 1 })
+        .lean();
+
+      const parentIdToReplies = new Map();
+      for (const r of replies) {
+        const key = r.parentId?.toString?.() || String(r.parentId);
+        if (!parentIdToReplies.has(key)) parentIdToReplies.set(key, []);
+        parentIdToReplies.get(key).push(r);
+      }
+
+      // 3) Attach replies array to each root
+      const withReplies = roots.map((c) => ({
+        ...c,
+        replies: parentIdToReplies.get(c._id.toString()) || [],
+      }));
+
+      return withReplies;
     } catch (error) {
       throw new Error(`Failed to find comments by post: ${error.message}`);
     }
@@ -53,7 +81,7 @@ class CommentRepository {
         parentId: commentId,
         isDeleted: false,
       })
-        .populate("author", "name avatar")
+        .populate("author", "fullName profilePicture")
         .sort({ createdAt: 1 }) // chronological order
         .skip(skip)
         .limit(limit)
@@ -73,7 +101,7 @@ class CommentRepository {
         author: authorId,
         isDeleted: false,
       })
-        .populate("author", "name avatar")
+        .populate("author", "fullName profilePicture")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -103,7 +131,7 @@ class CommentRepository {
         commentId,
         { isDeleted: true },
         { new: true }
-      );
+      ).lean();
     } catch (error) {
       throw new Error(`Failed to delete comment: ${error.message}`);
     }
@@ -145,6 +173,19 @@ class CommentRepository {
       );
     } catch (error) {
       throw new Error(`Failed to increment reply count: ${error.message}`);
+    }
+  }
+
+  // Decrement reply count
+  async decrementReplyCount(commentId) {
+    try {
+      return await CommentModel.findByIdAndUpdate(
+        commentId,
+        { $inc: { replyCount: -1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement reply count: ${error.message}`);
     }
   }
 

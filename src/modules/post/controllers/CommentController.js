@@ -41,6 +41,22 @@ class CommentController {
 			return res.status(500).json({ success: false, message: error.message });
 		}
 	};
+
+	// DELETE /post/comment/:commentId
+	remove = async (req, res) => {
+		try {
+			const userId = req.user.id;
+			const { commentId } = req.params;
+			// Allow post owner to delete any comment
+			const result = await this.commentService.deleteCommentOwned(userId, commentId, true);
+			if (!result) {
+				return res.status(403).json({ success: false, message: 'Forbidden: cannot delete this comment' });
+			}
+			return res.status(200).json({ success: true, data: { _id: commentId, deleted: true } });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
 }
 
 module.exports = CommentController;
