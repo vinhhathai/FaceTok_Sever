@@ -97,9 +97,8 @@ class ShareRepository {
       const existingShare = await ShareModel.findOne({ postId, userId });
       
       if (existingShare) {
-        // already shared -> unshare
-        await ShareModel.findOneAndDelete({ postId, userId });
-        return { action: 'unshared', share: null };
+        // already shared -> idempotent (do nothing)
+        return { action: 'exists', share: existingShare };
       } else {
         // not shared -> share
         const newShare = new ShareModel({ postId, userId });

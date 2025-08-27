@@ -70,8 +70,44 @@ class PostService {
   }
 
   // Get single post by id
-  async getPostById(postId) {
-    return this.postRepository.findPostById(postId);
+  async getPostById(postId, currentUserId = null) {
+    const post = await this.postRepository.findPostById(postId);
+    if (!post) return null;
+
+    // Enforce privacy: public OK; friends only if friend; private only owner
+    const privacy = post.privacy || 'public';
+    const authorId = post.author?._id?.toString?.() || post.author?._id || post.author?.id || post.author;
+    const isOwner = currentUserId && String(authorId) === String(currentUserId);
+    if (privacy === 'public' || isOwner) {
+      // attach isLiked for detail view
+      if (currentUserId) {
+        try {
+          const liked = await this.likeRepository.hasUserLikedPost(postId, currentUserId);
+          post.isLiked = !!liked;
+        } catch (_) {}
+      }
+      return post;
+    }
+
+    if (privacy === 'friends') {
+      try {
+        const friends = await this.friendRepository.getFriendsList(authorId);
+        const friendIds = (friends || []).map(f => f && (f._id?.toString?.() || f._id || f.id)).filter(Boolean);
+        const isFriend = currentUserId && friendIds.includes(String(currentUserId));
+        if (isFriend) {
+          if (currentUserId) {
+            try {
+              const liked = await this.likeRepository.hasUserLikedPost(postId, currentUserId);
+              post.isLiked = !!liked;
+            } catch (_) {}
+          }
+          return post;
+        }
+      } catch (_) {}
+    }
+    const err = new Error('Forbidden: You do not have permission to view this post');
+    err.statusCode = 403;
+    throw err;
   }
 
   // List posts by author with privacy check

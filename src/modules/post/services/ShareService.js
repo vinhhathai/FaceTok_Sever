@@ -11,7 +11,9 @@ class ShareService {
 		if (result.action === 'shared') {
 			await this.postRepository.incrementShareCount(postId);
 		} else if (result.action === 'unshared') {
-			// Optionally decrement; depends on business rule
+			// no longer used; keeping branch for backward compatibility
+		} else if (result.action === 'exists') {
+			// idempotent: do nothing
 		}
 		return result;
 	}

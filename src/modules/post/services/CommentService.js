@@ -34,6 +34,18 @@ class CommentService {
 		return this.commentRepository.findRepliesByCommentId(commentId, options);
 	}
 
+	// Update comment owned by user (only content)
+	async updateCommentOwned(currentUserId, commentId, { content }) {
+		if (!content || typeof content !== 'string' || content.trim() === '') return false;
+		const existing = await this.commentRepository.findCommentById(commentId);
+		if (!existing) return false;
+		if (String(existing.author?._id || existing.author) !== String(currentUserId)) {
+			return false;
+		}
+		const updated = await this.commentRepository.updateComment(commentId, { content });
+		return updated;
+	}
+
 	// Delete comment owned by user or by post owner
 	async deleteCommentOwned(currentUserId, commentId, allowPostOwner = false) {
 		// Fetch comment to verify ownership
@@ -49,11 +61,18 @@ class CommentService {
 			return false;
 		}
 		await this.commentRepository.deleteComment(commentId);
-		// Decrement counters
+		// Decrement counters and cascade delete for replies if root
 		if (existing.parentId) {
+			// deleting a reply
 			await this.commentRepository.decrementReplyCount(existing.parentId);
-		} else if (existing.postId) {
 			await this.postRepository.decrementCommentCount(existing.postId);
+		} else if (existing.postId) {
+			// deleting a root comment: also delete its replies and decrement by 1 + replyCount
+			const repliesCount = await this.commentRepository.countRepliesByCommentId(commentId);
+			if (repliesCount > 0) {
+				await this.commentRepository.deleteRepliesByParentId(commentId);
+			}
+			await this.postRepository.decrementCommentCountBy(existing.postId, 1 + repliesCount);
 		}
 		return true;
 	}

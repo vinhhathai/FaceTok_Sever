@@ -212,6 +212,18 @@ class CommentRepository {
       throw new Error(`Failed to count replies: ${error.message}`);
     }
   }
+
+  // Soft delete all replies under a parent comment
+  async deleteRepliesByParentId(parentId) {
+    try {
+      return await CommentModel.updateMany(
+        { parentId, isDeleted: false },
+        { $set: { isDeleted: true, updatedAt: new Date() } }
+      );
+    } catch (error) {
+      throw new Error(`Failed to delete replies by parentId: ${error.message}`);
+    }
+  }
 }
 
 module.exports = CommentRepository;

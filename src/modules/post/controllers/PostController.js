@@ -28,10 +28,12 @@ class PostController {
   // GET /post/:id
   getById = async (req, res) => {
     try {
-      const post = await this.postService.getPostById(req.params.id);
-      return res.status(200).json({ success: true, data: post });
+      const currentUserId = req.user?.id || null;
+      const result = await this.postService.getPostById(req.params.id, currentUserId);
+      return res.status(200).json({ success: true, data: result });
     } catch (error) {
-      return res.status(500).json({ success: false, message: error.message });
+      const status = error.statusCode || (error.message?.includes('Forbidden') ? 403 : 500);
+      return res.status(status).json({ success: false, message: error.message });
     }
   };
 

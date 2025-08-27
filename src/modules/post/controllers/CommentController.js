@@ -42,6 +42,22 @@ class CommentController {
 		}
 	};
 
+	// PUT /post/comment/:commentId
+	update = async (req, res) => {
+		try {
+			const userId = req.user.id;
+			const { commentId } = req.params;
+			const { content } = req.body;
+			const updated = await this.commentService.updateCommentOwned(userId, commentId, { content });
+			if (!updated) {
+				return res.status(403).json({ success: false, message: 'Forbidden: cannot edit this comment' });
+			}
+			return res.status(200).json({ success: true, data: updated });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
+
 	// DELETE /post/comment/:commentId
 	remove = async (req, res) => {
 		try {

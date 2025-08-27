@@ -232,6 +232,19 @@ class PostRepository {
     }
   }
 
+  // Decrement comment count by an arbitrary amount
+  async decrementCommentCountBy(postId, amount) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { commentsCount: -Math.abs(amount) } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement comment count by: ${error.message}`);
+    }
+  }
+
   // Increment share count
   async incrementShareCount(postId) {
     try {
@@ -242,6 +255,19 @@ class PostRepository {
       );
     } catch (error) {
       throw new Error(`Failed to increment share count: ${error.message}`);
+    }
+  }
+
+  // Decrement share count
+  async decrementShareCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { sharesCount: -1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement share count: ${error.message}`);
     }
   }
 
