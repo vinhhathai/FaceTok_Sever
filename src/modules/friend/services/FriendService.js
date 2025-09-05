@@ -5,6 +5,7 @@ const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { FriendDto } = require("../dtos");
 const FriendRequestModel = require("../models/FriendRequestModel");
 const mongoose = require("mongoose");
+const NotificationService = require("../../notification/services/NotificationService");
 
 /**
  * Service xử lý chức năng quản lý bạn bè
@@ -12,6 +13,7 @@ const mongoose = require("mongoose");
 class FriendService {
   constructor() {
     this.friendRepository = new FriendRepository();
+    this.notificationService = new NotificationService();
   }
   
   /**
@@ -216,6 +218,16 @@ class FriendService {
 
       const newFriendRequest = await this.friendRepository.createFriendRequest(senderId, recipientId);
 
+      // Gửi notification cho recipient
+      // Lấy thông tin sender để hiển thị tên
+      const sender = await this.friendRepository.userModel.findById(senderId);
+      await this.notificationService.createAndSend({
+        user: recipientId,
+        type: "friend_request",
+        content: `${sender.fullName} đã gửi lời mời kết bạn cho bạn.`,
+        data: { fromUserId: senderId, requestId: newFriendRequest._id }
+      });
+
       return FriendDto.success(
         { friendRequest: newFriendRequest },
         "Friend request sent successfully"
@@ -339,12 +351,14 @@ class FriendService {
       // Accept the friend request
       const result = await this.friendRepository.acceptFriendRequest(friendRequest);
 
-      if (!result) {
-        return FriendDto.error(
-          errorCode.ACCEPT_FRIEND_REQUEST_FAILED,
-          "Failed to accept friend request"
-        );
-      }
+      // Gửi notification cho sender
+      const recipient = await this.friendRepository.userModel.findById(userId);
+      await this.notificationService.createAndSend({
+        user: friendRequest.sender._id,
+        type: "friend_accept",
+        content: `${recipient.fullName} đã chấp nhận lời mời kết bạn của bạn.`,
+        data: { fromUserId: userId, requestId }
+      });
 
       return FriendDto.success(
         result,
@@ -404,12 +418,14 @@ class FriendService {
       // Reject the friend request
       const result = await this.friendRepository.rejectFriendRequest(friendRequest);
 
-      if (!result) {
-        return FriendDto.error(
-          errorCode.REJECT_FRIEND_REQUEST_FAILED,
-          "Failed to reject friend request"
-        );
-      }
+      // Gửi notification cho sender
+      const recipient = await this.friendRepository.userModel.findById(userId);
+      await this.notificationService.createAndSend({
+        user: friendRequest.sender._id,
+        type: "friend_reject",
+        content: `${recipient.fullName} đã từ chối lời mời kết bạn của bạn.`,
+        data: { fromUserId: userId, requestId }
+      });
 
       return FriendDto.success(
         { friendRequest: result },
