@@ -1,6 +1,10 @@
 const { LikeModel } = require('../models');
+const UserModel = require('../../user/models/UserModel');
 
 class LikeRepository {
+  constructor() {
+    this.userModel = UserModel;
+  }
   // Create a new like
   async createLike(likeData) {
     try {

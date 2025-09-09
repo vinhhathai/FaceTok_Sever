@@ -130,11 +130,7 @@ class MessageController {
           .filter((member) => member._id.toString() !== senderId)
           .map((member) => member._id.toString());
 
-        for (const memberId of otherMembers) {
-          SocketBus.emitToUser(memberId, "new_message_notification", {
-            message: messageData,
-          });
-        }
+        // Không gửi notification cho message theo yêu cầu
 
         return res.status(200).json(
           MessageDto.success({

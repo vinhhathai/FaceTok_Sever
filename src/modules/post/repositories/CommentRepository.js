@@ -1,6 +1,10 @@
 const { CommentModel } = require("../models");
+const UserModel = require('../../user/models/UserModel');
 
 class CommentRepository {
+  constructor() {
+    this.userModel = UserModel;
+  }
   // Create a new comment
   async createComment(commentData) {
     try {

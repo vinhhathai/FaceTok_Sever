@@ -225,7 +225,12 @@ class FriendService {
         user: recipientId,
         type: "friend_request",
         content: `${sender.fullName} đã gửi lời mời kết bạn cho bạn.`,
-        data: { fromUserId: senderId, requestId: newFriendRequest._id }
+        data: { 
+          fromUserId: senderId, 
+          fromUserName: sender.fullName,
+          fromUserAvatar: sender.profilePicture,
+          requestId: newFriendRequest._id 
+        }
       });
 
       return FriendDto.success(
@@ -357,7 +362,12 @@ class FriendService {
         user: friendRequest.sender._id,
         type: "friend_accept",
         content: `${recipient.fullName} đã chấp nhận lời mời kết bạn của bạn.`,
-        data: { fromUserId: userId, requestId }
+        data: { 
+          fromUserId: userId, 
+          fromUserName: recipient.fullName,
+          fromUserAvatar: recipient.profilePicture,
+          requestId 
+        }
       });
 
       return FriendDto.success(
@@ -424,7 +434,12 @@ class FriendService {
         user: friendRequest.sender._id,
         type: "friend_reject",
         content: `${recipient.fullName} đã từ chối lời mời kết bạn của bạn.`,
-        data: { fromUserId: userId, requestId }
+        data: { 
+          fromUserId: userId, 
+          fromUserName: recipient.fullName,
+          fromUserAvatar: recipient.profilePicture,
+          requestId 
+        }
       });
 
       return FriendDto.success(

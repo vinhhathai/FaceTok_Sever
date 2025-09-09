@@ -15,8 +15,7 @@ const NotificationSchema = new Schema({
     enum: [
       'friend_request',
       'friend_accept',
-      'message',
-      'group_invite',
+      'friend_reject',
       'post_like',
       'post_comment',
       'mention',

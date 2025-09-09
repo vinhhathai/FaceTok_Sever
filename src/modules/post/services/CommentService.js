@@ -1,9 +1,11 @@
 const { CommentRepository, PostRepository } = require('../repositories');
+const NotificationService = require('../../notification/services/NotificationService');
 
 class CommentService {
 	constructor() {
 		this.commentRepository = new CommentRepository();
 		this.postRepository = new PostRepository();
+		this.notificationService = new NotificationService();
 	}
 
 	// Create a comment for a post
@@ -16,12 +18,36 @@ class CommentService {
 			author: currentUserId,
 			content
 		});
+		
 		// Tăng đếm comment cho post gốc
 		await this.postRepository.incrementCommentCount(postId);
+		
 		// Nếu là reply, tăng replyCount cho comment cha
 		if (parentId) {
 			await this.commentRepository.incrementReplyCount(parentId);
 		}
+		
+		// Gửi notification cho tác giả bài viết (nếu không phải chính mình)
+		const post = await this.postRepository.findPostById(postId);
+		if (post && post.author._id.toString() !== currentUserId) {
+			const commenter = await this.commentRepository.userModel.findById(currentUserId);
+			
+			await this.notificationService.createAndSend({
+				user: post.author,
+				type: 'post_comment',
+				content: `${commenter.fullName} đã bình luận về bài viết của bạn: "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}"`,
+				data: {
+					fromUserId: currentUserId,
+					fromUserName: commenter.fullName,
+					fromUserAvatar: commenter.profilePicture,
+					postId: postId,
+					commentId: saved._id,
+					commentContent: content,
+					postContent: post.content.substring(0, 50) + (post.content.length > 50 ? '...' : '')
+				}
+			});
+		}
+		
 		// Trả về comment đã populate tác giả
 		return this.commentRepository.findCommentById(saved._id);
 	}
