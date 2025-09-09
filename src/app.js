@@ -45,7 +45,20 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:3004',
+    'https://4529bd02451e.ngrok-free.app',
+    /\.ngrok-free\.app$/,
+    /\.ngrok\.io$/
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning']
+};
+
+app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, '../public', 'uploads')));
 
 // Kết nối database
@@ -115,4 +128,4 @@ app.use((err, req, res, next) => {
     });
 });
 
-module.exports = app; 
+module.exports = app;

@@ -17,7 +17,12 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = socketIo(server, {
   cors: {
-    origin: process.env.SOCKET_CLIENT_URL,
+    origin: [
+      process.env.SOCKET_CLIENT_URL,
+      'https://4529bd02451e.ngrok-free.app',
+      /\.ngrok-free\.app$/,
+      /\.ngrok\.io$/
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   },
