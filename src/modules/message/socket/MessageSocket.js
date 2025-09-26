@@ -1,6 +1,6 @@
 "use strict";
 //----------------------------------------------------------------
-const { SocketController } = require("../controllers");
+const SocketController = require("../controllers/SocketController");
 
 /**
  * Socket.IO handler for message module
@@ -11,6 +11,7 @@ class MessageSocket {
     this.socketController = SocketController;
     this.userSocketMap = new Map(); // Map userId to socketId
     this.socketIdMap = new Map(); // Map socketId to userId
+    this.userRoomsMap = new Map(); // Map userId to Set of roomIds
   }
   /**
    * Initialize socket events
@@ -19,11 +20,25 @@ class MessageSocket {
     const messageNamespace = this.io.of("/message");
 
     messageNamespace.on("connection", (socket) => {
-      console.log(
-        `Socket connected: ${socket.id} (total active: ${
-          this.socketIdMap.size + 1
-        })`
-      );
+      // debug removed
+
+      // Xử lý khi socket ngắt kết nối
+      socket.on("disconnect", () => {
+        const userId = this.socketIdMap.get(socket.id);
+        if (userId) {
+          // Xóa khỏi các maps
+          this.socketIdMap.delete(socket.id);
+          this.userSocketMap.delete(userId);
+
+          // Xóa khỏi userRoomsMap
+          this.userRoomsMap.delete(userId);
+
+          // debug removed
+        } else {
+          // debug removed
+        }
+      });
+
       // Handle user authentication
       socket.on("authenticate", async (accessToken) => {
         if (!accessToken.accessToken) {
@@ -70,7 +85,6 @@ class MessageSocket {
 
       // Xử lý tham gia phòng chat
       socket.on("join_room", (data) => {
-        console.log("join_room", data.roomId);
         let roomId = data.roomId;
         if (!socket.userId) {
           socket.emit("room_error", { message: "Not authenticated" });
@@ -79,96 +93,82 @@ class MessageSocket {
 
         if (roomId) {
           const roomName = `room:${roomId}`;
+
+          // Lấy hoặc tạo set phòng của người dùng
+          let userRooms = this.userRoomsMap.get(socket.userId);
+          if (!userRooms) {
+            userRooms = new Set();
+            this.userRoomsMap.set(socket.userId, userRooms);
+          }
+
+          // Kiểm tra xem đã theo dõi phòng này chưa
+          if (userRooms.has(roomId)) {
+            // debug removed
+            return;
+          }
+
           // Chỉ tham gia nếu chưa trong phòng
           const rooms = Array.from(socket.rooms);
           if (!rooms.includes(roomName)) {
             socket.join(roomName);
+            // Thêm vào danh sách phòng đã theo dõi
+            userRooms.add(roomId);
+            // debug removed
             socket.emit("room_joined", { roomId });
+          } else {
+            // Đã trong phòng, không cần join lại
+            // Thêm vào danh sách phòng đã theo dõi
+            userRooms.add(roomId);
+            // debug removed
           }
-          console.log("rooms", rooms);
         }
       });
 
       // Xử lý rời phòng chat
-      socket.on("leave_room", (roomId) => {
+      socket.on("leave_room", (data) => {
         if (!socket.userId) {
           socket.emit("room_error", { message: "Not authenticated" });
           return;
         }
 
+        let roomId = data.roomId || data;
         if (roomId) {
           const roomName = `room:${roomId}`;
+
+          // Lấy set phòng của người dùng
+          let userRooms = this.userRoomsMap.get(socket.userId);
+          if (userRooms) {
+            // Kiểm tra xem có theo dõi phòng này không
+            if (!userRooms.has(roomId)) {
+              // debug removed
+              return;
+            }
+            // Xóa khỏi danh sách phòng đã theo dõi
+            userRooms.delete(roomId);
+          }
 
           // Chỉ rời phòng nếu đang trong phòng
           const rooms = Array.from(socket.rooms);
           if (rooms.includes(roomName)) {
             socket.leave(roomName);
+            // debug removed
             socket.emit("room_left", { roomId });
+          } else {
+            // debug removed
           }
         }
       });
 
-      // Xử lý gửi tin nhắn
-      socket.on("send_message", async (data) => {
-        if (!socket.userId) {
-          socket.emit("message_error", { message: "Not authenticated" });
-          return;
-        }
-
-        // Yêu cầu phải có roomId
-        if (!data.roomId) {
-          socket.emit("message_error", { message: "Room ID is required" });
-          return;
-        }
-
-        // Gửi tin nhắn trực tiếp vào phòng đã tồn tại
-        const result = await this.socketController.createMessageInRoom(
-          socket.userId,
-          data.roomId,
-          data.content
-        );
-
-        if (!result.success) {
-          socket.emit("message_error", { message: result.message });
-          return;
-        }
-
-        // Kết quả đã bao gồm cả message và room
-        const { message, room } = result.data;
-
-        // Tạo đối tượng tin nhắn để gửi
-        const messageData = {
-          _id: message._id,
-          senderId: message.senderId,
-          content: message.content,
-          roomId: message.roomId,
-          createdAt: message.createdAt,
-        };
-
-        // Gửi tin nhắn đến người gửi
-        socket.emit("message_received", messageData);
-
-        // Gửi tin nhắn đến phòng
-        socket.to(`room:${room._id}`).emit("message_received", messageData);
-        console.log("meme bẻ: " + room)
-
-        // Gửi thông báo đến các thành viên khác trong phòng
-        const otherMembers = room.members
-          .filter((member) => member._id.toString() !== socket.userId)
-          .map((member) => member._id.toString());
-
-        for (const memberId of otherMembers) {
-          const receiverSocketId = this.userSocketMap.get(memberId);
-          if (receiverSocketId) {
-            this.io
-              .of("/message")
-              .to(`user:${memberId}`)
-              .emit("new_message_notification", {
-                message: messageData,
-              });
-          }
-        }
-      });
+      // NOTE: All group management events have been moved to REST:
+      // - rename_group -> PUT /message/group/rename
+      // - dissolve_group -> POST /message/group/dissolve
+      // - change_group_owner -> PUT /message/group/change-owner
+      // - leave_group -> POST /message/room/leave
+      // - kick_member -> POST /message/room/kick-out
+      // - invite_member -> POST /message/group/invite
+      // - send_message -> POST /message/room/:roomId/message
+      // - revoke_message -> POST /message/revoke
+      // - update_group_avatar -> POST /message/group/update-avatar
     });
   }
 }

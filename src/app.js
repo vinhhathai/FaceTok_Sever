@@ -16,7 +16,7 @@ const DBConnection = require('./shared/database/DBConnection');
 
 // Import modules
 const userModule = require('./modules/user');
-// const postModule = require('./modules/post');
+const postModule = require('./modules/post');
 const messageModule = require('./modules/message');
 const friendModule = require('./modules/friend');
 const notificationModule = require('./modules/notification');
@@ -45,7 +45,17 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:3004',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning']
+};
+
+app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, '../public', 'uploads')));
 
 // Kết nối database
@@ -67,7 +77,7 @@ mongoose.connection.on('connected', () => {
 
 // Đăng ký routes từ các module
 app.use('/user', userModule.routes);
-// app.use('/post', postModule.routes);
+app.use('/post', postModule.routes);
 app.use('/message', messageModule.routes);
 app.use('/friend', friendModule.routes);
 app.use('/notification', notificationModule.routes);
@@ -115,4 +125,4 @@ app.use((err, req, res, next) => {
     });
 });
 
-module.exports = app; 
+module.exports = app;

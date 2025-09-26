@@ -1,143 +1,284 @@
-"use strict";
-//----------------------------------------------------------------
-const PostModel = require('../models/PostModel');
+const { PostModel, CommentModel, LikeModel, ShareModel } = require("../models");
 
 class PostRepository {
-    constructor() {
-        this.model = PostModel;
-    }
+  // Create a new post
+  async createPost(postData) {
+    const post = new PostModel(postData);
+    const saved = await post.save();
+    return await PostModel.findById(saved._id)
+      .populate("author", "fullName profilePicture")
+      .lean();
+  }
 
-    async findById(id) {
-        return this.model.findById(id);
-    }
-
-    async findByUserId(userId, options = { skip: 0, limit: 10 }) {
-        return this.model.find({ 
-            userId, 
-            isDelete: false 
-        })
-        .populate('userId', 'fullName profilePicture username email')
-        .populate({
-            path: 'comments',
-            select: 'content createdAt',
-            populate: {
-                path: 'userId',
-                select: 'fullName profilePicture username'
-            }
-        })
-        .sort({ createdAt: -1 })
-        .skip(options.skip)
-        .limit(options.limit)
+  // Find post by id
+  async findPostById(postId) {
+    try {
+      return await PostModel.findById(postId)
+        .populate("author", "fullName profilePicture")
         .lean();
+    } catch (error) {
+      throw new Error(`Failed to find post: ${error.message}`);
     }
+  }
 
-    async findRecentPosts(options = { skip: 0, limit: 10 }) {
-        return this.model.find({ isDelete: false })
-            .sort({ createdAt: -1 })
-            .skip(options.skip)
-            .limit(options.limit);
-    }
+  // Find posts by author with privacy control
+  async findPostsByAuthor(authorId, options = {}, privacyOptions = {}) {
+    try {
+      console.log("🔍 PostRepository.findPostsByAuthor called with:", {
+        authorId,
+        options,
+        privacyOptions,
+      });
 
-    async findPostsByUserIds(userIds, options = { skip: 0, limit: 10 }) {
-        return this.model.find({ 
-            userId: { $in: userIds }, 
-            isDelete: false 
-        })
-        .sort({ createdAt: -1 })
-        .skip(options.skip)
-        .limit(options.limit);
-    }
+      const { page = 1, limit = 10 } = options;
+      const { currentUserId, includePrivate = false } = privacyOptions;
+      const skip = (page - 1) * limit;
 
-    async create(postData) {
-        return this.model.create(postData);
-    }
+      // Base query
+      let query = {
+        author: authorId,
+        isDeleted: false,
+      };
 
-    async update(postId, postData) {
-        return this.model.findByIdAndUpdate(
-            postId,
-            { $set: postData },
-            { new: true }
-        );
-    }
+      // Privacy filter
+      if (!includePrivate) {
+        query.privacy = { $in: ["public"] };
+        // TODO: Add "friends" if currentUserId is friend with authorId
+      }
 
-    async softDelete(postId) {
-        return this.model.findByIdAndUpdate(
-            postId,
-            { $set: { isDelete: true } },
-            { new: true }
-        );
-    }
+      console.log("🔍 Final query:", JSON.stringify(query, null, 2));
+      console.log("📊 Pagination:", { page, limit, skip });
 
-    async likePost(postId, userId) {
-        const post = await this.model.findById(postId);
-        if (!post) return null;
+      const [posts, total] = await Promise.all([
+        PostModel.find(query)
+          .populate("author", "fullName profilePicture")
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        PostModel.countDocuments(query),
+      ]);
 
-        post.like(userId);
-        await post.save();
-        return post;
-    }
+      console.log("✅ Query results:", { postsCount: posts?.length, total });
+      console.log(
+        "📝 First post sample:",
+        posts?.[0]
+          ? {
+              _id: posts[0]._id,
+              author: posts[0].author,
+              content: posts[0].content?.substring(0, 50) + "...",
+              privacy: posts[0].privacy,
+            }
+          : "No posts found"
+      );
 
-    async unlikePost(postId, userId) {
-        const post = await this.model.findById(postId);
-        if (!post) return null;
+      return { posts, total };
+    } catch (error) {
+      console.error("❌ PostRepository.findPostsByAuthor error:", error);
+      console.error("❌ Error stack:", error.stack);
+      throw new Error(`Failed to find posts by author: ${error.message}`);
+    }
+  }
 
-        post.unlike(userId);
-        await post.save();
-        return post;
-    }
+  // Find timeline posts (public + friends)
+  async findTimelinePosts(userId, friendIds = [], options = {}) {
+    try {
+      const { page = 1, limit = 10 } = options;
+      const skip = (page - 1) * limit;
 
-    async getTotalPostCount(userId) {
-        return this.model.countDocuments({ 
-            userId, 
-            isDelete: false 
-        });
-    }
+      const query = {
+        isDeleted: false,
+        $or: [
+          { privacy: "public" }, // All public posts
+          { author: userId }, // User's own posts (all privacy levels)
+          {
+            privacy: "friends",
+            author: { $in: friendIds },
+          }, // Friends' posts with friends privacy
+        ],
+      };
 
-    // Phương thức cho kiến trúc cũ
-    async checkLikeStatus(postId, userId) {
-        const post = await this.model.findById(postId);
-        if (!post) return false;
-        
-        return post.likes.includes(userId);
-    }
+      const [posts, total] = await Promise.all([
+        PostModel.find(query)
+          .populate("author", "fullName profilePicture")
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        PostModel.countDocuments(query),
+      ]);
 
-    async getUserFriends(userId) {
-        // Lấy danh sách bạn bè từ model User
-        const UserModel = require('../../user/models/UserModel');
-        const user = await UserModel.findById(userId);
-        if (!user) return [];
-        
-        return user.friends || [];
+      return { posts, total };
+    } catch (error) {
+      throw new Error(`Failed to find timeline posts: ${error.message}`);
     }
+  }
 
-    async getTotalTimelinePosts(userIds) {
-        return this.model.countDocuments({ 
-            userId: { $in: userIds }, 
-            isDelete: false 
-        });
+  // Update a post
+  async updatePost(postId, updateData) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { ...updateData, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to update post: ${error.message}`);
     }
-    
-    // Phương thức mới - lấy tổng số bài viết có thể hiển thị
-    async getTotalPostsCount() {
-        return this.model.countDocuments({ isDelete: false });
+  }
+
+  // Update a post ensuring ownership (author must match)
+  async updatePostOwnedBy(postId, authorId, updateData) {
+    try {
+      // If media array provided, set it; otherwise only set allowed fields
+      const update = { updatedAt: new Date() };
+      if (Object.prototype.hasOwnProperty.call(updateData, "content")) {
+        update.content = updateData.content;
+      }
+      if (Object.prototype.hasOwnProperty.call(updateData, "privacy")) {
+        update.privacy = updateData.privacy;
+      }
+      if (Array.isArray(updateData.media)) {
+        update.media = updateData.media;
+      }
+
+      return await PostModel.findOneAndUpdate(
+        { _id: postId, author: authorId, isDeleted: false },
+        update,
+        { new: true, runValidators: true }
+      )
+        .populate("author", "fullName profilePicture")
+        .lean();
+    } catch (error) {
+      throw new Error(`Failed to update owned post: ${error.message}`);
     }
-    
-    // Phương thức mới - lấy các bài viết gần đây
-    async getRecentPosts(limit = 100) {
-        return this.model.find({ isDelete: false })
-            .populate('userId', 'fullName profilePicture username email')
-            .populate({
-                path: 'comments',
-                select: 'content createdAt',
-                populate: {
-                    path: 'userId',
-                    select: 'fullName profilePicture username'
-                }
-            })
-            .sort({ createdAt: -1 })
-            .limit(limit)
-            .lean();
+  }
+
+  // Soft delete a post
+  async deletePost(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { isDeleted: true },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to delete post: ${error.message}`);
     }
+  }
+
+  // Soft delete a post with ownership check
+  async softDeleteOwned(postId, authorId) {
+    try {
+      const res = await PostModel.updateOne(
+        { _id: postId, author: authorId, isDeleted: false },
+        { $set: { isDeleted: true, updatedAt: new Date() } }
+      );
+      return res.modifiedCount > 0;
+    } catch (error) {
+      throw new Error(`Failed to delete owned post: ${error.message}`);
+    }
+  }
+
+  // Increment like count
+  async incrementLikeCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { likesCount: 1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to increment like count: ${error.message}`);
+    }
+  }
+
+  // Decrement like count
+  async decrementLikeCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { likesCount: -1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement like count: ${error.message}`);
+    }
+  }
+
+  // Increment comment count
+  async incrementCommentCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { commentsCount: 1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to increment comment count: ${error.message}`);
+    }
+  }
+
+  // Decrement comment count
+  async decrementCommentCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { commentsCount: -1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement comment count: ${error.message}`);
+    }
+  }
+
+  // Decrement comment count by an arbitrary amount
+  async decrementCommentCountBy(postId, amount) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { commentsCount: -Math.abs(amount) } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement comment count by: ${error.message}`);
+    }
+  }
+
+  // Increment share count
+  async incrementShareCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { sharesCount: 1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to increment share count: ${error.message}`);
+    }
+  }
+
+  // Decrement share count
+  async decrementShareCount(postId) {
+    try {
+      return await PostModel.findByIdAndUpdate(
+        postId,
+        { $inc: { sharesCount: -1 } },
+        { new: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to decrement share count: ${error.message}`);
+    }
+  }
+
+  // Count posts
+  async countPosts(query = {}) {
+    try {
+      return await PostModel.countDocuments({ ...query, isDeleted: false });
+    } catch (error) {
+      throw new Error(`Failed to count posts: ${error.message}`);
+    }
+  }
 }
 
-module.exports = PostRepository; 
+module.exports = PostRepository;

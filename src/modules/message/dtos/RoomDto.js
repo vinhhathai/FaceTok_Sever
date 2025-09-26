@@ -17,7 +17,7 @@ class RoomDto {
     if (!room) return null;
 
     // Handle group chat
-    if (room.isGroup) {
+    if (room.groupId) {
       return {
         id: room._id,
         isGroup: true,
@@ -26,7 +26,7 @@ class RoomDto {
         members: room.members ? room.members.map(member => ({
           id: member._id,
           fullName: member.fullName || '',
-          avatar: member.avatar || null,
+          avatar: member.profilePicture || member.avatar || null,
         })) : [],
         messages: room.messages ? {
           id: room.messages._id,
@@ -53,7 +53,7 @@ class RoomDto {
       participant: otherMember ? {
         id: otherMember._id,
         fullName: otherMember.fullName || '',
-        avatar: otherMember.avatar || null,
+        avatar: otherMember.profilePicture || otherMember.avatar || null,
       } : null,
       messages: room.messages ? {
         id: room.messages._id,

@@ -120,5 +120,20 @@ const uploadToCloudinary = async (file, folder = 'chaotok', options = {}) => {
 module.exports = {
     processAndUploadImage,
     uploadToCloudinary,
-    uploadBufferToCloudinary
+    uploadBufferToCloudinary,
+    /**
+     * Delete an asset from Cloudinary by publicId
+     * @param {string} publicId
+     * @param {('image'|'video'|'raw')} resourceType
+     * @returns {Promise<Object>}
+     */
+    deleteFromCloudinary: async (publicId, resourceType = 'image') => {
+        try {
+            if (!publicId) return null;
+            return await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+        } catch (error) {
+            // Silently fail to not block user updates
+            return null;
+        }
+    }
 }; 

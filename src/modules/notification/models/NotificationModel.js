@@ -3,48 +3,45 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const NotificationSchema = new Schema(
-  {
-    userId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "users", 
-      required: true 
-    },
-    senderId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "users" 
-    },
-    content: { 
-      type: String, 
-      required: true 
-    },
-    type: { 
-      type: String, 
-      enum: ["friend_request", "friend_accept", "post_like", "post_comment", "system"], 
-      required: true 
-    },
-    referenceId: {
-      type: mongoose.Schema.Types.ObjectId,
-      refPath: "onModel"
-    },
-    onModel: {
-      type: String,
-      enum: ["users", "posts", "comments"]
-    },
-    isRead: {
-      type: Boolean,
-      default: false
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
+const NotificationSchema = new Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'users',
+    required: true,
+    index: true
   },
-  {
-    timestamps: true,
-    collection: "notifications",
+  type: {
+    type: String,
+    enum: [
+      'friend_request',
+      'friend_accept',
+      'friend_reject',
+      'post_like',
+      'post_comment',
+      'mention',
+      'system'
+    ],
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  data: {
+    type: Object,
+    default: {}
+  },
+  isRead: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    index: true
   }
-);
+});
 
 const NotificationModel = mongoose.model("notifications", NotificationSchema);
 

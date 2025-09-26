@@ -11,6 +11,58 @@ class UserRepository {
         this.model = UserModel;
     }
 
+
+    async getBlockedUsers(userId) {
+        try {
+            const userObjectId = new mongoose.Types.ObjectId(userId);
+            const user = await this.model.findById(userObjectId).populate('blockedUsers', 'fullName email profilePicture');
+            
+            if (!user) {
+                return null;
+            }
+            
+            return {
+                blockedUsers: user.blockedUsers || []
+            };
+        } catch (error) {
+            console.error(`Error getting blocked users for user ${userId}:`, error);
+            throw error;
+        }
+    }
+
+    async unblockUser(userId, blockedUserId) {
+        try {
+            // Convert string IDs to ObjectId
+            const userObjectId = new mongoose.Types.ObjectId(userId);
+            const blockedUserObjectId = new mongoose.Types.ObjectId(blockedUserId);
+            
+            return await this.model.findByIdAndUpdate(
+                userObjectId,
+                { $pull: { blockedUsers: blockedUserObjectId } },
+                { new: true }
+            );
+        } catch (error) {
+            console.error(`Error unblocking user ${blockedUserId} for user ${userId}:`, error);
+            throw error;
+        }
+    }
+    async blockUser(userId, blockedUserId) {
+        try {
+            // Convert string IDs to ObjectId
+            const userObjectId = new mongoose.Types.ObjectId(userId);
+            const blockedUserObjectId = new mongoose.Types.ObjectId(blockedUserId);
+            
+            return await this.model.findByIdAndUpdate(
+                userObjectId,
+                { $push: { blockedUsers: blockedUserObjectId } },
+                { new: true }
+            );
+        } catch (error) {
+            console.error(`Error blocking user ${blockedUserId} for user ${userId}:`, error);
+            throw error;
+        }
+    }
+
     /**
      * Tìm người dùng theo ID
      * @param {string} id - ID của người dùng
@@ -88,18 +140,28 @@ class UserRepository {
         }
     }
 
-    async updateAvatar(userId, profilePicture) {
+    async updateAvatar(userId, profilePicture, profilePicturePublicId) {
         return this.model.findByIdAndUpdate(
             userId,
-            { $set: { profilePicture } },
+            { 
+                $set: { 
+                    profilePicture,
+                    profilePicturePublicId: profilePicturePublicId || ""
+                } 
+            },
             { new: true }
         );
     }
 
-    async updateThumbnail(userId, thumbnail) {
+    async updateThumbnail(userId, thumbnail, thumbnailPublicId) {
         return this.model.findByIdAndUpdate(
             userId,
-            { $set: { thumbnail } },
+            { 
+                $set: { 
+                    thumbnail,
+                    thumbnailPublicId: thumbnailPublicId || ""
+                } 
+            },
             { new: true }
         );
     }

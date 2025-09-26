@@ -1,0 +1,21 @@
+const { LikeService } = require('../services');
+
+class LikeController {
+	constructor() {
+		this.likeService = new LikeService();
+	}
+
+	// POST /post/:postId/like/toggle
+	toggle = async (req, res) => {
+		try {
+			const userId = req.user.id;
+			const { postId } = req.params;
+			const result = await this.likeService.toggleLike(userId, postId);
+			return res.status(200).json({ success: true, data: result });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
+}
+
+module.exports = LikeController;

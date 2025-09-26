@@ -5,22 +5,32 @@ const { Schema } = mongoose;
 
 const RoomSchema = new Schema(
   {
-    members: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "users"
-    }],
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users",
+      },
+    ],
 
-    isGroup: {
-      type: Boolean,
-      default: false,
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "groups",
     },
     
+    deleteBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users",
+        default: null,
+      },
+    ],
+
     // Lưu tin nhắn cuối cùng để hiển thị trong danh sách chat
     lastMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "messages",
-      default: null
-    }
+      default: null,
+    },
   },
   {
     timestamps: true,

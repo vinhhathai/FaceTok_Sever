@@ -7,11 +7,6 @@ const { dtoResponse } = require("../../../shared/helper");
  */
 class MessageDto {
 
-  /**
-   * Transform a single message to response format
-   * @param {Object} message - Message object
-   * @returns {Object} Formatted message
-   */
   static toResponse(message) {
     if (!message) return null;
 

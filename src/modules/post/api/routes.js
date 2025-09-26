@@ -1,35 +1,36 @@
 "use strict";
 //----------------------------------------------------------------
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const {
-    FeedController,
-    PostManagementController,
-    PostInteractionController,
-    CommentController
-} = require('../controllers');
-const  checkLogin  = require('../../../shared/middlewares/checkLogin');
+const { PostController, CommentController, LikeController, ShareController } = require("../controllers");
+const checkLogin = require("../../../shared/middlewares/checkLogin");
+const { mediaArray } = require("../../../shared/middlewares/uploadMediaMiddleware");
 
+// Post
+router.post("/", checkLogin, mediaArray('media', 5), PostController.create); // createPost with media upload
 
-// Feed Routes
-router.get('/', checkLogin, FeedController.getTimelinePosts);
-router.post('/user', checkLogin, FeedController.getUserPosts);
+// Get posts by author (for user profiles)
+router.get("/author/:authorId", checkLogin, PostController.getByAuthor);
 
-// Post Management Routes
-router.post('/create', checkLogin, PostManagementController.createPost);
-router.put('/update', checkLogin, PostManagementController.updatePost);
-router.delete('/delete', checkLogin, PostManagementController.deletePost);
-router.post('/get-by-id', checkLogin, PostManagementController.getPostById);
+// Get timeline posts (for newsfeed)
+router.get("/timeline", checkLogin, PostController.getTimeline);
 
-// Post Interaction Routes
-router.post('/like', checkLogin, PostInteractionController.toggleLike);
-router.post('/like-status', checkLogin, PostInteractionController.checkLikeStatus);
-router.post('/like-post', checkLogin, PostInteractionController.likePost);
-router.post('/unlike-post', checkLogin, PostInteractionController.unlikePost);
+// Post manage
+router.get("/:id", checkLogin, PostController.getById);
+router.put("/:id", checkLogin, mediaArray('media', 5), PostController.update);
+router.delete("/:id", checkLogin, PostController.remove);
 
-// Comment Routes
-router.post('/comment', checkLogin, CommentController.createComment);
-router.post('/get-comments', checkLogin, CommentController.getComments);
-router.delete('/comment', checkLogin, CommentController.deleteComment);
+// Comments
+router.post("/:postId/comment", checkLogin, CommentController.create);
+router.get("/:postId/comments", checkLogin, CommentController.listByPost);
+router.get("/comment/:commentId/replies", checkLogin, CommentController.replies);
+router.put("/comment/:commentId", checkLogin, CommentController.update);
+router.delete("/comment/:commentId", checkLogin, CommentController.remove);
 
-module.exports = router; 
+// Likes
+router.post("/:postId/like/toggle", checkLogin, LikeController.toggle);
+
+// Shares
+router.post("/:postId/share/toggle", checkLogin, ShareController.toggle);
+
+module.exports = router;

@@ -16,102 +16,35 @@ class MessageRepository {
     this.userModel = UserModel;
   }
 
-  /**
-   * Tạo tin nhắn mới
-   * @param {string} senderId - ID người gửi
-   * @param {string} roomId - ID phòng chat
-   * @param {string} content - Nội dung tin nhắn
-   * @returns {Promise<Object>} - Tin nhắn đã tạo
-   */
+  async revokeMessage(messageId, senderId) {
+    return await this.messageModel.findOneAndUpdate(
+      {
+        _id: messageId,
+        senderId: senderId,
+      },
+      { isRevoked: true },
+      { new: true }
+    );
+  }
+
   async createMessage(senderId, roomId, content) {
     const message = new this.messageModel({
       senderId,
       roomId,
       content,
     });
+
     return await message.save();
   }
 
-  /**
-   * Lấy tin nhắn trong phòng chat
-   * @param {string} roomId - ID phòng chat
-   * @param {number} limit - Số lượng tin nhắn tối đa
-   * @param {number} skip - Số tin nhắn bỏ qua (phân trang)
-   * @returns {Promise<Array>} - Danh sách tin nhắn
-   */
   async getMessagesByRoomId(roomId, limit = 20, skip = 0) {
     return await this.messageModel
       .find({ roomId })
       .sort({ createdAt: -1 }) // Sắp xếp theo thời gian, mới nhất trước
       .skip(skip)
       .limit(limit)
-      .populate('senderId', 'fullName profilePicture')
+      .populate("senderId", "fullName profilePicture")
       .lean();
-  }
-
-  /**
-   * Tạo phòng chat mới giữa hai người dùng
-   * @param {string} userId1 - ID người dùng thứ nhất
-   * @param {string} userId2 - ID người dùng thứ hai
-   * @returns {Promise<Object>} - Phòng chat đã tạo
-   */
-  async createRoom(userId1, userId2) {
-    const room = new this.roomModel({
-      members: [userId1, userId2],
-      isGroup: false,
-    });
-    return await room.save();
-  }
-
-  /**
-   * Tìm phòng chat giữa hai người dùng
-   * @param {string} userId1 - ID người dùng thứ nhất
-   * @param {string} userId2 - ID người dùng thứ hai
-   * @returns {Promise<Object>} - Phòng chat nếu tồn tại
-   */
-  async findRoomByMembers(userId1, userId2) {
-    return await this.roomModel.findOne({
-      members: { $all: [userId1, userId2] },
-      isGroup: false,
-    });
-  }
-
-  /**
-   * Tìm phòng chat theo ID
-   * @param {string} roomId - ID phòng chat
-   * @returns {Promise<Object>} - Phòng chat với thông tin người dùng
-   */
-  async findRoomById(roomId) {
-    return await this.roomModel.findById(roomId)
-      .populate('members', 'fullName profilePicture');
-  }
-
-  /**
-   * Lấy danh sách phòng chat của người dùng
-   * @param {string} userId - ID người dùng
-   * @returns {Promise<Array>} - Danh sách phòng chat
-   */
-  async getUserRooms(userId) {
-    return await this.roomModel.find({
-      members: userId
-    })
-    .populate('members', 'fullName profilePicture')
-    .populate('lastMessage')
-    .sort({ updatedAt: -1 }); // Sắp xếp theo thời gian cập nhật, mới nhất trước
-  }
-
-  /**
-   * Cập nhật tin nhắn cuối cùng của phòng chat
-   * @param {string} roomId - ID phòng chat
-   * @param {string} messageId - ID tin nhắn cuối cùng
-   * @returns {Promise<Object>} - Phòng chat đã cập nhật
-   */
-  async updateRoomLastMessage(roomId, messageId) {
-    return await this.roomModel.findByIdAndUpdate(
-      roomId,
-      { lastMessage: messageId, updatedAt: new Date() },
-      { new: true }
-    );
   }
 }
 

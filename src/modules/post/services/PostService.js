@@ -1,464 +1,297 @@
-"use strict";
-//----------------------------------------------------------------
-const PostRepository = require('../repositories/PostRepository');
-const { errorCode, errorMessage } = require('../../../shared/common/error');
+const { PostRepository } = require('../repositories');
+const LikeRepository = require('../repositories/LikeRepository');
+const {
+  uploadBufferToCloudinary,
+  processAndUploadImage,
+  deleteFromCloudinary
+} = require('../../../shared/utils/cloudinaryUpload');
+const FriendRepository = require('../../friend/repositories/FriendRepository');
 
 class PostService {
-    constructor() {
-        this.postRepository = new PostRepository();
-    }
+  constructor() {
+    this.postRepository = new PostRepository();
+    this.friendRepository = new FriendRepository();
+    this.likeRepository = new LikeRepository();
+  }
 
-    async getPostById(postId) {
-        try {
-            const post = await this.postRepository.findById(postId);
-            
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
+  // Create a new post
+  async createPost(currentUserId, payload) {
+    // If files uploaded from multipart, transform and upload to Cloudinary
+    const uploadedMedia = [];
+    if (payload.__files && Array.isArray(payload.__files)) {
+
+      for (const file of payload.__files) {
+        const isVideo = file.mimetype.startsWith('video/');
+        const folder = isVideo ? 'chaotok/posts/videos' : 'chaotok/posts/images';
+        
+        let result;
+        if (isVideo) {
+          // Videos: upload directly (Cloudinary handles compression)
+          result = await uploadBufferToCloudinary(file.buffer, {
+            folder,
+            resource_type: 'video',
+            quality: 'auto',
+            fetch_format: 'auto'
+          });
+        } else {
+          // Images: resize and compress with Sharp
+          result = await processAndUploadImage(
+            file.buffer,
+            folder,
+            {
+              width: 1200,
+              height: 1200, 
+              fit: 'inside',
+              quality: 85,
+              format: 'jpeg'
+            },
+            {
+              quality: 'auto',
+              fetch_format: 'auto'
             }
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: post
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
+          );
         }
+        
+        uploadedMedia.push({
+          type: isVideo ? 'video' : 'image',
+          url: result.secure_url,
+          publicId: result.public_id
+        });
+      }
     }
 
-    async getUserPosts(userId, page = 1, limit = 10) {
+    const data = {
+      author: currentUserId,
+      content: payload?.content || '',
+      media: (payload?.media || []).concat(uploadedMedia),
+      privacy: payload?.privacy || 'public'
+    };
+    return this.postRepository.createPost(data);
+  }
+
+  // Get single post by id
+  async getPostById(postId, currentUserId = null) {
+    const post = await this.postRepository.findPostById(postId);
+    if (!post) return null;
+
+    // Enforce privacy: public OK; friends only if friend; private only owner
+    const privacy = post.privacy || 'public';
+    const authorId = post.author?._id?.toString?.() || post.author?._id || post.author?.id || post.author;
+    const isOwner = currentUserId && String(authorId) === String(currentUserId);
+    if (privacy === 'public' || isOwner) {
+      // attach isLiked for detail view
+      if (currentUserId) {
         try {
-            const skip = (page - 1) * limit;
-            const posts = await this.postRepository.findByUserId(userId, { skip, limit });
-            const totalPosts = await this.postRepository.getTotalPostCount(userId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    posts,
-                    page,
-                    limit,
-                    total: totalPosts,
-                    totalPages: Math.ceil(totalPosts / limit)
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
+          const liked = await this.likeRepository.hasUserLikedPost(postId, currentUserId);
+          post.isLiked = !!liked;
+        } catch (_) {}
+      }
+      return post;
     }
 
-    async getNewsFeed(userIds, page = 1, limit = 10) {
-        try {
-            const skip = (page - 1) * limit;
-            const posts = await this.postRepository.findPostsByUserIds(userIds, { skip, limit });
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    posts,
-                    page,
-                    limit
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
+    if (privacy === 'friends') {
+      try {
+        const friends = await this.friendRepository.getFriendsList(authorId);
+        const friendIds = (friends || []).map(f => f && (f._id?.toString?.() || f._id || f.id)).filter(Boolean);
+        const isFriend = currentUserId && friendIds.includes(String(currentUserId));
+        if (isFriend) {
+          if (currentUserId) {
+            try {
+              const liked = await this.likeRepository.hasUserLikedPost(postId, currentUserId);
+              post.isLiked = !!liked;
+            } catch (_) {}
+          }
+          return post;
         }
+      } catch (_) {}
+    }
+    const err = new Error('Forbidden: You do not have permission to view this post');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  // List posts by author with privacy check
+  async getPostsByAuthor(authorId, currentUserId, options) {
+    try {
+      console.log('🔍 PostService.getPostsByAuthor called with:', { authorId, currentUserId, options });
+      
+      // Privacy logic: 
+      // - If viewing own profile, show all non-deleted posts
+      // - If viewing other's profile, show public + friends posts (if friends)
+      const includePrivate = authorId === currentUserId;
+      console.log('🔒 Privacy settings:', { includePrivate });
+      
+      const result = await this.postRepository.findPostsByAuthor(authorId, options, {
+        currentUserId,
+        includePrivate
+      });
+      // Attach isLiked at service layer
+      if (Array.isArray(result.posts) && result.posts.length > 0) {
+        const postIds = result.posts.map(p => p._id);
+        const likedIds = await this.likeRepository.findLikedPostIdsForUser(currentUserId, postIds);
+        const likedSet = new Set(likedIds);
+        result.posts = result.posts.map(p => ({
+          ...p,
+          isLiked: likedSet.has(p._id.toString())
+        }));
+      }
+      
+      console.log('✅ Repository result:', { postsCount: result.posts?.length, total: result.total });
+      return result;
+    } catch (error) {
+      console.error('❌ PostService.getPostsByAuthor error:', error);
+      console.error('❌ Error stack:', error.stack);
+      throw error;
+    }
+  }
+
+  // Timeline for a user (newsfeed)
+  async getTimeline(currentUserId, options) {
+    // Fetch friend IDs to include friends-only posts in the feed
+    let friendIds = [];
+    try {
+      const friends = await this.friendRepository.getFriendsList(currentUserId);
+      if (Array.isArray(friends)) {
+        friendIds = friends
+          .map((f) => (f && (f._id?.toString?.() || f._id || f.id)))
+          .filter(Boolean);
+      }
+    } catch (e) {
+      // Fallback to empty list if friend fetching fails
+      friendIds = [];
     }
 
-    async createPost(postData) {
-        try {
-            const newPost = await this.postRepository.create(postData);
-            
-            return {
-                success: true,
-                statusCode: 201,
-                data: newPost
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.CREATE_POST_FAILED,
-                    message: error.message
-                }
-            };
-        }
+    const result = await this.postRepository.findTimelinePosts(currentUserId, friendIds, options);
+    // Attach isLiked at service layer
+    if (Array.isArray(result.posts) && result.posts.length > 0) {
+      const postIds = result.posts.map(p => p._id);
+      const likedIds = await this.likeRepository.findLikedPostIdsForUser(currentUserId, postIds);
+      const likedSet = new Set(likedIds);
+      result.posts = result.posts.map(p => ({
+        ...p,
+        isLiked: likedSet.has(p._id.toString())
+      }));
+    }
+    return result;
+  }
+
+  // Update post
+  async updatePost(postId, payload, currentUserId) {
+    // Allowed top-level fields
+    const allowedFields = ["content", "privacy"];
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(payload, key)) {
+        updateData[key] = payload[key];
+      }
     }
 
-    async updatePost(postId, userId, postData) {
-        try {
-            const post = await this.postRepository.findById(postId);
-            
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
+    // Handle media changes:
+    // - payload.mediaAdd: files from multer (req.files) mapped to payload.__files
+    // - payload.mediaRemove: array of publicId or url to remove
+
+    // Collect existing media updates if provided directly
+    if (Array.isArray(payload.media)) {
+      updateData.media = payload.media;
+    }
+
+    // Upload new files if present (via req.files injected as __files)
+    const newUploadedMedia = [];
+    if (payload.__files && Array.isArray(payload.__files)) {
+      for (const file of payload.__files) {
+        const isVideo = file.mimetype.startsWith('video/');
+        const folder = isVideo ? 'chaotok/posts/videos' : 'chaotok/posts/images';
+        let result;
+        if (isVideo) {
+          result = await uploadBufferToCloudinary(file.buffer, {
+            folder,
+            resource_type: 'video',
+            quality: 'auto',
+            fetch_format: 'auto'
+          });
+        } else {
+          result = await processAndUploadImage(
+            file.buffer,
+            folder,
+            {
+              width: 1200,
+              height: 1200,
+              fit: 'inside',
+              quality: 85,
+              format: 'jpeg'
+            },
+            {
+              quality: 'auto',
+              fetch_format: 'auto'
             }
-            
-            // Kiểm tra quyền sở hữu
-            if (post.userId.toString() !== userId.toString()) {
-                return {
-                    success: false,
-                    statusCode: 403,
-                    error: {
-                        code: errorCode.NOT_PERMISSIONS,
-                        message: errorMessage.NOT_PERMISSIONS
-                    }
-                };
-            }
-            
-            const updatedPost = await this.postRepository.update(postId, postData);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: updatedPost
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.UPDATE_POST_FAILED,
-                    message: error.message
-                }
-            };
+          );
         }
+        newUploadedMedia.push({
+          type: isVideo ? 'video' : 'image',
+          url: result.secure_url,
+          publicId: result.public_id
+        });
+      }
     }
 
-    async deletePost(postId, userId) {
-        try {
-            const post = await this.postRepository.findById(postId);
-            
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
-            }
-            
-            // Kiểm tra quyền sở hữu
-            if (post.userId.toString() !== userId.toString()) {
-                return {
-                    success: false,
-                    statusCode: 403,
-                    error: {
-                        code: errorCode.NOT_PERMISSIONS,
-                        message: errorMessage.NOT_PERMISSIONS
-                    }
-                };
-            }
-            
-            await this.postRepository.softDelete(postId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: { message: 'Post deleted successfully' }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.DELETE_POST_FAILED,
-                    message: error.message
-                }
-            };
-        }
+    // Determine final media set and deletions
+    let finalMediaArray = null;
+    let mediaToDelete = [];
+
+    // Fetch existing post to compare media
+    const existing = await this.postRepository.findPostById(postId);
+
+    if (Array.isArray(updateData.media)) {
+      // Full replacement mode: use provided media array as baseline
+      finalMediaArray = Array.isArray(updateData.media) ? [...updateData.media] : [];
+      // Compute deletions: items present in existing but not in final
+      const existingKeys = (existing?.media || []).map(m => m.publicId || m.url);
+      const finalKeys = finalMediaArray.map(m => m.publicId || m.url);
+      mediaToDelete = (existing?.media || []).filter(m => !finalKeys.includes(m.publicId || m.url));
+    } else {
+      // Incremental mode: start from existing, remove items listed in mediaRemove, then append new uploads
+      const existingMedia = Array.isArray(existing?.media) ? [...existing.media] : [];
+      const mediaRemove = Array.isArray(payload.mediaRemove) ? payload.mediaRemove : [];
+      const removeKeys = new Set(mediaRemove);
+      mediaToDelete = existingMedia.filter(m => removeKeys.has(m.publicId || m.url));
+      finalMediaArray = existingMedia.filter(m => !removeKeys.has(m.publicId || m.url));
     }
 
-    async likePost(postId, userId) {
-        try {
-            const post = await this.postRepository.findById(postId);
-            
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
-            }
-            
-            const updatedPost = await this.postRepository.likePost(postId, userId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    likesCount: updatedPost.likesCount,
-                    liked: true
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
+    // Append newly uploaded media
+    if (newUploadedMedia.length > 0) {
+      finalMediaArray = [...(finalMediaArray || []), ...newUploadedMedia];
     }
 
-    async unlikePost(postId, userId) {
-        try {
-            const post = await this.postRepository.findById(postId);
-            
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
-            }
-            
-            const updatedPost = await this.postRepository.unlikePost(postId, userId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    likesCount: updatedPost.likesCount,
-                    liked: false
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
+    // Assign computed media to update
+    updateData.media = finalMediaArray || [];
+
+    // Enforce ownership by requiring author = currentUserId
+    const updated = await this.postRepository.updatePostOwnedBy(postId, currentUserId, updateData);
+
+    // Fire-and-forget deletion on Cloudinary for removed items (if any)
+    if (mediaToDelete.length > 0) {
+      for (const m of mediaToDelete) {
+        if (m.publicId) {
+          const resourceType = m.type === 'video' ? 'video' : 'image';
+          deleteFromCloudinary(m.publicId, resourceType).catch(() => {});
         }
+      }
     }
 
-    // Phương thức cho kiến trúc cũ
-    async getTimelinePosts(userId, page = 1, limit = 10) {
-        try {
-            const skip = (page - 1) * limit;
-            
-            // Lấy danh sách bạn bè của người dùng
-            const friends = await this.postRepository.getUserFriends(userId);
-            const friendIds = friends || [];
-            
-            // Thời gian hiện tại để tính điểm cho posts gần đây
-            const currentTime = new Date();
-            // Thời gian 1 tuần trước để đánh giá tăng trưởng tương tác
-            const oneWeekAgo = new Date(currentTime.getTime() - 7 * 24 * 60 * 60 * 1000);
-            // Thời gian 1 ngày trước để đánh giá tăng trưởng tương tác nhanh
-            const oneDayAgo = new Date(currentTime.getTime() - 24 * 60 * 60 * 1000);
-            
-            // Lấy tổng số bài viết để phân trang
-            const totalPosts = await this.postRepository.getTotalPostsCount();
-            
-            // Lấy các bài viết gần đây để tính điểm
-            const recentPosts = await this.postRepository.getRecentPosts(Math.min(100, limit * 3));
-            
-            // Tính điểm cho mỗi bài viết dựa trên thuật toán
-            const scoredPosts = recentPosts.map(post => {
-                // Cơ sở điểm là 0
-                let score = 0;
-                
-                // Ưu tiên 1: Thời gian tạo post (ưu tiên post mới)
-                // Posts mới hơn có điểm cao hơn
-                const postAge = (currentTime - new Date(post.createdAt)) / (1000 * 60 * 60); // Tuổi theo giờ
-                const timeScore = Math.max(0, 100 - postAge); // Điểm tối đa 100, giảm dần theo thời gian
-                score += timeScore;
-                
-                // Ưu tiên 2: Lượng tương tác (likes, comments)
-                // Mỗi like đáng giá 2 điểm, mỗi comment đáng giá 3 điểm
-                const interactionScore = (post.likes.length || 0) * 2 + (post.comments.length || 0) * 3;
-                score += interactionScore;
-                
-                // Ưu tiên 3: Mối quan hệ (ưu tiên post từ bạn bè)
-                // Post từ bạn bè được cộng 50 điểm
-                const isFriend = friendIds.some(friendId =>
-                    friendId.toString() === post.userId._id.toString()
-                );
-                if (isFriend) {
-                    score += 50;
-                }
-                
-                // Ưu tiên 4: Tăng trưởng tương tác (post mới có lượng tương tác tăng nhanh)
-                // Nếu post trong 24h gần đây có tương tác cao, boost điểm
-                const isRecent = post.createdAt > oneDayAgo;
-                if (isRecent && interactionScore > 10) {
-                    score += 30; // Boost thêm 30 điểm cho post mới có tương tác cao
-                }
-                
-                // Ưu tiên 5: Đa dạng hóa (đôi khi chèn vài post random từ người lạ)
-                // Áp dụng yếu tố ngẫu nhiên để đa dạng hóa feed
-                const randomBoost = Math.random() * 10; // Ngẫu nhiên từ 0-10 điểm
-                score += randomBoost;
-                
-                return {
-                    post,
-                    score
-                };
-            });
-            
-            // Sắp xếp posts theo điểm và lấy theo phân trang
-            const sortedPosts = scoredPosts
-                .sort((a, b) => b.score - a.score)
-                .slice(skip, skip + limit)
-                .map(item => item.post);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    posts: sortedPosts,
-                    page,
-                    limit,
-                    total: totalPosts,
-                    totalPages: Math.ceil(totalPosts / limit)
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+    return updated;
+  }
 
-    // Phương thức cho kiến trúc cũ - toggle like/unlike
-    async toggleLike(postId, userId) {
-        try {
-            const post = await this.postRepository.findById(postId);
-            
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
-            }
-            
-            // Kiểm tra xem người dùng đã like bài viết chưa
-            const hasLiked = await this.postRepository.checkLikeStatus(postId, userId);
-            
-            if (hasLiked) {
-                // Nếu đã like, thì unlike
-                await this.postRepository.unlikePost(postId, userId);
-                return {
-                    success: true,
-                    statusCode: 200,
-                    data: { liked: false, message: 'Post unliked successfully' }
-                };
-            } else {
-                // Nếu chưa like, thì like
-                await this.postRepository.likePost(postId, userId);
-                return {
-                    success: true,
-                    statusCode: 200,
-                    data: { liked: true, message: 'Post liked successfully' }
-                };
-            }
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_INTERNAL_SERVER,
-                    message: error.message
-                }
-            };
-        }
-    }
+  // Soft delete
+  async deletePost(postId) {
+    return this.postRepository.deletePost(postId);
+  }
 
-    // Phương thức cho kiến trúc cũ - kiểm tra trạng thái like
-    async checkLikeStatus(postId, userId) {
-        try {
-            const post = await this.postRepository.findById(postId);
-            
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
-            }
-            
-            const hasLiked = await this.postRepository.checkLikeStatus(postId, userId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: { liked: hasLiked }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+  // Soft delete with ownership check
+  async deletePostOwned(postId, currentUserId) {
+    return this.postRepository.softDeleteOwned(postId, currentUserId);
+  }
 }
 
-// Export instance thay vì class
-module.exports = new PostService(); 
+module.exports = PostService;
+
+

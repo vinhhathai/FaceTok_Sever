@@ -1,13 +1,13 @@
 "use strict";
 //----------------------------------------------------------------
-const FeedService = require('./FeedService');
-const PostManagementService = require('./PostManagementService');
-const PostInteractionService = require('./PostInteractionService');
+const PostService = require('./PostService');
 const CommentService = require('./CommentService');
+const LikeService = require('./LikeService');
+const ShareService = require('./ShareService');
 
 module.exports = {
-    FeedService,
-    PostManagementService,
-    PostInteractionService,
-    CommentService
-}; 
+	PostService,
+	CommentService,
+	LikeService,
+	ShareService
+};

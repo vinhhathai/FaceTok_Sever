@@ -1,183 +1,107 @@
-"use strict";
-//----------------------------------------------------------------
-const CommentRepository = require('../repositories/CommentRepository');
-const PostRepository = require('../repositories/PostRepository');
-const { errorCode, errorMessage } = require('../../../shared/common/error');
+const { CommentRepository, PostRepository } = require('../repositories');
+const NotificationService = require('../../notification/services/NotificationService');
 
 class CommentService {
-    constructor() {
-        this.commentRepository = new CommentRepository();
-        this.postRepository = new PostRepository();
-    }
+	constructor() {
+		this.commentRepository = new CommentRepository();
+		this.postRepository = new PostRepository();
+		this.notificationService = new NotificationService();
+	}
 
-    async getCommentsByPostId(postId, page = 1, limit = 20) {
-        try {
-            // Kiểm tra post có tồn tại không
-            const post = await this.postRepository.findById(postId);
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
-            }
-            
-            const skip = (page - 1) * limit;
-            const comments = await this.commentRepository.findByPostId(postId, { skip, limit });
-            const totalComments = await this.commentRepository.countByPostId(postId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: {
-                    comments,
-                    page,
-                    limit,
-                    total: totalComments,
-                    totalPages: Math.ceil(totalComments / limit)
-                }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+	// Create a comment for a post
+	async createComment(currentUserId, postId, content, parentId = null) {
+		// Tạo comment
+		const saved = await this.commentRepository.createComment({
+			postId,
+			parentId,
+			rootId: parentId || null,
+			author: currentUserId,
+			content
+		});
+		
+		// Tăng đếm comment cho post gốc
+		await this.postRepository.incrementCommentCount(postId);
+		
+		// Nếu là reply, tăng replyCount cho comment cha
+		if (parentId) {
+			await this.commentRepository.incrementReplyCount(parentId);
+		}
+		
+		// Gửi notification cho tác giả bài viết (nếu không phải chính mình)
+		const post = await this.postRepository.findPostById(postId);
+		if (post && post.author._id.toString() !== currentUserId) {
+			const commenter = await this.commentRepository.userModel.findById(currentUserId);
+			
+			await this.notificationService.createAndSend({
+				user: post.author,
+				type: 'post_comment',
+				content: `${commenter.fullName} đã bình luận về bài viết của bạn: "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}"`,
+				data: {
+					fromUserId: currentUserId,
+					fromUserName: commenter.fullName,
+					fromUserAvatar: commenter.profilePicture,
+					postId: postId,
+					commentId: saved._id,
+					commentContent: content,
+					postContent: post.content.substring(0, 50) + (post.content.length > 50 ? '...' : '')
+				}
+			});
+		}
+		
+		// Trả về comment đã populate tác giả
+		return this.commentRepository.findCommentById(saved._id);
+	}
 
-    async createComment(commentData) {
-        try {
-            // Kiểm tra post có tồn tại không
-            const post = await this.postRepository.findById(commentData.postId);
-            if (!post || post.isDelete) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.POST_NOT_FOUND,
-                        message: errorMessage.POST_NOT_FOUND
-                    }
-                };
-            }
-            
-            const newComment = await this.commentRepository.create(commentData);
-            
-            return {
-                success: true,
-                statusCode: 201,
-                data: newComment
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+	async getPostComments(postId, options) {
+		return this.commentRepository.findCommentsByPostId(postId, options);
+	}
 
-    async updateComment(commentId, userId, text) {
-        try {
-            const comment = await this.commentRepository.findById(commentId);
-            
-            if (!comment) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.COMMENT_NOT_FOUND,
-                        message: errorMessage.COMMENT_NOT_FOUND
-                    }
-                };
-            }
-            
-            // Kiểm tra quyền sở hữu
-            if (comment.userId.toString() !== userId.toString()) {
-                return {
-                    success: false,
-                    statusCode: 403,
-                    error: {
-                        code: errorCode.NOT_PERMISSIONS,
-                        message: errorMessage.NOT_PERMISSIONS
-                    }
-                };
-            }
-            
-            const updatedComment = await this.commentRepository.update(commentId, text);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: updatedComment
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+	async getCommentReplies(commentId, options) {
+		return this.commentRepository.findRepliesByCommentId(commentId, options);
+	}
 
-    async deleteComment(commentId, userId) {
-        try {
-            const comment = await this.commentRepository.findById(commentId);
-            
-            if (!comment) {
-                return {
-                    success: false,
-                    statusCode: 404,
-                    error: {
-                        code: errorCode.COMMENT_NOT_FOUND,
-                        message: errorMessage.COMMENT_NOT_FOUND
-                    }
-                };
-            }
-            
-            // Kiểm tra quyền sở hữu
-            if (comment.userId.toString() !== userId.toString()) {
-                return {
-                    success: false,
-                    statusCode: 403,
-                    error: {
-                        code: errorCode.NOT_PERMISSIONS,
-                        message: errorMessage.NOT_PERMISSIONS
-                    }
-                };
-            }
-            
-            await this.commentRepository.delete(commentId);
-            
-            return {
-                success: true,
-                statusCode: 200,
-                data: { message: 'Comment deleted successfully' }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                statusCode: 500,
-                error: {
-                    code: errorCode.ERR_GET_DATA_FAILED,
-                    message: error.message
-                }
-            };
-        }
-    }
+	// Update comment owned by user (only content)
+	async updateCommentOwned(currentUserId, commentId, { content }) {
+		if (!content || typeof content !== 'string' || content.trim() === '') return false;
+		const existing = await this.commentRepository.findCommentById(commentId);
+		if (!existing) return false;
+		if (String(existing.author?._id || existing.author) !== String(currentUserId)) {
+			return false;
+		}
+		const updated = await this.commentRepository.updateComment(commentId, { content });
+		return updated;
+	}
+
+	// Delete comment owned by user or by post owner
+	async deleteCommentOwned(currentUserId, commentId, allowPostOwner = false) {
+		// Fetch comment to verify ownership
+		const existing = await this.commentRepository.findCommentById(commentId);
+		if (!existing) return false;
+		// If allowPostOwner, fetch post to check owner
+		if (allowPostOwner) {
+			const post = await this.postRepository.findPostById(existing.postId);
+			const isPostOwner = String(post?.author?._id || post?.author) === String(currentUserId);
+			const isCommentOwner = String(existing.author?._id || existing.author) === String(currentUserId);
+			if (!isPostOwner && !isCommentOwner) return false;
+		} else if (String(existing.author?._id || existing.author) !== String(currentUserId)) {
+			return false;
+		}
+		await this.commentRepository.deleteComment(commentId);
+		// Decrement counters and cascade delete for replies if root
+		if (existing.parentId) {
+			// deleting a reply
+			await this.commentRepository.decrementReplyCount(existing.parentId);
+			await this.postRepository.decrementCommentCount(existing.postId);
+		} else if (existing.postId) {
+			// deleting a root comment: also delete its replies and decrement by 1 + replyCount
+			const repliesCount = await this.commentRepository.countRepliesByCommentId(commentId);
+			if (repliesCount > 0) {
+				await this.commentRepository.deleteRepliesByParentId(commentId);
+			}
+			await this.postRepository.decrementCommentCountBy(existing.postId, 1 + repliesCount);
+		}
+		return true;
+	}
 }
 
-// Export instance thay vì class
-module.exports = new CommentService(); 
+module.exports = CommentService;

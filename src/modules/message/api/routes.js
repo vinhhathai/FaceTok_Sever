@@ -1,45 +1,48 @@
 "use strict";
 //----------------------------------------------------------------
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { 
-    MessageController,
-    RoomController
-} = require('../controllers');
-const checkLogin = require('../../../shared/middlewares/checkLogin');
+const { MessageController, RoomController } = require("../controllers");
+const checkLogin = require("../../../shared/middlewares/checkLogin");
+const GroupController = require("../controllers/GroupController");
 
+// Group API
+router.put("/group/change-owner", checkLogin, GroupController.changeGroupOwner);
+router.put("/group/rename", checkLogin, GroupController.renameGroup);
+router.post("/group", checkLogin, GroupController.createGroup);
+router.get("/group/:id", checkLogin, GroupController.getGroupById);
+router.post("/group/invite", checkLogin, RoomController.inviteToGroup);
+router.post("/group/dissolve", checkLogin, GroupController.dissolveGroup);
+// Update group avatar by roomId (id=roomId)
+router.post("/group/update-avatar", checkLogin, GroupController.updateAvatar);
 
+// Room API
+// Delete conversation
+router.delete("/room/:roomId", checkLogin, RoomController.deleteConversation);
+// Kick out member
+router.post("/room/kick-out", checkLogin, RoomController.kickOutMember);
 
-// Lấy hoặc tạo phòng chat
-router.post('/room/get-or-create', checkLogin, MessageController.getOrCreateRoom);
+router.post("/room/leave", checkLogin, RoomController.leaveGroup);
 
-// Lấy thông tin phòng 2 user
-router.get('/room/:roomId', checkLogin, RoomController.getRoomById);
-// Lấy danh sách tin nhắn phòng chat của 2 user
-router.get('/room/:roomId/messages', checkLogin, MessageController.getMessages);
+// Get or create room
+router.post("/room/get-or-create", checkLogin, RoomController.getOrCreateRoom);
 
-// Lấy danh sách phòng chat của user
-router.get('/rooms', checkLogin, RoomController.getRooms);
+// Get room by id
+router.get("/room/:roomId", checkLogin, RoomController.getRoomById);
+// Get messages in room
+router.get("/room/:roomId/messages", checkLogin, MessageController.getMessages);
 
-// Tạo tin nhắn trong phòng đã tồn tại
-router.post('/room/:roomId/message', checkLogin, MessageController.createMessageInRoom);
+// Get rooms of user
+router.get("/rooms", checkLogin, RoomController.getRooms);
 
+// Create message in room
+router.post(
+  "/room/:roomId/message",
+  checkLogin,
+  MessageController.createMessageInRoom
+);
 
+// Revoke message
+router.post("/revoke", checkLogin, MessageController.revokeMessage);
 
-
-//Tạo phòng
-// router.post('/room', checkLogin, MessageController.createRoom);
-
-// Gửi tin nhắn
-// router.post('/send', checkLogin, MessageController.sendMessage);
-
-// Rooms API
-// router.get('/room/user/:userId', RoomController.getRoomDetails);
-
-
-// router.get('/unread', RoomController.getUnreadCount);
-
-// Messages API
-// router.put('/room/:roomId/read', MessageController.markAsRead);
-
-module.exports = router; 
+module.exports = router;

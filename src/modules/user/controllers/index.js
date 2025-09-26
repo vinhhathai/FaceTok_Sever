@@ -5,11 +5,13 @@ const AvatarController = require('./AvatarController');
 const ThumbnailController = require('./ThumbnailController');
 const FullnameController = require('./FullnameController');
 const UserSearchController = require('./UserSearchController');
+const MediaController = require('./MediaController');
 
 module.exports = {
     ProfileController: new ProfileController(),
     AvatarController: new AvatarController(),
     ThumbnailController: new ThumbnailController(),
     FullnameController: new FullnameController(),
-    UserSearchController: new UserSearchController()
-}; 
+    UserSearchController: new UserSearchController(),
+    MediaController: new MediaController()
+};

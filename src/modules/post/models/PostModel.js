@@ -1,84 +1,23 @@
-"use strict";
-//----------------------------------------------------------------
-
+// post.model.js
 const mongoose = require("mongoose");
 
-const PostSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
-      required: true,
-    },
-    caption: {
-      type: String,
-      default: "",
-    },
-    filePath: {
-      type: String,
-      default: "",
-    },
-    fileType: {
-      type: String,
-      default: "",
-    },
-    likes: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "users"
-    }],
-    likesCount: {
-      type: Number,
-      default: 0
-    },
-    commentsCount: {
-      type: Number,
-      default: 0
-    },
-    isDelete: {
-      type: Boolean,
-      default: false
-    },
-    
-   
-  },
- 
-  {
-    timestamps: true,
-    collection: "posts",
-  }
-);
+const postSchema = new mongoose.Schema({
+  author: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
+  content: { type: String, maxlength: 5000, trim: true, default: "" },
+  media: [{
+    type: { type: String, enum: ["image", "video"], required: true },
+    url: { type: String, required: true },
+    publicId: { type: String } // optional, used for deletion on Cloudinary
+  }],
+  likesCount: { type: Number, default: 0 },
+  sharesCount: { type: Number, default: 0 },
+  commentsCount: { type: Number, default: 0 },
+  privacy: { type: String, enum: ["public", "friends", "private"], default: "public" },
+  isDeleted: { type: Boolean, default: false }
+}, { timestamps: true });
 
-// Tạo virtual property để trả về đường dẫn đầy đủ đến file
-PostSchema.virtual('mediaUrl').get(function() {
-  return this.filePath ? this.filePath : '';
-});
+postSchema.index({ author: 1, createdAt: -1 });
+postSchema.index({ privacy: 1, createdAt: -1 });
 
-// Tạo method để thêm like
-PostSchema.methods.like = function(userId) {
-  if (!this.likes.includes(userId)) {
-    this.likes.push(userId);
-    this.likesCount = this.likes.length;
-  }
-};
-
-// Tạo method để bỏ like
-PostSchema.methods.unlike = function(userId) {
-  this.likes = this.likes.filter(id => id.toString() !== userId.toString());
-  this.likesCount = this.likes.length;
-};
-
-// Tạo virtual field để lấy comments theo postId
-PostSchema.virtual('comments', {
-  ref: 'comments',
-  localField: '_id',
-  foreignField: 'postId',
-  options: { sort: { createdAt: -1 } }
-});
-
-// Đảm bảo Mongoose biết khi trả về JSON, hãy bao gồm cả virtual properties
-PostSchema.set('toJSON', { virtuals: true });
-PostSchema.set('toObject', { virtuals: true });
-
-const PostModel = mongoose.model("posts", PostSchema);
-
-module.exports = PostModel; 
+const PostModel = mongoose.model("posts", postSchema);
+module.exports = PostModel;

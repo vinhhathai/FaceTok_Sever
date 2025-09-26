@@ -1,13 +1,13 @@
 "use strict";
 //----------------------------------------------------------------
-const FeedController = require('./FeedController');
-const PostManagementController = require('./PostManagementController');
-const PostInteractionController = require('./PostInteractionController');
+const PostController = require('./PostController');
 const CommentController = require('./CommentController');
+const LikeController = require('./LikeController');
+const ShareController = require('./ShareController');
 
 module.exports = {
-    FeedController,
-    PostManagementController,
-    PostInteractionController,
-    CommentController
-}; 
+	PostController: new PostController(),
+	CommentController: new CommentController(),
+	LikeController: new LikeController(),
+	ShareController: new ShareController()
+};

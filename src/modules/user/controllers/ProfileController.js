@@ -6,6 +6,7 @@ const { ProfileDto } = require("../dtos");
 const {
   profileValidation,
   updateProfileValidation,
+  blockUserValidation,
 } = require("../validations");
 const {
   processAndUploadImage,
@@ -18,6 +19,93 @@ class ProfileController {
   constructor() {
     this.profileService = new ProfileService();
   }
+
+  getBlockedUsers = async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const result = await this.profileService.getBlockedUsers(userId);
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(500).json({
+        ...ProfileDto.error(
+          errorCode.ERR_RETRIEVE_PROFILE_FAILED,
+          error.message || "Lỗi khi lấy danh sách người dùng đã chặn",
+          error.detail
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
+  unblockUser = async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const blockedUserId = req.body.blockedUserId;
+      
+      const { error, value } = await blockUserValidation({ blockedUserId });
+      if (error) {
+        return res
+          .status(400)
+          .json(
+            ProfileDto.error(
+              errorCode.VALIDATION_FAILED,
+              error.details[0].message
+            )
+          );
+      }
+      
+      const result = await this.profileService.unblockUser(userId, value.blockedUserId);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(500).json({
+        ...ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          error.message || "Lỗi khi bỏ chặn người dùng",
+          error.detail
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
+  blockUser = async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const blockedUserId = req.body.blockedUserId;
+
+      const { error, value } = await blockUserValidation({ blockedUserId });
+      if (error) {
+        return res
+          .status(400)
+          .json(
+            ProfileDto.error(
+              errorCode.VALIDATION_FAILED,
+              error.details[0].message
+            )
+          );
+      }
+
+      const result = await this.profileService.blockUser(
+        userId,
+        value.blockedUserId
+      );
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(500).json({
+        ...ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          error.message || "Lỗi khi chặn người dùng",
+          error.detail
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
 
   getProfile = async (req, res) => {
     try {
@@ -101,7 +189,7 @@ class ProfileController {
             )
           );
       }
-      
+
       console.log("Profile update - received data:", value);
 
       // Update profile through service

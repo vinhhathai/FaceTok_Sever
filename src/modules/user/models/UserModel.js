@@ -25,7 +25,15 @@ const UserSchema = new Schema(
       type: String,
       default: ""
     },
+    profilePicturePublicId: {
+      type: String,
+      default: ""
+    },
     thumbnail: {
+      type: String,
+      default: ""
+    },
+    thumbnailPublicId: {
       type: String,
       default: ""
     },
@@ -66,6 +74,7 @@ const UserSchema = new Schema(
         default: null
       }
     },
+    blockedUsers: [{ type: mongoose.Types.ObjectId, ref: "users" }],
 
   },
   {

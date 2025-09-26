@@ -1,111 +1,78 @@
-"use strict";
-//----------------------------------------------------------------
-const CommentService = require('../services/CommentService');
+const { CommentService } = require('../services');
 
 class CommentController {
-    constructor() {
-        this.commentService = CommentService;
-    }
+	constructor() {
+		this.commentService = new CommentService();
+	}
 
-    getComments = async (req, res) => {
-        const postId = req.params.postId;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        
-        const result = await this.commentService.getCommentsByPostId(postId, page, limit);
-        
-        return res.status(result.statusCode).json(
-            result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: `/post/${postId}/comments`,
-                    error: result.error 
-                }
-        );
-    }
+	// POST /post/:postId/comment
+	create = async (req, res) => {
+		try {
+			const userId = req.user.id;
+			const { postId } = req.params;
+			const { content, parentId } = req.body;
+			const comment = await this.commentService.createComment(userId, postId, content, parentId || null);
+			return res.status(201).json({ success: true, data: comment });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
 
-    createComment = async (req, res) => {
-        const postId = req.params.postId;
-        const userId = req.user.id;
-        const { text } = req.body;
-        
-        if (!text || text.trim() === '') {
-            return res.status(400).json({
-                timestamp: new Date().toISOString(),
-                path: `/post/${postId}/comments`,
-                error: {
-                    code: 'INVALID_INPUT',
-                    message: 'Comment text is required'
-                }
-            });
-        }
-        
-        const commentData = {
-            postId,
-            userId,
-            text
-        };
-        
-        const result = await this.commentService.createComment(commentData);
-        
-        return res.status(result.statusCode).json(
-            result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: `/post/${postId}/comments`,
-                    error: result.error 
-                }
-        );
-    }
+	// GET /post/:postId/comments
+	listByPost = async (req, res) => {
+		try {
+			const { postId } = req.params;
+			const { page, limit } = req.query;
+			const items = await this.commentService.getPostComments(postId, { page, limit });
+			return res.status(200).json({ success: true, data: items });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
 
-    updateComment = async (req, res) => {
-        const commentId = req.params.id;
-        const userId = req.user.id;
-        const { text } = req.body;
-        
-        if (!text || text.trim() === '') {
-            return res.status(400).json({
-                timestamp: new Date().toISOString(),
-                path: `/comment/${commentId}`,
-                error: {
-                    code: 'INVALID_INPUT',
-                    message: 'Comment text is required'
-                }
-            });
-        }
-        
-        const result = await this.commentService.updateComment(commentId, userId, text);
-        
-        return res.status(result.statusCode).json(
-            result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: `/comment/${commentId}`,
-                    error: result.error 
-                }
-        );
-    }
+	// GET /comment/:commentId/replies
+	replies = async (req, res) => {
+		try {
+			const { commentId } = req.params;
+			const { page, limit } = req.query;
+			const items = await this.commentService.getCommentReplies(commentId, { page, limit });
+			return res.status(200).json({ success: true, data: items });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
 
-    deleteComment = async (req, res) => {
-        const commentId = req.params.id;
-        const userId = req.user.id;
-        
-        const result = await this.commentService.deleteComment(commentId, userId);
-        
-        return res.status(result.statusCode).json(
-            result.success 
-                ? { data: result.data } 
-                : { 
-                    timestamp: new Date().toISOString(),
-                    path: `/comment/${commentId}`,
-                    error: result.error 
-                }
-        );
-    }
+	// PUT /post/comment/:commentId
+	update = async (req, res) => {
+		try {
+			const userId = req.user.id;
+			const { commentId } = req.params;
+			const { content } = req.body;
+			const updated = await this.commentService.updateCommentOwned(userId, commentId, { content });
+			if (!updated) {
+				return res.status(403).json({ success: false, message: 'Forbidden: cannot edit this comment' });
+			}
+			return res.status(200).json({ success: true, data: updated });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
+
+	// DELETE /post/comment/:commentId
+	remove = async (req, res) => {
+		try {
+			const userId = req.user.id;
+			const { commentId } = req.params;
+			// Allow post owner to delete any comment
+			const result = await this.commentService.deleteCommentOwned(userId, commentId, true);
+			if (!result) {
+				return res.status(403).json({ success: false, message: 'Forbidden: cannot delete this comment' });
+			}
+			return res.status(200).json({ success: true, data: { _id: commentId, deleted: true } });
+		} catch (error) {
+			return res.status(500).json({ success: false, message: error.message });
+		}
+	};
 }
 
-// Xuất ra instance của controller thay vì class
-module.exports = new CommentController(); 
+module.exports = CommentController;
