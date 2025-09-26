@@ -5,11 +5,13 @@ const AvatarDto = require('./AvatarDto');
 const ThumbnailDto = require('./ThumbnailDto');
 const FullnameDto = require('./FullnameDto');
 const UserSearchDto = require('./UserSearchDto');
+const MediaDto = require('./MediaDto');
 
 module.exports = {
     ProfileDto,
     AvatarDto,
     ThumbnailDto,
     FullnameDto,
-    UserSearchDto
-}; 
+    UserSearchDto,
+    MediaDto
+};

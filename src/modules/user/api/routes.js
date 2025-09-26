@@ -9,6 +9,7 @@ const {
   ThumbnailController,
   FullnameController,
   UserSearchController,
+  MediaController,
 } = require("../controllers");
 const checkLogin = require("../../../shared/middlewares/checkLogin");
 const uploadImageMiddleware = require("../../../shared/middlewares/uploadImageMiddleware");
@@ -25,6 +26,9 @@ router.put("/update-fullname", checkLogin, FullnameController.updateFullName);
 
 // Search Routes
 router.get("/search", checkLogin, UserSearchController.searchUsers);
+
+// Media Gallery Routes
+router.get("/media/:userId", checkLogin, MediaController.getUserMedia);
 
 //-----------------------------------------------------------
 // Upload cover photo

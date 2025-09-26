@@ -49,9 +49,6 @@ app.use(express.static(path.join(__dirname, '../public')));
 const corsOptions = {
   origin: [
     'http://localhost:3004',
-    'https://4529bd02451e.ngrok-free.app',
-    /\.ngrok-free\.app$/,
-    /\.ngrok\.io$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
