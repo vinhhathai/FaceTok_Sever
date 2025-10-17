@@ -2,7 +2,7 @@
 //----------------------------------------------------------------
 const express = require("express");
 const router = express.Router();
-const { MessageController, RoomController } = require("../controllers");
+const { MessageController, RoomController } = require("../controllers/");
 const checkLogin = require("../../../shared/middlewares/checkLogin");
 const GroupController = require("../controllers/GroupController");
 
