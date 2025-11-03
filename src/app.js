@@ -45,12 +45,33 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../public")));
+
 // CORS configuration
+const allowedOrigins = [
+  "http://localhost:3004",
+  "https://chaotok.site",
+  "https://www.chaotok.site",
+  "https://d13tci060h3fsw.cloudfront.net",
+  /^https:\/\/.*\.cloudfront\.net$/
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
     // Cho phép request không có Origin (ví dụ Postman)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+    
+    // Kiểm tra origin trong allowedOrigins
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return allowed === origin;
+      }
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.log("❌ Blocked by CORS:", origin);
