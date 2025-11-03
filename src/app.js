@@ -47,10 +47,16 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../public")));
 // CORS configuration
 const corsOptions = {
-  origin: [
-    "http://localhost:3004", // cho local dev
-    "https://chaotok.site", // cho production
-  ],
+  origin: function (origin, callback) {
+    // Cho phép request không có Origin (ví dụ Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("❌ Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
@@ -58,6 +64,8 @@ const corsOptions = {
     "Authorization",
     "ngrok-skip-browser-warning",
   ],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
