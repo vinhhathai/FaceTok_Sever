@@ -14,6 +14,8 @@ router.post("/login", AuthLoginController.loginToSystem);
 
 // Auth Register Routes
 router.post("/sign-up", AuthRegisterController.signUp);
+router.post("/verify-email", AuthRegisterController.verifyEmail);
+router.post("/resend-verification", AuthRegisterController.resendVerificationOTP);
 
 // Auth Password Routes
 router.post("/request-reset", AuthPasswordController.requestPasswordReset);

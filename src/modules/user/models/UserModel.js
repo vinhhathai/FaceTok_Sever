@@ -44,7 +44,19 @@ const UserSchema = new Schema(
     },
     isActive: {
       type: Boolean,
-      default: true
+      default: false  // Changed: User inactive until email verified
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false
+    },
+    emailVerificationOTP: {
+      type: String,
+      default: null
+    },
+    emailVerificationExpiry: {
+      type: Date,
+      default: null
     },
     notifications: [{ type: mongoose.Types.ObjectId, ref: "notifications" }],
     posts: [{ type: mongoose.Types.ObjectId, ref: "posts" }],

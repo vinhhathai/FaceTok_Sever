@@ -35,7 +35,15 @@ class AuthLoginService {
         );
       }
 
-      // Check account status
+      // Check if email is verified
+      if (!user.isEmailVerified) {
+        return AuthLoginDto.error(
+          errorCode.EMAIL_NOT_VERIFIED,
+          "Please verify your email before logging in. Check your inbox for the verification code."
+        );
+      }
+
+      // Check if user is banned
       if (!user.isActive) {
         return AuthLoginDto.error(
           errorCode.ACCOUNT_IS_BANNED,
