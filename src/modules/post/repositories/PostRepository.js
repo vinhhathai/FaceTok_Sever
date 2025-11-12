@@ -1,4 +1,5 @@
 const { PostModel, CommentModel, LikeModel, ShareModel } = require("../models");
+const UserRepository = require("../../user/repositories/UserRepository");
 
 class PostRepository {
   // Create a new post
@@ -6,7 +7,7 @@ class PostRepository {
     const post = new PostModel(postData);
     const saved = await post.save();
     return await PostModel.findById(saved._id)
-      .populate("author", "fullName profilePicture")
+      .populate("author", "fullName profilePicture publicId")
       .lean();
   }
 
@@ -14,7 +15,7 @@ class PostRepository {
   async findPostById(postId) {
     try {
       return await PostModel.findById(postId)
-        .populate("author", "fullName profilePicture")
+        .populate("author", "fullName profilePicture publicId")
         .lean();
     } catch (error) {
       throw new Error(`Failed to find post: ${error.message}`);
@@ -30,13 +31,21 @@ class PostRepository {
         privacyOptions,
       });
 
+      // Convert UUID to ObjectId if needed
+      const userRepo = new UserRepository();
+      const author = await userRepo.findById(authorId);
+      if (!author) {
+        return { posts: [], total: 0 };
+      }
+      const authorObjectId = author._id;
+
       const { page = 1, limit = 10 } = options;
       const { currentUserId, includePrivate = false } = privacyOptions;
       const skip = (page - 1) * limit;
 
       // Base query
       let query = {
-        author: authorId,
+        author: authorObjectId,
         isDeleted: false,
       };
 
@@ -51,7 +60,7 @@ class PostRepository {
 
       const [posts, total] = await Promise.all([
         PostModel.find(query)
-          .populate("author", "fullName profilePicture")
+          .populate("author", "fullName profilePicture publicId")
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
@@ -100,7 +109,7 @@ class PostRepository {
 
       const [posts, total] = await Promise.all([
         PostModel.find(query)
-          .populate("author", "fullName profilePicture")
+          .populate("author", "fullName profilePicture publicId")
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
@@ -147,7 +156,7 @@ class PostRepository {
         update,
         { new: true, runValidators: true }
       )
-        .populate("author", "fullName profilePicture")
+        .populate("author", "fullName profilePicture publicId")
         .lean();
     } catch (error) {
       throw new Error(`Failed to update owned post: ${error.message}`);

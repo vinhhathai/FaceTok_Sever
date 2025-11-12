@@ -29,7 +29,8 @@ class PostController {
   getById = async (req, res) => {
     try {
       const currentUserId = req.user?.id || null;
-      const result = await this.postService.getPostById(req.params.id, currentUserId);
+      const userRole = req.user?.role || 'user';
+      const result = await this.postService.getPostById(req.params.id, currentUserId, userRole);
       return res.status(200).json({ success: true, data: result });
     } catch (error) {
       const status = error.statusCode || (error.message?.includes('Forbidden') ? 403 : 500);
@@ -143,11 +144,26 @@ class PostController {
   remove = async (req, res) => {
     try {
       const currentUserId = req.user.id;
-      const deleted = await this.postService.deletePostOwned(req.params.id, currentUserId);
-      if (!deleted) {
-        return res.status(403).json({ success: false, message: 'Forbidden: You can only delete your own posts' });
+      const userRole = req.user.role;
+      
+      // Admin/Staff can delete any post, regular users can only delete their own
+      const isAdminOrStaff = userRole === 'admin' || userRole === 'staff';
+      
+      if (isAdminOrStaff) {
+        // Admin/Staff: delete any post directly
+        const deleted = await this.postService.deletePost(req.params.id);
+        if (!deleted) {
+          return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+        return res.status(200).json({ success: true, data: { _id: req.params.id, deleted: true } });
+      } else {
+        // Regular user: can only delete their own post
+        const deleted = await this.postService.deletePostOwned(req.params.id, currentUserId);
+        if (!deleted) {
+          return res.status(403).json({ success: false, message: 'Forbidden: You can only delete your own posts' });
+        }
+        return res.status(200).json({ success: true, data: { _id: req.params.id, deleted: true } });
       }
-      return res.status(200).json({ success: true, data: { _id: req.params.id, deleted: true } });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });
     }

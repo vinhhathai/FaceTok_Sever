@@ -20,7 +20,31 @@ class MessageSocket {
     const messageNamespace = this.io.of("/message");
 
     messageNamespace.on("connection", (socket) => {
-      // debug removed
+      // Auto-authenticate from httpOnly cookie (secure approach)
+      const cookieToken = socket.request.cookies?.auth_token;
+      
+      if (cookieToken) {
+        // Immediately authenticate using cookie token
+        this.socketController.authenticateUser(cookieToken).then(authResult => {
+          if (authResult.success) {
+            const userId = authResult.userId;
+            
+            // Update maps
+            this.userSocketMap.set(userId, socket.id);
+            this.socketIdMap.set(socket.id, userId);
+            socket.userId = userId;
+            
+            // Join personal room
+            socket.join(`user:${userId}`);
+            socket.emit("auth_success", { userId, method: "cookie" });
+          } else {
+            socket.emit("auth_error", { 
+              message: "Cookie authentication failed",
+              detail: authResult.message 
+            });
+          }
+        });
+      }
 
       // Xử lý khi socket ngắt kết nối
       socket.on("disconnect", () => {
@@ -39,8 +63,14 @@ class MessageSocket {
         }
       });
 
-      // Handle user authentication
+      // Handle user authentication (fallback for manual auth or mobile apps)
       socket.on("authenticate", async (accessToken) => {
+        // If already authenticated via cookie, skip
+        if (socket.userId) {
+          socket.emit("auth_success", { userId: socket.userId, method: "already_authenticated" });
+          return;
+        }
+        
         if (!accessToken.accessToken) {
           socket.emit("auth_error", { message: "Token is required" });
           return;

@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const { dtoResponse } = require("../../../shared/helper");
+const { getPublicUserId } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO cho xử lý dữ liệu thumbnail người dùng
@@ -25,7 +26,7 @@ class ThumbnailDto {
    */
   static toResponse(user) {
     return {
-      id: user._id,
+      id: getPublicUserId(user),
       thumbnail: user.thumbnail || "",
       updatedAt: user.updatedAt
     };

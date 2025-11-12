@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const dtoResponse = require("../../../shared/helper/dtoResponse");
+const { getPublicUserId } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO for user search functionality
@@ -13,7 +14,7 @@ class UserSearchDto {
    */
   static toResponse(user) {
     return {
-      id: user._id || user.id,
+      id: getPublicUserId(user),
       fullName: user.fullName || '',
       profilePicture: user.profilePicture || '',
       bio: user.bio || '',

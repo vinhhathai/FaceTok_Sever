@@ -157,6 +157,51 @@ class ProfileController {
   };
 
   /**
+   * Update privacy setting - Show/Hide personal info
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  updatePrivacySetting = async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const { showPersonalInfo } = req.body;
+
+      if (!userId) {
+        return res.status(401).json(
+          ProfileDto.error(
+            errorCode.AUTHENTICATION_FAILED,
+            "Authentication required"
+          )
+        );
+      }
+
+      if (typeof showPersonalInfo !== 'boolean') {
+        return res.status(400).json(
+          ProfileDto.error(
+            errorCode.VALIDATION_FAILED,
+            "showPersonalInfo must be a boolean"
+          )
+        );
+      }
+
+      const result = await this.profileService.updatePrivacySetting(userId, showPersonalInfo);
+      return res.status(200).json(result);
+      
+    } catch (error) {
+      console.error("ProfileController.updatePrivacySetting error:", error);
+      return res.status(500).json({
+        ...ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          error.message || "Lỗi khi cập nhật cài đặt riêng tư",
+          error.detail
+        ),
+        path: req.originalUrl,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
+  /**
    * Update user profile information
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object

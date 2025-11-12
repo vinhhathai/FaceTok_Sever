@@ -13,8 +13,37 @@ const MessageSchema = new Schema(
 
     content: {
       type: String,
-      required: true,
+      required: function() {
+        // Content required if no media
+        return !this.media || this.media.length === 0;
+      },
     },
+    
+    // Media attachments (images/videos)
+    media: [{
+      type: {
+        type: String,
+        enum: ['image', 'video'],
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
+      publicId: {
+        type: String, // Cloudinary public ID for deletion
+        required: true,
+      },
+      thumbnail: {
+        type: String, // Thumbnail for videos
+        default: null,
+      },
+      width: Number,
+      height: Number,
+      size: Number, // File size in bytes
+      duration: Number, // Video duration in seconds
+    }],
+
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "rooms",

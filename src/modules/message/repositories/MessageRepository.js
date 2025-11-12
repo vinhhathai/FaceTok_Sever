@@ -27,11 +27,12 @@ class MessageRepository {
     );
   }
 
-  async createMessage(senderId, roomId, content) {
+  async createMessage(senderId, roomId, content, media = []) {
     const message = new this.messageModel({
       senderId,
       roomId,
       content,
+      media,
     });
 
     return await message.save();

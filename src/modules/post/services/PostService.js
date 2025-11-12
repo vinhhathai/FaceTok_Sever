@@ -6,6 +6,8 @@ const {
   deleteFromCloudinary
 } = require('../../../shared/utils/cloudinaryUpload');
 const FriendRepository = require('../../friend/repositories/FriendRepository');
+const moderationService = require('../../../shared/services/ModerationService');
+const logger = require('../../../shared/utils/logger');
 
 class PostService {
   constructor() {
@@ -66,13 +68,64 @@ class PostService {
       media: (payload?.media || []).concat(uploadedMedia),
       privacy: payload?.privacy || 'public'
     };
+
+    // ===== CONTENT MODERATION =====
+    // Kiểm duyệt nội dung trước khi lưu vào database
+    if (moderationService.isEnabled()) {
+      const mediaUrls = data.media.map(m => m.url);
+      const moderationResult = await moderationService.moderatePost({
+        content: data.content,
+        mediaUrls,
+      });
+
+      logger.info('Post moderation check:', {
+        postId: 'new',
+        approved: moderationResult.approved,
+        violations: moderationResult.violations?.length || 0,
+      });
+
+      // Nếu vi phạm nội dung, từ chối tạo post
+      if (!moderationResult.approved) {
+        // Xóa các media đã upload
+        for (const media of uploadedMedia) {
+          try {
+            await deleteFromCloudinary(media.publicId);
+          } catch (cleanupError) {
+            logger.error('Failed to cleanup media after moderation rejection:', cleanupError);
+          }
+        }
+
+        const error = new Error('Nội dung không phù hợp với quy định cộng đồng');
+        error.statusCode = 400;
+        error.moderationResult = moderationResult;
+        throw error;
+      }
+    }
+
     return this.postRepository.createPost(data);
   }
 
   // Get single post by id
-  async getPostById(postId, currentUserId = null) {
+  async getPostById(postId, currentUserId = null, userRole = 'user') {
     const post = await this.postRepository.findPostById(postId);
     if (!post) return null;
+
+    // Check if post is deleted - only admin can view deleted posts
+    if (post.isDeleted) {
+      if (userRole !== 'admin') {
+        const err = new Error('Post not found');
+        err.statusCode = 404;
+        throw err;
+      }
+      // Admin can view deleted post - add isLiked flag if needed
+      if (currentUserId) {
+        try {
+          const liked = await this.likeRepository.hasUserLikedPost(postId, currentUserId);
+          post.isLiked = !!liked;
+        } catch (_) {}
+      }
+      return post;
+    }
 
     // Enforce privacy: public OK; friends only if friend; private only owner
     const privacy = post.privacy || 'public';

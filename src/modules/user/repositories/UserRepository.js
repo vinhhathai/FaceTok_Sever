@@ -32,9 +32,16 @@ class UserRepository {
 
     async unblockUser(userId, blockedUserId) {
         try {
-            // Convert string IDs to ObjectId
-            const userObjectId = new mongoose.Types.ObjectId(userId);
-            const blockedUserObjectId = new mongoose.Types.ObjectId(blockedUserId);
+            // Get actual ObjectIds from publicId/UUID
+            const user = await this.findById(userId);
+            const blockedUser = await this.findById(blockedUserId);
+            
+            if (!user || !blockedUser) {
+                throw new Error('User not found');
+            }
+            
+            const userObjectId = user._id;
+            const blockedUserObjectId = blockedUser._id;
             
             return await this.model.findByIdAndUpdate(
                 userObjectId,
@@ -48,9 +55,16 @@ class UserRepository {
     }
     async blockUser(userId, blockedUserId) {
         try {
-            // Convert string IDs to ObjectId
-            const userObjectId = new mongoose.Types.ObjectId(userId);
-            const blockedUserObjectId = new mongoose.Types.ObjectId(blockedUserId);
+            // Get actual ObjectIds from publicId/UUID
+            const user = await this.findById(userId);
+            const blockedUser = await this.findById(blockedUserId);
+            
+            if (!user || !blockedUser) {
+                throw new Error('User not found');
+            }
+            
+            const userObjectId = user._id;
+            const blockedUserObjectId = blockedUser._id;
             
             return await this.model.findByIdAndUpdate(
                 userObjectId,
@@ -70,7 +84,28 @@ class UserRepository {
      * @returns {Promise<Object>} Thông tin người dùng
      */
     async findById(id, projection = {}) {
-        return this.model.findById(id, projection);
+        try {
+            // Check if it's a valid ObjectId format (24 hex chars)
+            if (mongoose.Types.ObjectId.isValid(id) && id.length === 24) {
+                return await this.model.findById(id, projection);
+            }
+            
+            // For UUID format, search by publicId field
+            return await this.model.findOne({ publicId: id }, projection);
+        } catch (error) {
+            console.error('Error in findById:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Tìm người dùng theo query bất kỳ
+     * @param {Object} query - Query object
+     * @param {Object} projection - Projection object
+     * @returns {Promise<Object>} Thông tin người dùng
+     */
+    async findOne(query, projection = {}) {
+        return this.model.findOne(query, projection);
     }
 
     /**
@@ -235,6 +270,49 @@ class UserRepository {
      */
     async countByCondition(condition) {
         return this.model.countDocuments(condition);
+    }
+
+    /**
+     * Lấy tất cả users theo filter
+     * @param {Object} filter - Filter conditions
+     * @param {Object} projection - Fields to include/exclude
+     * @param {Object} options - Options (skip, limit, sort)
+     * @returns {Promise<Array>} List of users
+     */
+    async findAll(filter = {}, projection = {}, options = {}) {
+        const query = this.model.find(filter, projection);
+        
+        if (options.skip) {
+            query.skip(options.skip);
+        }
+        
+        if (options.limit) {
+            query.limit(options.limit);
+        }
+        
+        if (options.sort) {
+            query.sort(options.sort);
+        }
+        
+        return query.exec();
+    }
+
+    /**
+     * Đếm số documents theo filter
+     * @param {Object} filter - Filter conditions
+     * @returns {Promise<Number>} Count of documents
+     */
+    async countDocuments(filter = {}) {
+        return this.model.countDocuments(filter);
+    }
+
+    /**
+     * Delete user by ID
+     * @param {string} id - User ID
+     * @returns {Promise<Object>} Deleted user
+     */
+    async delete(id) {
+        return this.model.findByIdAndDelete(id);
     }
 }
 

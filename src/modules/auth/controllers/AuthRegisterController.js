@@ -27,7 +27,14 @@ class AuthRegisterController {
         });
       }
 
-      const result = await this.authRegisterService.register(value);
+      // Get IP address from request
+      const ipAddress = req.ip || 
+                       req.headers['x-forwarded-for']?.split(',')[0] || 
+                       req.connection.remoteAddress || 
+                       req.socket.remoteAddress ||
+                       null;
+
+      const result = await this.authRegisterService.register(value, ipAddress);
 
       if (result.success) {
         return res.status(201).json({

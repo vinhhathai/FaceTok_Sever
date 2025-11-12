@@ -23,7 +23,7 @@ class MessageService {
     }
   }
 
-  async createMessageInRoom(senderId, roomId, content) {
+  async createMessageInRoom(senderId, roomId, content, media = []) {
     try {
       // Kiểm tra phòng tồn tại và user có quyền gửi tin nhắn
       const room = await this.roomRepository.findRoomById(roomId);
@@ -62,11 +62,12 @@ class MessageService {
         }
       }
 
-      // Tạo tin nhắn mới
+      // Tạo tin nhắn mới với media
       const message = await this.messageRepository.createMessage(
         senderId,
         roomId,
-        content
+        content,
+        media
       );
 
       // Cập nhật tin nhắn cuối cùng và thời gian của phòng

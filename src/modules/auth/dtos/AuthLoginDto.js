@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const { dtoResponse } = require("../../../shared/helper");
+const { sanitizeUser } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO for login handling
@@ -9,14 +10,7 @@ class AuthLoginDto {
 
   static toResponse(user, accessToken, refreshToken) {
     return {
-      user: {
-        id: user._id,
-        email: user.email,
-        fullName: user.fullName,
-        profilePicture: user.profilePicture || null,
-        thumbnail: user.thumbnail || null,
-        role: user.role,
-      },
+      user: sanitizeUser(user, { includeEmail: true, includeRole: true }),
       accessToken,
       refreshToken,
     };

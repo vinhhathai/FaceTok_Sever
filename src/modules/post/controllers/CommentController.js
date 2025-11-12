@@ -21,9 +21,10 @@ class CommentController {
 	// GET /post/:postId/comments
 	listByPost = async (req, res) => {
 		try {
+			const userId = req.user.id;
 			const { postId } = req.params;
 			const { page, limit } = req.query;
-			const items = await this.commentService.getPostComments(postId, { page, limit });
+			const items = await this.commentService.getPostComments(postId, userId, { page, limit });
 			return res.status(200).json({ success: true, data: items });
 		} catch (error) {
 			return res.status(500).json({ success: false, message: error.message });
@@ -33,9 +34,10 @@ class CommentController {
 	// GET /comment/:commentId/replies
 	replies = async (req, res) => {
 		try {
+			const userId = req.user.id;
 			const { commentId } = req.params;
 			const { page, limit } = req.query;
-			const items = await this.commentService.getCommentReplies(commentId, { page, limit });
+			const items = await this.commentService.getCommentReplies(commentId, userId, { page, limit });
 			return res.status(200).json({ success: true, data: items });
 		} catch (error) {
 			return res.status(500).json({ success: false, message: error.message });

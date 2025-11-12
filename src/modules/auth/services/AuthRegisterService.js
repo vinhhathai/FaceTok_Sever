@@ -18,7 +18,7 @@ class AuthRegisterService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  async register(data) {
+  async register(data, ipAddress = null) {
     try {
       // Check if email already exists
       const existingEmail = await this.userRepository.findByEmail(data.email);
@@ -45,7 +45,14 @@ class AuthRegisterService {
         isActive: false,  // Inactive until email verified
         isEmailVerified: false,
         emailVerificationOTP: otp,
-        emailVerificationExpiry: otpExpiry
+        emailVerificationExpiry: otpExpiry,
+        // Terms & Privacy acceptance
+        termsAcceptance: {
+          accepted: true,  // User must accept to register
+          acceptedAt: new Date(),
+          version: "1.0",  // Current version
+          ipAddress: ipAddress
+        }
       };
 
       // Create new user with correct schema structure
