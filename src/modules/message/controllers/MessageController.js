@@ -223,7 +223,7 @@ class MessageController {
         // Create message data for broadcast
         const messageData = {
           _id: message._id,
-          senderId: message.senderId,
+          senderId: message.senderId.toString(), // Convert to string for consistent comparison
           content: message.content,
           media: message.media, // Include media in broadcast
           roomId: message.roomId,

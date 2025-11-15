@@ -63,6 +63,8 @@ app.use('/api/', generalApiLimiter);
 // CORS configuration
 const allowedOrigins = [
   "http://localhost:3004",
+  "http://social.chaotok.local:3004",
+  "http://game.chaotok.local:4000",
   "https://chaotok.site",
   "https://www.chaotok.site",
   "https://d13tci060h3fsw.cloudfront.net",

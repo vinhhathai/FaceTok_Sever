@@ -36,6 +36,9 @@ messageSocket.init();
 // Expose io instance to HTTP controllers via SocketBus
 SocketBus.setIo(io);
 
+// Mount io to app for controllers to access
+app.set('io', io);
+
 // Start the server
 server.listen(port);
 server.on("error", onError);
@@ -68,5 +71,5 @@ function onError(error) {
 function onListening() {
   const addr = server.address();
   const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
-  // debug removed
+  console.log(`✅ Social Server listening on ${bind}`);
 }

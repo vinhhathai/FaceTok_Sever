@@ -111,16 +111,27 @@ class GroupController {
     try {
       const { id, name } = req.body || {};
       const currentUserId = req.user.id;
+      
+      console.log('[GroupController] renameGroup called with:', { id, name, currentUserId });
+      
       if (!id || !name) {
         return res
           .status(400)
           .json(GroupDto.error("Room ID and name are required"));
       }
+      
       const group = await this.groupService.renameGroupByRoomId(
         id,
         name,
         currentUserId
       );
+      
+      if (!group) {
+        return res
+          .status(404)
+          .json(GroupDto.error("Group not found or this is not a group conversation"));
+      }
+      
       const roomId = id;
       SocketBus.emitToRoom(roomId, "group_renamed", {
         roomId,
@@ -129,6 +140,7 @@ class GroupController {
       });
       return res.status(200).json(GroupDto.success(group));
     } catch (error) {
+      console.error("Error in renameGroup:", error);
       return res
         .status(500)
         .json(GroupDto.error(error.message || "Failed to rename group"));

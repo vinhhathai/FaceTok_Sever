@@ -96,7 +96,21 @@ class ModerationService {
         error: error.message,
         stack: error.stack,
       });
-      // Trong trường hợp lỗi, cho phép nội dung đi qua nhưng log warning
+      
+      // Handle rate limit - skip moderation and allow content
+      if (error.status === 429 || error.message.includes('429') || error.message.includes('Too Many Requests')) {
+        logger.warn('OpenAI rate limit exceeded - allowing content through');
+        return { 
+          flagged: false, 
+          categories: {}, 
+          scores: {}, 
+          reason: null,
+          skipped: true,
+          skipReason: 'Rate limit exceeded'
+        };
+      }
+      
+      // Trong trường hợp lỗi khác, cho phép nội dung đi qua nhưng log warning
       return { 
         flagged: false, 
         categories: {}, 

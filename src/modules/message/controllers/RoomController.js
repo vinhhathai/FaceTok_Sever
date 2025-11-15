@@ -10,7 +10,10 @@ const {
   kickOutMemberValidation,
   leaveGroupValidation,
 } = require("../validations");
-const { VALIDATION_ERRORS } = require("../../../shared/common/error");
+const {
+  VALIDATION_ERRORS,
+  MESSAGE_ERRORS,
+} = require("../../../shared/common/error");
 const { inviteToGroupValidation } = require("../validations/groupValidation");
 const SocketBus = require("../../../shared/socket/SocketBus");
 
@@ -68,19 +71,35 @@ class RoomController {
     try {
       const { error, value } = leaveGroupValidation.validate(req.body);
       if (error) {
-        return res.status(400).json(RoomDto.error(error.details[0].message));
+        return res.status(400).json(RoomDto.error("VALIDATION_ERROR", error.details[0].message));
       }
       const { id } = value;
       const currentUserId = req.user.id;
-      const group = await this.roomService.leaveGroup(id, currentUserId);
-      // Broadcast via socket
       try {
-        SocketBus.emitToUser(currentUserId, "group_left", { roomId: id });
-        SocketBus.emitToRoom(id, "group_member_left", { roomId: id, userId: currentUserId });
-      } catch {}
-      return res.status(200).json(RoomDto.success(group));
+        const group = await this.roomService.leaveGroup(id, currentUserId);
+        // Broadcast via socket
+        try {
+          SocketBus.emitToUser(currentUserId, "group_left", { roomId: id });
+          SocketBus.emitToRoom(id, "group_member_left", { roomId: id, userId: currentUserId });
+        } catch {}
+        return res.status(200).json(RoomDto.success(group));
+      } catch (err) {
+        // Lỗi nghiệp vụ: owner không được rời nhóm, không phải thành viên, không tìm thấy phòng
+        const businessErrors = [
+          "Owner cannot leave the group. Transfer ownership first",
+          "You are not a member of this group",
+          "Room not found"
+        ];
+        if (businessErrors.includes(err.message)) {
+          return res.status(400).json(RoomDto.error("BUSINESS_ERROR", err.message));
+        }
+        // Lỗi hệ thống
+        console.error("Error in leaveGroup (system):", err);
+        return res.status(500).json(RoomDto.error("INTERNAL_SERVER_ERROR", err.message || "Failed to leave group"));
+      }
     } catch (error) {
-      return res.status(500).json(RoomDto.error(error));
+      console.error("Error in leaveGroup (validation):", error);
+      return res.status(500).json(RoomDto.error("INTERNAL_SERVER_ERROR", error.message || "Failed to leave group"));
     }
   };
 

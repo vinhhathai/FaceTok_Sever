@@ -5,7 +5,7 @@ const router = express.Router();
 const {
   AuthLoginController,
   AuthRegisterController,
-  AuthPasswordController,
+  AuthPasswordController
 } = require("../controllers");
 const { checkLogin } = require("../../../shared/middlewares");
 const { loginLimiter, registerLimiter } = require("../../../shared/middlewares/rateLimiter");

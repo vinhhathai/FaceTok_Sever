@@ -76,13 +76,30 @@ class GroupRepository {
     try {
       // Tìm room trước, rồi lấy groupId từ room
       const room = await this.roomModel.findById(roomId);
-      if (!room || !room.groupId) {
+      
+      if (!room) {
+        console.log(`[GroupRepository] Room not found with id: ${roomId}`);
+        return null;
+      }
+      
+      if (!room.groupId) {
+        console.log(`[GroupRepository] Room ${roomId} does not have groupId. Room data:`, {
+          _id: room._id,
+          members: room.members?.length,
+          isGroup: room.isGroup,
+          groupId: room.groupId
+        });
         return null;
       }
 
       // Tìm group bằng groupId từ room
-      return await this.groupModel.findById(room.groupId);
+      const group = await this.groupModel.findById(room.groupId);
+      if (!group) {
+        console.log(`[GroupRepository] Group not found with id: ${room.groupId}`);
+      }
+      return group;
     } catch (error) {
+      console.error('[GroupRepository] Error in getGroupByRoomId:', error);
       throw error;
     }
   }
