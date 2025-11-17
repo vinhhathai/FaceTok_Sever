@@ -24,8 +24,14 @@ class ProfileService {
         );
       }
       
+      const blockedUsers = (result.blockedUsers || []).map(u => ({
+        id: (u._id?.toString?.() || String(u._id || '')),
+        fullName: u.fullName || '',
+        profilePicture: u.profilePicture || ''
+      }));
+      
       return ProfileDto.success(
-        { blockedUsers: result.blockedUsers || [] },
+        { blockedUsers },
         "Blocked users retrieved successfully"
       );
     } catch (error) {
@@ -58,8 +64,9 @@ class ProfileService {
         );
       }
       
-      // Check if not blocked
-      if (!user.blockedUsers || !user.blockedUsers.includes(blockedUserId)) {
+      // Check if not blocked (compare by ObjectId)
+      const isBlocked = Array.isArray(user.blockedUsers) && user.blockedUsers.some(id => id.toString() === blockedUser._id.toString());
+      if (!isBlocked) {
         return ProfileDto.error(
           errorCode.VALIDATION_FAILED,
           "User is not blocked"
@@ -110,15 +117,16 @@ class ProfileService {
       }
       
       // Prevent self-blocking
-      if (userId === blockedUserId) {
+      if (user._id.toString() === blockedUser._id.toString()) {
         return ProfileDto.error(
           errorCode.VALIDATION_FAILED,
           "Cannot block yourself"
         );
       }
       
-      // Check if already blocked
-      if (user.blockedUsers && user.blockedUsers.includes(blockedUserId)) {
+      // Check if already blocked (compare by ObjectId)
+      const alreadyBlocked = Array.isArray(user.blockedUsers) && user.blockedUsers.some(id => id.toString() === blockedUser._id.toString());
+      if (alreadyBlocked) {
         return ProfileDto.error(
           errorCode.VALIDATION_FAILED,
           "User is already blocked"

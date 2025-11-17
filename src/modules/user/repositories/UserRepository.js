@@ -14,15 +14,18 @@ class UserRepository {
 
     async getBlockedUsers(userId) {
         try {
-            const userObjectId = new mongoose.Types.ObjectId(userId);
-            const user = await this.model.findById(userObjectId).populate('blockedUsers', 'fullName email profilePicture');
-            
+            const user = await this.findById(userId);
             if (!user) {
+                return null;
+            }
+            const populated = await this.model.findById(user._id).populate('blockedUsers', 'fullName profilePicture');
+            
+            if (!populated) {
                 return null;
             }
             
             return {
-                blockedUsers: user.blockedUsers || []
+                blockedUsers: populated.blockedUsers || []
             };
         } catch (error) {
             console.error(`Error getting blocked users for user ${userId}:`, error);
@@ -32,7 +35,6 @@ class UserRepository {
 
     async unblockUser(userId, blockedUserId) {
         try {
-            // Get actual ObjectIds from publicId/UUID
             const user = await this.findById(userId);
             const blockedUser = await this.findById(blockedUserId);
             
@@ -53,9 +55,9 @@ class UserRepository {
             throw error;
         }
     }
+
     async blockUser(userId, blockedUserId) {
         try {
-            // Get actual ObjectIds from publicId/UUID
             const user = await this.findById(userId);
             const blockedUser = await this.findById(blockedUserId);
             
@@ -66,9 +68,10 @@ class UserRepository {
             const userObjectId = user._id;
             const blockedUserObjectId = blockedUser._id;
             
+            // Use $addToSet to avoid duplicates and ensure idempotency
             return await this.model.findByIdAndUpdate(
                 userObjectId,
-                { $push: { blockedUsers: blockedUserObjectId } },
+                { $addToSet: { blockedUsers: blockedUserObjectId } },
                 { new: true }
             );
         } catch (error) {
@@ -85,13 +88,10 @@ class UserRepository {
      */
     async findById(id, projection = {}) {
         try {
-            // Check if it's a valid ObjectId format (24 hex chars)
-            if (mongoose.Types.ObjectId.isValid(id) && id.length === 24) {
+            if (mongoose.Types.ObjectId.isValid(id) && String(id).length === 24) {
                 return await this.model.findById(id, projection);
             }
-            
-            // For UUID format, search by publicId field
-            return await this.model.findOne({ publicId: id }, projection);
+            return null;
         } catch (error) {
             console.error('Error in findById:', error);
             return null;
@@ -246,75 +246,28 @@ class UserRepository {
 
     async createUser(userData) {
         const user = new this.model(userData);
-        return user.save();
+        return await user.save();
     }
 
-    /**
-     * Tìm người dùng theo điều kiện
-     * @param {Object} condition - Điều kiện tìm kiếm
-     * @param {Object} projection - Các trường cần lấy hoặc loại bỏ
-     * @param {Object} options - Tùy chọn (sắp xếp, phân trang, v.v.)
-     * @returns {Promise<Array>} Danh sách người dùng
-     */
     async findByCondition(condition, projection = {}, options = {}) {
-        return this.model.find(condition, projection)
-            .skip(options.skip || 0)
-            .limit(options.limit || 20)
-            .sort(options.sort || { createdAt: -1 });
+        return this.model.find(condition, projection, options);
     }
 
-    /**
-     * Đếm số lượng người dùng theo điều kiện
-     * @param {Object} condition - Điều kiện tìm kiếm
-     * @returns {Promise<Number>} Số lượng người dùng
-     */
     async countByCondition(condition) {
         return this.model.countDocuments(condition);
     }
 
-    /**
-     * Lấy tất cả users theo filter
-     * @param {Object} filter - Filter conditions
-     * @param {Object} projection - Fields to include/exclude
-     * @param {Object} options - Options (skip, limit, sort)
-     * @returns {Promise<Array>} List of users
-     */
     async findAll(filter = {}, projection = {}, options = {}) {
-        const query = this.model.find(filter, projection);
-        
-        if (options.skip) {
-            query.skip(options.skip);
-        }
-        
-        if (options.limit) {
-            query.limit(options.limit);
-        }
-        
-        if (options.sort) {
-            query.sort(options.sort);
-        }
-        
-        return query.exec();
+        return this.model.find(filter, projection, options);
     }
 
-    /**
-     * Đếm số documents theo filter
-     * @param {Object} filter - Filter conditions
-     * @returns {Promise<Number>} Count of documents
-     */
     async countDocuments(filter = {}) {
         return this.model.countDocuments(filter);
     }
 
-    /**
-     * Delete user by ID
-     * @param {string} id - User ID
-     * @returns {Promise<Object>} Deleted user
-     */
     async delete(id) {
         return this.model.findByIdAndDelete(id);
     }
 }
 
-// Export class
-module.exports = UserRepository; 
+module.exports = UserRepository;

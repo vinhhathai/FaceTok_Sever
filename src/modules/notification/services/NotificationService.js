@@ -21,7 +21,7 @@ class NotificationService {
       user,
       "notification_received",
       {
-        _id: notification._id,
+        id: (notification._id?.toString?.() || String(notification._id || '')),
         type,
         content,
         data,

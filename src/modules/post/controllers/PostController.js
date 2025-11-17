@@ -155,14 +155,14 @@ class PostController {
         if (!deleted) {
           return res.status(404).json({ success: false, message: 'Post not found' });
         }
-        return res.status(200).json({ success: true, data: { _id: req.params.id, deleted: true } });
+        return res.status(200).json({ success: true, data: { id: String(req.params.id), deleted: true } });
       } else {
         // Regular user: can only delete their own post
         const deleted = await this.postService.deletePostOwned(req.params.id, currentUserId);
         if (!deleted) {
           return res.status(403).json({ success: false, message: 'Forbidden: You can only delete your own posts' });
         }
-        return res.status(200).json({ success: true, data: { _id: req.params.id, deleted: true } });
+        return res.status(200).json({ success: true, data: { id: String(req.params.id), deleted: true } });
       }
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });

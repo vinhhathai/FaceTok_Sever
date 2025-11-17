@@ -38,7 +38,14 @@ const revokeMessageValidation = Joi.object({
     })
 });
 
+const sendMessageInRoomValidation = Joi.object({
+  content: Joi.string().allow('').max(1000).messages({
+    'string.max': 'Message content cannot exceed 1000 characters'
+  })
+});
+
 module.exports = {
   sendMessageValidation,
-  revokeMessageValidation
+  revokeMessageValidation,
+  sendMessageInRoomValidation
 };

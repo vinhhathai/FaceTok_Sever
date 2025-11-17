@@ -222,7 +222,7 @@ const generalApiLimiter = rateLimit({
  */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 10,
   message: {
     success: false,
     message: 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.',
@@ -259,7 +259,7 @@ const loginLimiter = rateLimit({
  */
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 3,
+  max: 5,
   message: {
     success: false,
     message: 'Quá nhiều lần đăng ký. Vui lòng thử lại sau 1 giờ.',

@@ -7,7 +7,7 @@ class PostRepository {
     const post = new PostModel(postData);
     const saved = await post.save();
     return await PostModel.findById(saved._id)
-      .populate("author", "fullName profilePicture publicId")
+      .populate("author", "fullName profilePicture")
       .lean();
   }
 
@@ -15,7 +15,7 @@ class PostRepository {
   async findPostById(postId) {
     try {
       return await PostModel.findById(postId)
-        .populate("author", "fullName profilePicture publicId")
+        .populate("author", "fullName profilePicture")
         .lean();
     } catch (error) {
       throw new Error(`Failed to find post: ${error.message}`);
@@ -60,7 +60,7 @@ class PostRepository {
 
       const [posts, total] = await Promise.all([
         PostModel.find(query)
-          .populate("author", "fullName profilePicture publicId")
+          .populate("author", "fullName profilePicture")
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
@@ -109,7 +109,7 @@ class PostRepository {
 
       const [posts, total] = await Promise.all([
         PostModel.find(query)
-          .populate("author", "fullName profilePicture publicId")
+          .populate("author", "fullName profilePicture")
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
@@ -156,7 +156,7 @@ class PostRepository {
         update,
         { new: true, runValidators: true }
       )
-        .populate("author", "fullName profilePicture publicId")
+        .populate("author", "fullName profilePicture")
         .lean();
     } catch (error) {
       throw new Error(`Failed to update owned post: ${error.message}`);
@@ -250,7 +250,7 @@ class PostRepository {
         { new: true }
       );
     } catch (error) {
-      throw new Error(`Failed to decrement comment count by: ${error.message}`);
+      throw new Error(`Failed to decrement comment count by amount: ${error.message}`);
     }
   }
 
@@ -280,10 +280,10 @@ class PostRepository {
     }
   }
 
-  // Count posts
+  // Count posts based on query
   async countPosts(query = {}) {
     try {
-      return await PostModel.countDocuments({ ...query, isDeleted: false });
+      return await PostModel.countDocuments(query);
     } catch (error) {
       throw new Error(`Failed to count posts: ${error.message}`);
     }

@@ -1,25 +1,22 @@
 /**
- * Security Helper: Convert internal MongoDB _id to public UUID
+ * Security Helper: Convert internal MongoDB _id to client-safe ID
  * 
- * Purpose: Never expose internal database IDs to clients
- * Use publicId (UUID) for all client-facing operations
+ * We standardize to MongoDB ObjectId string for all client-facing operations.
  */
 
 /**
- * Get public ID from user object
+ * Get client-facing user ID from user object
  * @param {Object} user - User document from database
- * @returns {String} - Public UUID or fallback to _id during migration
+ * @returns {String} - MongoDB ObjectId as string
  */
 const getPublicUserId = (user) => {
   if (!user) return null;
-  
-  // Prefer publicId (UUID) over internal _id
-  return user.publicId || user._id?.toString();
+  return user._id?.toString() || null;
 };
 
 /**
  * Sanitize user object for client response
- * Removes sensitive fields and uses publicId
+ * Removes sensitive fields and uses ObjectId
  * @param {Object} user - User document
  * @param {Object} options - Additional options
  * @returns {Object} - Sanitized user object

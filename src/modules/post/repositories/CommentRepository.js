@@ -167,6 +167,19 @@ class CommentRepository {
     }
   }
 
+  // Set like count to an exact value (ensures updatedAt changes)
+  async setLikeCount(commentId, count) {
+    try {
+      return await CommentModel.findByIdAndUpdate(
+        commentId,
+        { $set: { likesCount: count, updatedAt: new Date() } },
+        { new: true, runValidators: true }
+      );
+    } catch (error) {
+      throw new Error(`Failed to set like count: ${error.message}`);
+    }
+  }
+
   // Increment reply count
   async incrementReplyCount(commentId) {
     try {

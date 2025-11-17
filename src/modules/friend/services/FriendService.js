@@ -79,7 +79,7 @@ class FriendService {
         );
       }
 
-      // Convert UUID to ObjectId if needed
+      // Resolve users by ObjectId
       const userRepo = new UserRepository();
       const user = await userRepo.findById(userId);
       const targetUser = await userRepo.findById(targetUserId);

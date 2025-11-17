@@ -709,3 +709,289 @@
 {"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 21:34:12"}
 {"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 21:34:16"}
 {"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 21:34:16"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 22:57:41"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 22:57:41"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:13:04"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:13:04"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:16:11"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:16:11"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:16:20"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:16:20"}
+{"ip":"http://localhost:3006","level":"warn","message":"❌ Blocked by CORS:","origin":"http://localhost:3006","service":"chaotok-api","timestamp":"2025-11-15 23:17:20"}
+{"error":"Not allowed by CORS","level":"error","message":"Unhandled error:","service":"chaotok-api","stack":"Error: Not allowed by CORS\n    at origin (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\app.js:94:16)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:219:13\n    at optionsCallback (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:199:9)\n    at corsMiddleware (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:204:7)\n    at Layer.handle [as handle_request] (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:317:13)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:284:7\n    at Function.process_params (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:335:12)\n    at next (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:275:10)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express-mongo-sanitize\\index.js:122:5","timestamp":"2025-11-15 23:17:20","url":"/auth/login/"}
+{"ip":"http://localhost:3006","level":"warn","message":"❌ Blocked by CORS:","origin":"http://localhost:3006","service":"chaotok-api","timestamp":"2025-11-15 23:17:39"}
+{"error":"Not allowed by CORS","level":"error","message":"Unhandled error:","service":"chaotok-api","stack":"Error: Not allowed by CORS\n    at origin (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\app.js:94:16)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:219:13\n    at optionsCallback (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:199:9)\n    at corsMiddleware (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:204:7)\n    at Layer.handle [as handle_request] (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:317:13)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:284:7\n    at Function.process_params (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:335:12)\n    at next (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:275:10)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express-mongo-sanitize\\index.js:122:5","timestamp":"2025-11-15 23:17:39","url":"/auth/login/"}
+{"ip":"http://localhost:3006","level":"warn","message":"❌ Blocked by CORS:","origin":"http://localhost:3006","service":"chaotok-api","timestamp":"2025-11-15 23:18:12"}
+{"error":"Not allowed by CORS","level":"error","message":"Unhandled error:","service":"chaotok-api","stack":"Error: Not allowed by CORS\n    at origin (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\app.js:94:16)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:219:13\n    at optionsCallback (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:199:9)\n    at corsMiddleware (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:204:7)\n    at Layer.handle [as handle_request] (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:317:13)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:284:7\n    at Function.process_params (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:335:12)\n    at next (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:275:10)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express-mongo-sanitize\\index.js:122:5","timestamp":"2025-11-15 23:18:12","url":"/auth/login/"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:19:20"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:19:20"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:21:03"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:21:03"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:21:29"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:21:29"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:35:14"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:35:14"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:35:36"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:35:36"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:35:54"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:35:54"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:36:23"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:36:23"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:38:19"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:38:19"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:40:37"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:40:37"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:41:05"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:41:05"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:43:47"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:43:47"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:45:55"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:45:55"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:46:16"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:46:16"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:48:48"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:48:48"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:49:08"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:49:08"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:50:46"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:50:46"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:55:47"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:55:48"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:56:15"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:56:15"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-15 23:58:31"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-15 23:58:31"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:01:48"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:01:48"}
+{"error":"429 Too Many Requests","level":"error","message":"Text moderation error:","service":"chaotok-api","stack":"Error: 429 Too Many Requests\n    at APIError.generate (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\core\\error.js:63:20)\n    at OpenAI.makeStatusError (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:165:32)\n    at OpenAI.makeRequest (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:333:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async ModerationService.moderateText (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:57:24)\n    at async ModerationService.moderatePost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:234:20)\n    at async PostService.createPost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\services\\PostService.js:76:32)\n    at async create (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\controllers\\PostController.js:21:20)","timestamp":"2025-11-16 00:05:10"}
+{"level":"warn","message":"OpenAI rate limit exceeded - allowing content through","service":"chaotok-api","timestamp":"2025-11-16 00:05:10"}
+{"approved":true,"hasText":true,"imageCount":0,"level":"info","message":"Post moderation completed:","service":"chaotok-api","timestamp":"2025-11-16 00:05:10","violationCount":0}
+{"approved":true,"level":"info","message":"Post moderation check:","postId":"new","service":"chaotok-api","timestamp":"2025-11-16 00:05:10","violations":0}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:06:01"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:06:01"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:06:58"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:06:58"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:07:51"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:07:51"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:08:22"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:08:22"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:09:52"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:09:52"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:10:36"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:10:36"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:13:17"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:13:17"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:13:27"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:13:27"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:13:35"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:13:35"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:15:11"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:15:11"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:15:28"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:15:28"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:15:43"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:15:43"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:16:02"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:16:02"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:16:23"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:16:23"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:16:37"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:16:37"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:16:49"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:16:49"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:25:53"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:25:53"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:26:01"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:26:01"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:26:24"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:26:24"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:26:34"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:26:34"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:26:52"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:26:52"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:30:21"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:30:21"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:31:09"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:31:09"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:31:21"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:31:21"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:31:48"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:31:48"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:32:11"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:32:11"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:32:22"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:32:22"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:32:33"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:32:33"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:33:06"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:33:06"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:33:41"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:33:41"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:34:10"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:34:10"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:36:06"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:36:06"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:37:17"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:37:17"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:41:59"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:41:59"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:42:13"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:42:13"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:42:24"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:42:24"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:42:34"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:42:34"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:43:18"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:43:18"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:43:42"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:43:42"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:49:27"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:49:27"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:49:35"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:49:35"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:50:06"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:50:06"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:53:46"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:53:46"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:55:16"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:55:16"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 00:58:25"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 00:58:25"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:02:53"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:02:53"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:03:22"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:03:22"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:04:29"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:04:29"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:05:08"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:05:08"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:05:42"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:05:42"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:06:14"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:06:14"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:08:17"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:08:17"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:10:53"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:10:53"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:12:03"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:12:03"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:12:32"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:12:32"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:13:50"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:13:50"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:15:23"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:15:23"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:15:32"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:15:32"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:16:15"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:16:15"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:18:39"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:18:39"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:18:58"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:18:58"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 01:21:54"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 01:21:54"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 02:10:01"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 02:10:01"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 02:21:48"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 02:21:48"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 02:36:55"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 02:36:55"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 02:38:38"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 02:38:38"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 02:39:03"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 02:39:03"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 02:46:08"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 02:46:08"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 15:47:15"}
+{"ip":"http://localhost:3005","level":"warn","message":"❌ Blocked by CORS:","origin":"http://localhost:3005","service":"chaotok-api","timestamp":"2025-11-16 15:48:34"}
+{"error":"Not allowed by CORS","level":"error","message":"Unhandled error:","service":"chaotok-api","stack":"Error: Not allowed by CORS\n    at origin (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\app.js:94:16)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:219:13\n    at optionsCallback (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:199:9)\n    at corsMiddleware (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\cors\\lib\\index.js:204:7)\n    at Layer.handle [as handle_request] (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:317:13)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:284:7\n    at Function.process_params (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:335:12)\n    at next (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express\\lib\\router\\index.js:275:10)\n    at D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\express-mongo-sanitize\\index.js:122:5","timestamp":"2025-11-16 15:48:34","url":"/auth/login/"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:02:02"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:02:02"}
+{"error":"429 Too Many Requests","level":"error","message":"Text moderation error:","service":"chaotok-api","stack":"Error: 429 Too Many Requests\n    at APIError.generate (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\core\\error.js:63:20)\n    at OpenAI.makeStatusError (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:165:32)\n    at OpenAI.makeRequest (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:333:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async ModerationService.moderateText (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:57:24)\n    at async ModerationService.moderatePost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:234:20)\n    at async PostService.createPost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\services\\PostService.js:76:32)\n    at async create (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\controllers\\PostController.js:21:20)","timestamp":"2025-11-16 16:02:13"}
+{"level":"warn","message":"OpenAI rate limit exceeded - allowing content through","service":"chaotok-api","timestamp":"2025-11-16 16:02:13"}
+{"approved":true,"hasText":true,"imageCount":0,"level":"info","message":"Post moderation completed:","service":"chaotok-api","timestamp":"2025-11-16 16:02:13","violationCount":0}
+{"approved":true,"level":"info","message":"Post moderation check:","postId":"new","service":"chaotok-api","timestamp":"2025-11-16 16:02:13","violations":0}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:02:44"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:02:44"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:05:15"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:05:15"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:12:45"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:12:45"}
+{"error":"429 Too Many Requests","level":"error","message":"Text moderation error:","service":"chaotok-api","stack":"Error: 429 Too Many Requests\n    at APIError.generate (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\core\\error.js:63:20)\n    at OpenAI.makeStatusError (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:165:32)\n    at OpenAI.makeRequest (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:333:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async ModerationService.moderateText (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:57:24)\n    at async ModerationService.moderatePost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:234:20)\n    at async PostService.createPost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\services\\PostService.js:76:32)\n    at async create (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\controllers\\PostController.js:21:20)","timestamp":"2025-11-16 16:17:31"}
+{"level":"warn","message":"OpenAI rate limit exceeded - allowing content through","service":"chaotok-api","timestamp":"2025-11-16 16:17:31"}
+{"approved":true,"hasText":true,"imageCount":0,"level":"info","message":"Post moderation completed:","service":"chaotok-api","timestamp":"2025-11-16 16:17:31","violationCount":0}
+{"approved":true,"level":"info","message":"Post moderation check:","postId":"new","service":"chaotok-api","timestamp":"2025-11-16 16:17:31","violations":0}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:19:17"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:19:17"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:19:23"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:19:23"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:19:38"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:19:38"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:08"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:08"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:10"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:10"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:24"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:24"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:30"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:30"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:36"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:36"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:48"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:48"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:51"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:51"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:21:54"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:21:54"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:22:02"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:22:02"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:22:05"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:22:05"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:22:07"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:22:07"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:23:19"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:23:19"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:23:32"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:23:32"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:23:51"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:23:51"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:27:01"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:27:01"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:28:49"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:28:49"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:29:17"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:29:17"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:31:23"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:31:23"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:35:47"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:35:47"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:46:05"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:46:05"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:48:30"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:48:30"}
+{"error":"429 Too Many Requests","level":"error","message":"Text moderation error:","service":"chaotok-api","stack":"Error: 429 Too Many Requests\n    at APIError.generate (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\core\\error.js:63:20)\n    at OpenAI.makeStatusError (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:165:32)\n    at OpenAI.makeRequest (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:333:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async ModerationService.moderateText (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:57:24)\n    at async ModerationService.moderatePost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:234:20)\n    at async PostService.createPost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\services\\PostService.js:76:32)\n    at async create (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\controllers\\PostController.js:21:20)","timestamp":"2025-11-16 16:58:25"}
+{"level":"warn","message":"OpenAI rate limit exceeded - allowing content through","service":"chaotok-api","timestamp":"2025-11-16 16:58:25"}
+{"approved":true,"hasText":true,"imageCount":0,"level":"info","message":"Post moderation completed:","service":"chaotok-api","timestamp":"2025-11-16 16:58:25","violationCount":0}
+{"approved":true,"level":"info","message":"Post moderation check:","postId":"new","service":"chaotok-api","timestamp":"2025-11-16 16:58:25","violations":0}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 16:59:11"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 16:59:11"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 17:02:23"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 17:02:23"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-16 17:02:50"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-16 17:02:50"}
+{"email":"vinhkoj2@gmail.com","ip":"::1","level":"warn","limit":3,"message":"Rate limit exceeded for register:","service":"chaotok-api","timestamp":"2025-11-17 00:46:56"}
+{"email":"hathaivinhs@gmail.com","ip":"::1","level":"warn","limit":5,"message":"Rate limit exceeded for login:","service":"chaotok-api","timestamp":"2025-11-17 00:47:34"}
+{"email":"hathaivinhs@gmail.com","ip":"::1","level":"warn","limit":5,"message":"Rate limit exceeded for login:","service":"chaotok-api","timestamp":"2025-11-17 00:47:37"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-17 00:49:10"}
+{"level":"info","message":"Successfully connected to MongoDB","service":"chaotok-api","timestamp":"2025-11-17 00:49:10"}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-17 15:23:03"}
+{"error":"429 Too Many Requests","level":"error","message":"Text moderation error:","service":"chaotok-api","stack":"Error: 429 Too Many Requests\n    at APIError.generate (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\core\\error.js:63:20)\n    at OpenAI.makeStatusError (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:165:32)\n    at OpenAI.makeRequest (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:333:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async ModerationService.moderateText (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:57:24)\n    at async ModerationService.moderatePost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:234:20)\n    at async PostService.createPost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\services\\PostService.js:76:32)\n    at async create (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\controllers\\PostController.js:21:20)","timestamp":"2025-11-17 18:15:47"}
+{"level":"warn","message":"OpenAI rate limit exceeded - allowing content through","service":"chaotok-api","timestamp":"2025-11-17 18:15:47"}
+{"approved":true,"hasText":true,"imageCount":0,"level":"info","message":"Post moderation completed:","service":"chaotok-api","timestamp":"2025-11-17 18:15:47","violationCount":0}
+{"approved":true,"level":"info","message":"Post moderation check:","postId":"new","service":"chaotok-api","timestamp":"2025-11-17 18:15:47","violations":0}
+{"error":"429 Too Many Requests","level":"error","message":"Text moderation error:","service":"chaotok-api","stack":"Error: 429 Too Many Requests\n    at APIError.generate (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\core\\error.js:63:20)\n    at OpenAI.makeStatusError (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:165:32)\n    at OpenAI.makeRequest (D:\\Workspace\\Chaotok\\FaceTok_Sever\\node_modules\\openai\\client.js:333:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async ModerationService.moderateText (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:57:24)\n    at async ModerationService.moderatePost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\shared\\services\\ModerationService.js:234:20)\n    at async PostService.createPost (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\services\\PostService.js:76:32)\n    at async create (D:\\Workspace\\Chaotok\\FaceTok_Sever\\src\\modules\\post\\controllers\\PostController.js:21:20)","timestamp":"2025-11-17 18:22:12"}
+{"level":"warn","message":"OpenAI rate limit exceeded - allowing content through","service":"chaotok-api","timestamp":"2025-11-17 18:22:12"}
+{"approved":true,"hasText":true,"imageCount":0,"level":"info","message":"Post moderation completed:","service":"chaotok-api","timestamp":"2025-11-17 18:22:12","violationCount":0}
+{"approved":true,"level":"info","message":"Post moderation check:","postId":"new","service":"chaotok-api","timestamp":"2025-11-17 18:22:12","violations":0}
+{"level":"info","message":"MongoDB connected successfully","service":"chaotok-api","timestamp":"2025-11-17 20:31:21"}

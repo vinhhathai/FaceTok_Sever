@@ -15,11 +15,11 @@ class GroupDto {
   static toResponseGroup(group) {
     if (!group) return null;
     return {
-      id: group._id,
+      id: (group._id && group._id.toString) ? group._id.toString() : String(group._id || ""),
       name: group.name,
       avatar: group.avatar,
-      roomId: group.roomId,
-      ownerId: group.ownerId,
+      roomId: (group.roomId && group.roomId.toString) ? group.roomId.toString() : String(group.roomId || ""),
+      ownerId: (group.ownerId && group.ownerId.toString && group.ownerId.toString()) || null,
     };
   }
 

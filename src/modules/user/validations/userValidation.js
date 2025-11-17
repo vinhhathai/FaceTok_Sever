@@ -24,8 +24,10 @@ const updateProfileValidation = (data) => {
  */
 const profileValidation = (data) => {
   const schema = Joi.object({
-    // Accept both MongoDB ObjectId (24 hex chars) and UUID (with dashes)
-    userId: Joi.string().required().pattern(/^([0-9a-fA-F]{24}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/).message('Invalid user ID format'),
+    userId: Joi.string()
+      .required()
+      .pattern(/^[0-9a-fA-F]{24}$/)
+      .message('Invalid user ID format'),
   });
 
   return schema.validate(data);
@@ -33,8 +35,10 @@ const profileValidation = (data) => {
 
 const blockUserValidation = (data) => {
   const schema = Joi.object({
-    // Accept both MongoDB ObjectId (24 hex chars) and UUID (with dashes)
-    blockedUserId: Joi.string().required().pattern(/^([0-9a-fA-F]{24}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/).message('Invalid user ID format'),
+    blockedUserId: Joi.string()
+      .required()
+      .pattern(/^[0-9a-fA-F]{24}$/)
+      .message('Invalid user ID format'),
   });
 
   return schema.validate(data);
@@ -44,4 +48,4 @@ module.exports = {
   updateProfileValidation,
   profileValidation,
   blockUserValidation
-}; 
+};

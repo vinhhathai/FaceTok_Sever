@@ -400,17 +400,18 @@ class AdminService {
         );
       }
 
-      // Find user to update - try by publicId first (UUID), then by _id (ObjectId)
-      let user = await this.userRepository.findOne({ publicId: userId });
-      if (!user) {
-        // Try finding by _id for newer users with ObjectId
-        try {
-          user = await this.userRepository.findById(userId);
-        } catch (err) {
-          // Silently fail and return null
-        }
+      // Enforce ObjectId-only user lookup
+      const isObjectId = /^[a-f\d]{24}$/i.test(String(userId));
+      const isAdminObjectId = /^[a-f\d]{24}$/i.test(String(adminId));
+      if (!isObjectId || !isAdminObjectId) {
+        return AdminDto.error(
+          errorCode.VALIDATION_FAILED,
+          "IDs must be 24-hex ObjectId",
+          { userId, adminId }
+        );
       }
-      
+
+      const user = await this.userRepository.findById(userId);
       if (!user) {
         return AdminDto.error(
           errorCode.DATA_NOT_FOUND,
@@ -419,10 +420,8 @@ class AdminService {
         );
       }
 
-      // Check if trying to update own role (admin cannot change their own role)
-      // Compare with both _id and publicId
-      const userIdentifier = user._id.toString() || user.publicId;
-      if (userId === adminId || userIdentifier === adminId || user.publicId === adminId) {
+      // Prevent admin changing their own role
+      if (String(user._id) === String(adminId)) {
         return AdminDto.error(
           errorCode.FORBIDDEN,
           "Cannot change your own role",

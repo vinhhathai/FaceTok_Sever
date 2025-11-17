@@ -28,32 +28,42 @@ class MessageService {
       // Kiểm tra phòng tồn tại và user có quyền gửi tin nhắn
       const room = await this.roomRepository.findRoomById(roomId);
 
+      // Guard: phòng không tồn tại
+      if (!room) {
+        throw new Error("Room not found");
+      }
+
+      const senderIdStr = senderId?.toString?.() || String(senderId);
+      const memberIds = (room.members || []).map((member) => member?._id?.toString?.() || member?.toString?.());
+
       // Kiểm tra người dùng có trong phòng không
-      if (
-        !room.members.some(
-          (member) => member._id.toString() === senderId.toString()
-        )
-      ) {
+      if (!memberIds.includes(senderIdStr)) {
         throw new Error("User is not a member of this room");
       }
 
       if (!room.groupId) {
         // Direct message: enforce mutual block policy (either side blocked => prevent sending)
-        const receiverMember = room.members.find(
-          (member) => member._id.toString() !== senderId.toString()
+        const receiverMember = (room.members || []).find(
+          (member) => (member?._id?.toString?.() || member?.toString?.()) !== senderIdStr
         );
+
+        // Guard: không tìm thấy người nhận trong phòng (bất thường đối với phòng DM)
+        if (!receiverMember) {
+          throw new Error("Receiver not found in this room");
+        }
+
         const receiverUserId = receiverMember?._id?.toString?.() || receiverMember?.toString?.() || receiverMember;
         
         const [receiver, sender] = await Promise.all([
           this.userRepository.findById(receiverUserId),
-          this.userRepository.findById(senderId),
+          this.userRepository.findById(senderIdStr),
         ]);
 
         const receiverBlockedList = (receiver?.blockedUsers || []).map((u) => u.toString());
         const senderBlockedList = (sender?.blockedUsers || []).map((u) => u.toString());
 
         if (
-          receiverBlockedList.includes(senderId.toString()) ||
+          receiverBlockedList.includes(senderIdStr) ||
           senderBlockedList.includes(receiverUserId?.toString?.() || String(receiverUserId))
         ) {
           throw new Error(
@@ -64,7 +74,7 @@ class MessageService {
 
       // Tạo tin nhắn mới với media
       const message = await this.messageRepository.createMessage(
-        senderId,
+        senderIdStr,
         roomId,
         content,
         media
@@ -73,7 +83,7 @@ class MessageService {
       // Cập nhật tin nhắn cuối cùng và thời gian của phòng
       await this.roomRepository.updateRoomLastMessage(roomId, message._id);
 
-      if (room.deleteBy.length > 0) {
+      if (Array.isArray(room.deleteBy) && room.deleteBy.length > 0) {
         await this.roomRepository.backupConversation(roomId);
       }
 

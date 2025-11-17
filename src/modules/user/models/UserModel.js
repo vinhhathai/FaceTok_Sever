@@ -5,12 +5,7 @@ const { Schema } = mongoose;
 
 const UserSchema = new Schema(
   {
-    publicId: {
-      type: String,
-      unique: true,
-      sparse: true, // Allow null during migration
-      index: true
-    },
+
     email: {
       type: String,
       required: true,
@@ -137,15 +132,7 @@ const UserSchema = new Schema(
   }
 );
 
-// Auto-generate publicId before saving new user
-UserSchema.pre('save', async function(next) {
-  if (this.isNew && !this.publicId) {
-    // Use dynamic import for uuid (ESM module)
-    const { v4: uuidv4 } = await import('uuid');
-    this.publicId = uuidv4();
-  }
-  next();
-});
+
 
 const UserModel = mongoose.model("users", UserSchema);
 

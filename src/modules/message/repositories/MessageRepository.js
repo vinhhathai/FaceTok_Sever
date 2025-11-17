@@ -41,10 +41,10 @@ class MessageRepository {
   async getMessagesByRoomId(roomId, limit = 20, skip = 0) {
     return await this.messageModel
       .find({ roomId })
-      .sort({ createdAt: -1 }) // Sắp xếp theo thời gian, mới nhất trước
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("senderId", "fullName profilePicture publicId")
+      .populate("senderId", "fullName profilePicture")
       .lean();
   }
 }
