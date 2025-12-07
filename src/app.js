@@ -68,6 +68,7 @@ const allowedOrigins = [
   "https://chaotok.site",
   "https://www.chaotok.site",
   "https://d13tci060h3fsw.cloudfront.net",
+  "https://api.chaotok.site",
   /^https:\/\/.*\.cloudfront\.net$/
 ];
 
