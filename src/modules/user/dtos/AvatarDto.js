@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const { dtoResponse } = require("../../../shared/helper");
+const { getPublicUserId } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO cho xử lý dữ liệu avatar người dùng
@@ -25,7 +26,7 @@ class AvatarDto {
    */
   static toResponse(user) {
     return {
-      id: user._id,
+      id: getPublicUserId(user),
       profilePicture: user.profilePicture || "",
       updatedAt: user.updatedAt
     };

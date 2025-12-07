@@ -125,6 +125,67 @@ class LikeRepository {
       throw new Error(`Failed to fetch liked post ids: ${error.message}`);
     }
   }
+
+  // ========== COMMENT LIKE METHODS ==========
+
+  // Find like by commentId and userId
+  async findLikeByCommentAndUser(commentId, userId) {
+    try {
+      return await LikeModel.findOne({ commentId, userId }).lean();
+    } catch (error) {
+      throw new Error(`Failed to find comment like: ${error.message}`);
+    }
+  }
+
+  // Check whether user already liked the comment
+  async hasUserLikedComment(commentId, userId) {
+    try {
+      const like = await LikeModel.findOne({ commentId, userId });
+      return !!like;
+    } catch (error) {
+      throw new Error(`Failed to check comment like: ${error.message}`);
+    }
+  }
+
+  // Count likes of a comment
+  async countLikesByCommentId(commentId) {
+    try {
+      return await LikeModel.countDocuments({ commentId });
+    } catch (error) {
+      throw new Error(`Failed to count comment likes: ${error.message}`);
+    }
+  }
+
+  // Toggle comment like
+  async toggleCommentLike(commentId, userId) {
+    try {
+      const existingLike = await LikeModel.findOne({ commentId, userId });
+      
+      if (existingLike) {
+        // already liked -> unlike
+        await LikeModel.findOneAndDelete({ commentId, userId });
+        return { action: 'unliked', like: null };
+      } else {
+        // not liked -> like
+        const newLike = new LikeModel({ commentId, userId });
+        const savedLike = await newLike.save();
+        return { action: 'liked', like: savedLike };
+      }
+    } catch (error) {
+      throw new Error(`Failed to toggle comment like: ${error.message}`);
+    }
+  }
+
+  // Get list of commentIds liked by a user among a set of commentIds
+  async findLikedCommentIdsForUser(userId, commentIds) {
+    try {
+      if (!userId || !Array.isArray(commentIds) || commentIds.length === 0) return [];
+      const likedIds = await LikeModel.find({ commentId: { $in: commentIds }, userId }).distinct('commentId');
+      return likedIds.map((id) => id.toString());
+    } catch (error) {
+      throw new Error(`Failed to fetch liked comment ids: ${error.message}`);
+    }
+  }
 }
 
 module.exports = LikeRepository;

@@ -4,6 +4,7 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const { errorCode, errorMessage } = require('../common/error');
 const { role } = require('../common/constants');
+const logger = require('../utils/logger');
 
 // Đối với Modular Monolith, chúng ta không nên import trực tiếp model từ module khác
 // Thay vào đó, chúng ta sẽ import từ module user thông qua interface
@@ -11,10 +12,9 @@ const UserModel = require('../../modules/user/models/UserModel');
 
 const checkLogin = async (req, res, next) => {
     try {
-        // Check login
-        const authHeader = req.headers.authorization;
-        
-        const accessToken = authHeader?.split(' ')[1];
+        // Check login - Try cookie first (httpOnly), then fallback to Authorization header
+        const accessToken = req.cookies?.auth_token || 
+                           req.headers.authorization?.split(' ')[1];
         
         if (!accessToken) {
             return res.status(401).json({
@@ -22,7 +22,8 @@ const checkLogin = async (req, res, next) => {
                 path: req.originalUrl,
                 code: errorCode.UNAUTHORIZED,
                 error: {
-                    name: errorMessage.LOGIN_REQUIRED
+                    name: errorMessage.LOGIN_REQUIRED,
+                    message: 'No access token found in cookie or header'
                 }
             });
         }
@@ -35,7 +36,7 @@ const checkLogin = async (req, res, next) => {
             const userId = token.userId || token._id;
             
             if (!userId) {
-                console.error('Token missing userId:', token);
+                logger.error('Token missing userId:', { token: token });
                 return res.status(401).json({
                     timestamp: new Date().toISOString(),
                     path: req.originalUrl,
@@ -61,16 +62,9 @@ const checkLogin = async (req, res, next) => {
                 });
             }
             
-            if (user.role !== role.MEMBER) {
-                return res.status(403).json({
-                    timestamp: new Date().toISOString(),
-                    path: req.originalUrl,
-                    code: errorCode.NOT_PERMISSIONS,
-                    error: {
-                        name: errorMessage.NOT_PERMISSIONS
-                    }
-                });
-            }
+            // Note: We no longer restrict by role here
+            // Different routes can check specific roles if needed
+            // This allows flexibility for routes that need to accept all authenticated users
             
             // Add user info to req.user
             req.user = {
@@ -81,7 +75,7 @@ const checkLogin = async (req, res, next) => {
             // Proceed to next middleware
             next();
         } catch (jwtError) {
-            console.error('JWT verification error:', jwtError);
+            logger.error('JWT verification error:', { error: jwtError.message, stack: jwtError.stack });
             return res.status(401).json({
                 timestamp: new Date().toISOString(),
                 path: req.originalUrl,
@@ -93,7 +87,7 @@ const checkLogin = async (req, res, next) => {
             });
         }
     } catch (error) {
-        console.error('CheckLogin middleware error:', error);
+        logger.error('CheckLogin middleware error:', { error: error.message, stack: error.stack });
         return res.status(500).json({
             timestamp: new Date().toISOString(),
             path: req.originalUrl,

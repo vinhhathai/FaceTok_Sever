@@ -19,6 +19,13 @@ const GroupSchema = new Schema(
       ref: "users",
       required: true,
     },
+    // Link back to the room this group belongs to
+    roomId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "rooms",
+      required: false,
+      default: null,
+    },
 
     isDissolved: {
       type: Boolean,

@@ -6,6 +6,7 @@ const ThumbnailController = require('./ThumbnailController');
 const FullnameController = require('./FullnameController');
 const UserSearchController = require('./UserSearchController');
 const MediaController = require('./MediaController');
+const AdminController = require('./AdminController');
 
 module.exports = {
     ProfileController: new ProfileController(),
@@ -13,5 +14,6 @@ module.exports = {
     ThumbnailController: new ThumbnailController(),
     FullnameController: new FullnameController(),
     UserSearchController: new UserSearchController(),
-    MediaController: new MediaController()
+    MediaController: new MediaController(),
+    AdminController: new AdminController()
 };

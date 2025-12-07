@@ -155,9 +155,15 @@ class ProfileService {
         password: 0,
         __v: 0,
       });
+      
+      // Get current logged in user to compare ObjectIds
+      const loggedInUser = await this.userRepository.findById(logingUserId, {
+        _id: 1,
+      });
 
-      // So sánh để xác định có phải chủ sở hữu không
-      const isOwner = viewingUserId.toString() === logingUserId.toString();
+      // So sánh ObjectId để xác định có phải chủ sở hữu không
+      const isOwner = user && loggedInUser && 
+        user._id.toString() === loggedInUser._id.toString();
 
       // Sử dụng DTO để format dữ liệu trả về
       const profileData = ProfileDto.toResponse(user, isOwner);
@@ -171,6 +177,55 @@ class ProfileService {
       return ProfileDto.error(
         errorCode.ERR_RETRIEVE_PROFILE_FAILED,
         "Lỗi khi lấy thông tin profile",
+        error.message
+      );
+    }
+  }
+
+  /**
+   * Update privacy setting - Show/Hide personal info
+   * @param {string} userId - User ID to update
+   * @param {boolean} showPersonalInfo - Show or hide personal info
+   * @returns {Promise<Object>} Update result
+   */
+  async updatePrivacySetting(userId, showPersonalInfo) {
+    try {
+      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        return ProfileDto.error(
+          errorCode.VALIDATION_FAILED,
+          "Invalid user ID format"
+        );
+      }
+
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        return ProfileDto.error(
+          errorCode.DATA_NOT_FOUND,
+          errorMessage.USER_NOT_FOUND
+        );
+      }
+
+      const updatedUser = await this.userRepository.updateProfile(
+        userId,
+        { showPersonalInfo }
+      );
+
+      if (!updatedUser) {
+        return ProfileDto.error(
+          errorCode.UPDATE_PROFILE_FAILED,
+          "Failed to update privacy setting"
+        );
+      }
+
+      return ProfileDto.success(
+        { showPersonalInfo: updatedUser.showPersonalInfo },
+        "Privacy setting updated successfully"
+      );
+    } catch (error) {
+      console.error(`Privacy setting update error for user ${userId}:`, error);
+      return ProfileDto.error(
+        errorCode.UPDATE_PROFILE_FAILED,
+        "Error updating privacy setting",
         error.message
       );
     }

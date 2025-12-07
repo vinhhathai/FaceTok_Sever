@@ -10,6 +10,9 @@ const helmet = require("helmet");
 const compression = require("compression");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./shared/swagger/swagger");
+const mongoSanitize = require('express-mongo-sanitize');
+const { generalApiLimiter } = require('./shared/middlewares/rateLimiter');
+const winstonLogger = require('./shared/utils/logger');
 
 // Kết nối database
 const DBConnection = require("./shared/database/DBConnection");
@@ -25,7 +28,7 @@ const authModule = require("./modules/auth");
 // Middleware handler cho lỗi JSON
 const jsonErrorHandler = (err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
-    console.error("JSON Parse Error:", err);
+    winstonLogger.error("JSON Parse Error:", { error: err.message, stack: err.stack });
     return res.status(400).json({
       message: "Invalid JSON in request body",
       error: err.message,
@@ -46,9 +49,22 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../public")));
 
+// Security: Sanitize user input to prevent NoSQL injection
+app.use(mongoSanitize({
+  replaceWith: '_',
+  onSanitize: ({ req, key }) => {
+    winstonLogger.warn(`Sanitized potentially malicious input`, { key, ip: req.ip });
+  }
+}));
+
+// Security: Apply rate limiting to all API routes
+app.use('/api/', generalApiLimiter);
+
 // CORS configuration
 const allowedOrigins = [
   "http://localhost:3004",
+  "http://social.chaotok.local:3004",
+  "http://game.chaotok.local:4000",
   "https://chaotok.site",
   "https://www.chaotok.site",
   "https://d13tci060h3fsw.cloudfront.net",
@@ -74,12 +90,12 @@ const corsOptions = {
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.log("❌ Blocked by CORS:", origin);
+      winstonLogger.warn("❌ Blocked by CORS:", { origin, ip: origin });
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
     "Authorization",
@@ -105,11 +121,11 @@ connect();
 
 // Debug kết nối database
 mongoose.connection.on("error", (err) => {
-  console.error("MongoDB connection error:", err);
+  winstonLogger.error("MongoDB connection error:", err);
 });
 
 mongoose.connection.on("connected", () => {
-  console.log("MongoDB connected successfully");
+  winstonLogger.info("MongoDB connected successfully");
 });
 
 // Đăng ký routes từ các module
@@ -150,7 +166,7 @@ app.use((req, res, next) => {
 
 // Xử lý lỗi chung
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  winstonLogger.error("Unhandled error:", { error: err.message, stack: err.stack, url: req.originalUrl });
   res.status(500).json({
     success: false,
     error: {

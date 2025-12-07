@@ -6,6 +6,7 @@ const ThumbnailService = require('./ThumbnailService');
 const FullnameService = require('./FullnameService');
 const UserSearchService = require('./UserSearchService');
 const MediaService = require('./MediaService');
+const AdminService = require('./AdminService');
 
 module.exports = {
     ProfileService,
@@ -13,5 +14,6 @@ module.exports = {
     ThumbnailService,
     FullnameService,
     UserSearchService,
-    MediaService
+    MediaService,
+    AdminService
 };

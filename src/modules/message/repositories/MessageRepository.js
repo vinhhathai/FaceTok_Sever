@@ -27,11 +27,12 @@ class MessageRepository {
     );
   }
 
-  async createMessage(senderId, roomId, content) {
+  async createMessage(senderId, roomId, content, media = []) {
     const message = new this.messageModel({
       senderId,
       roomId,
       content,
+      media,
     });
 
     return await message.save();
@@ -43,7 +44,7 @@ class MessageRepository {
       .sort({ createdAt: -1 }) // Sắp xếp theo thời gian, mới nhất trước
       .skip(skip)
       .limit(limit)
-      .populate("senderId", "fullName profilePicture")
+      .populate("senderId", "fullName profilePicture publicId")
       .lean();
   }
 }

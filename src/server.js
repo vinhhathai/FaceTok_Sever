@@ -5,6 +5,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const MessageSocket = require("./modules/message/socket/MessageSocket");
 const SocketBus = require("./shared/socket/SocketBus");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 // Get port from environment or use default port 3000
@@ -21,9 +22,12 @@ const io = socketIo(server, {
       process.env.SOCKET_CLIENT_URL_CORS,
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
+    credentials: true, // Allow cookies
   },
 });
+
+// Parse cookies for Socket.IO
+io.engine.use(cookieParser());
 
 // Initialize message socket handler
 const messageSocket = new MessageSocket(io);
@@ -31,6 +35,9 @@ messageSocket.init();
 
 // Expose io instance to HTTP controllers via SocketBus
 SocketBus.setIo(io);
+
+// Mount io to app for controllers to access
+app.set('io', io);
 
 // Start the server
 server.listen(port);
@@ -64,5 +71,5 @@ function onError(error) {
 function onListening() {
   const addr = server.address();
   const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
-  // debug removed
+  console.log(`✅ Social Server listening on ${bind}`);
 }

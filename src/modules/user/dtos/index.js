@@ -6,6 +6,7 @@ const ThumbnailDto = require('./ThumbnailDto');
 const FullnameDto = require('./FullnameDto');
 const UserSearchDto = require('./UserSearchDto');
 const MediaDto = require('./MediaDto');
+const AdminDto = require('./AdminDto');
 
 module.exports = {
     ProfileDto,
@@ -13,5 +14,6 @@ module.exports = {
     ThumbnailDto,
     FullnameDto,
     UserSearchDto,
-    MediaDto
+    MediaDto,
+    AdminDto
 };

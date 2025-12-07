@@ -10,7 +10,10 @@ const {
   kickOutMemberValidation,
   leaveGroupValidation,
 } = require("../validations");
-const { VALIDATION_ERRORS } = require("../../../shared/common/error");
+const {
+  VALIDATION_ERRORS,
+  MESSAGE_ERRORS,
+} = require("../../../shared/common/error");
 const { inviteToGroupValidation } = require("../validations/groupValidation");
 const SocketBus = require("../../../shared/socket/SocketBus");
 
@@ -44,23 +47,39 @@ class RoomController {
     try {
       const { error, value } = kickOutMemberValidation.validate(req.body);
       if (error) {
-        return res.status(400).json(RoomDto.error(error.details[0].message));
+        return res.status(400).json(RoomDto.error("VALIDATION_ERROR", error.details[0].message));
       }
       const { roomId, kickOutUserId } = value;
       const currentUserId = req.user.id;
-      const room = await this.roomService.kickOutMember(
-        roomId,
-        currentUserId,
-        kickOutUserId
-      );
-      // Broadcast via socket
       try {
-        SocketBus.emitToRoom(roomId, "group_member_kicked", { roomId, userId: kickOutUserId });
-        SocketBus.emitToUser(kickOutUserId, "group_member_kicked", { roomId, userId: kickOutUserId });
-      } catch {}
-      return res.status(200).json(RoomDto.success(room));
+        const room = await this.roomService.kickOutMember(
+          roomId,
+          currentUserId,
+          kickOutUserId
+        );
+        // Broadcast via socket
+        try {
+          SocketBus.emitToRoom(roomId, "group_member_kicked", { roomId, userId: kickOutUserId });
+          SocketBus.emitToUser(kickOutUserId, "group_member_kicked", { roomId, userId: kickOutUserId });
+        } catch {}
+        return res.status(200).json(RoomDto.success(room));
+      } catch (err) {
+        const businessErrors = [
+          "This is not a group room or room not found",
+          "Group not found",
+          "You are not the group owner",
+          "Invalid target user id format",
+          "Target user is not a member of this group",
+        ];
+        if (businessErrors.includes(err.message)) {
+          return res.status(400).json(RoomDto.error("BUSINESS_ERROR", err.message));
+        }
+        console.error("Error in kickOutMember (system):", err);
+        return res.status(500).json(RoomDto.error("INTERNAL_SERVER_ERROR", err.message || "Failed to kick out member"));
+      }
     } catch (error) {
-      return res.status(500).json(RoomDto.error(error));
+      console.error("Error in kickOutMember (validation/system):", error);
+      return res.status(500).json(RoomDto.error("INTERNAL_SERVER_ERROR", error.message || "Failed to kick out member"));
     }
   };
 
@@ -68,19 +87,35 @@ class RoomController {
     try {
       const { error, value } = leaveGroupValidation.validate(req.body);
       if (error) {
-        return res.status(400).json(RoomDto.error(error.details[0].message));
+        return res.status(400).json(RoomDto.error("VALIDATION_ERROR", error.details[0].message));
       }
       const { id } = value;
       const currentUserId = req.user.id;
-      const group = await this.roomService.leaveGroup(id, currentUserId);
-      // Broadcast via socket
       try {
-        SocketBus.emitToUser(currentUserId, "group_left", { roomId: id });
-        SocketBus.emitToRoom(id, "group_member_left", { roomId: id, userId: currentUserId });
-      } catch {}
-      return res.status(200).json(RoomDto.success(group));
+        const group = await this.roomService.leaveGroup(id, currentUserId);
+        // Broadcast via socket
+        try {
+          SocketBus.emitToUser(currentUserId, "group_left", { roomId: id });
+          SocketBus.emitToRoom(id, "group_member_left", { roomId: id, userId: currentUserId });
+        } catch {}
+        return res.status(200).json(RoomDto.success(group));
+      } catch (err) {
+        // Lỗi nghiệp vụ: owner không được rời nhóm, không phải thành viên, không tìm thấy phòng
+        const businessErrors = [
+          "Owner cannot leave the group. Transfer ownership first",
+          "You are not a member of this group",
+          "Room not found"
+        ];
+        if (businessErrors.includes(err.message)) {
+          return res.status(400).json(RoomDto.error("BUSINESS_ERROR", err.message));
+        }
+        // Lỗi hệ thống
+        console.error("Error in leaveGroup (system):", err);
+        return res.status(500).json(RoomDto.error("INTERNAL_SERVER_ERROR", err.message || "Failed to leave group"));
+      }
     } catch (error) {
-      return res.status(500).json(RoomDto.error(error));
+      console.error("Error in leaveGroup (validation):", error);
+      return res.status(500).json(RoomDto.error("INTERNAL_SERVER_ERROR", error.message || "Failed to leave group"));
     }
   };
 
@@ -142,7 +177,7 @@ class RoomController {
 
         return res.status(200).json(
           RoomDto.success({
-            rooms: rooms,
+            rooms: RoomDto.toResponseList(rooms, userId),
           })
         );
       } catch (error) {
@@ -200,7 +235,7 @@ class RoomController {
 
         return res.status(200).json(
           RoomDto.success({
-            room: room,
+            room: RoomDto.toResponseRoom(room, currentUserId),
           })
         );
       } catch (error) {
@@ -255,10 +290,20 @@ class RoomController {
 
         return res.status(200).json(
           RoomDto.success({
-            room: room,
+            room: RoomDto.toResponseRoom(room, userId),
           })
         );
       } catch (error) {
+        // Map business errors
+        if (error.message === "Room not found") {
+          return res.status(404).json(
+            RoomDto.error(
+              "ROOM_NOT_FOUND",
+              "Room not found",
+              error.message
+            )
+          );
+        }
         return res
           .status(500)
           .json(
@@ -355,7 +400,7 @@ class RoomController {
 
         return res.status(200).json(
           MessageDto.success({
-            room: updatedRoom,
+            room: RoomDto.toResponseRoom(updatedRoom, currentUserId),
           })
         );
       } catch (error) {

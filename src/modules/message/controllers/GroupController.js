@@ -1,19 +1,19 @@
 "use strict";
 //----------------------------------------------------------------
+const uploadImageMiddleware = require("../../../shared/middlewares/uploadImageMiddleware");
+const { processAndUploadImage } = require("../../../shared/utils/cloudinaryUpload");
 const GroupService = require("../services/GroupService");
+const { GroupDto } = require("../dtos");
 const {
   createGroupValidation,
   getGroupByIdValidation,
-} = require("../validations");
-const GroupDto = require("../dtos/GroupDto");
-const {
+  renameGroupValidation,
   changeGroupOwnerValidation,
+  leaveGroupValidation,
+  kickOutMemberValidation,
+  inviteToGroupValidation,
   updateGroupAvatarValidation,
 } = require("../validations/groupValidation");
-const {
-  processAndUploadImage,
-} = require("../../../shared/utils/cloudinaryUpload");
-const uploadImageMiddleware = require("../../../shared/middlewares/uploadImageMiddleware");
 const SocketBus = require("../../../shared/socket/SocketBus");
 
 class GroupController {
@@ -70,7 +70,7 @@ class GroupController {
           avatar: updatedGroup.avatar,
         });
 
-        return res.status(200).json(GroupDto.success({ group: updatedGroup }));
+        return res.status(200).json(GroupDto.success({ group: GroupDto.toResponseGroup(updatedGroup) }));
       } catch (error) {
         console.error("Error updating group avatar:", error);
         return res
@@ -82,53 +82,41 @@ class GroupController {
     },
   ];
 
-  changeGroupOwner = async (req, res) => {
-    try {
-      const { error, value } = changeGroupOwnerValidation.validate(req.body);
-      if (error) {
-        return res.status(400).json(GroupDto.error(error.details[0].message));
-      }
-      const { id, newOwnerId } = value;
-      const currentUserId = req.user.id;
-      const group = await this.groupService.changeGroupOwner(
-        id,
-        currentUserId,
-        newOwnerId
-      );
-      const roomId = id;
-      SocketBus.emitToRoom(roomId, "group_owner_changed", {
-        roomId,
-        newOwnerId,
-      });
-      return res.status(200).json(GroupDto.success(group));
-    } catch (error) {
-      return res.status(500).json(GroupDto.error(error));
-    }
-  };
-
   // REST rename group -> broadcast
   renameGroup = async (req, res) => {
     try {
       const { id, name } = req.body || {};
       const currentUserId = req.user.id;
+      
+      console.log('[GroupController] renameGroup called with:', { id, name, currentUserId });
+      
       if (!id || !name) {
         return res
           .status(400)
           .json(GroupDto.error("Room ID and name are required"));
       }
+      
       const group = await this.groupService.renameGroupByRoomId(
         id,
         name,
         currentUserId
       );
+      
+      if (!group) {
+        return res
+          .status(404)
+          .json(GroupDto.error("Group not found or this is not a group conversation"));
+      }
+      
       const roomId = id;
       SocketBus.emitToRoom(roomId, "group_renamed", {
         roomId,
         groupId: group._id,
         newName: group.name,
       });
-      return res.status(200).json(GroupDto.success(group));
+      return res.status(200).json(GroupDto.success(GroupDto.toResponseGroup(group)));
     } catch (error) {
+      console.error("Error in renameGroup:", error);
       return res
         .status(500)
         .json(GroupDto.error(error.message || "Failed to rename group"));
@@ -163,7 +151,7 @@ class GroupController {
       }
       const { name, members } = value;
       const group = await this.groupService.createGroup(name, ownerId, members);
-      return res.status(200).json(GroupDto.success(group));
+      return res.status(200).json(GroupDto.success(GroupDto.toResponseGroup(group)));
     } catch (error) {
       console.error("Error in createGroup controller:", error);
       return res
@@ -180,9 +168,39 @@ class GroupController {
       }
       const { id } = value;
       const group = await this.groupService.getGroupById(id);
-      return res.status(200).json(GroupDto.success(group));
+      return res.status(200).json(GroupDto.success(GroupDto.toResponseGroup(group)));
     } catch (error) {
       return res.status(500).json(GroupDto.error(error));
+    }
+  };
+  changeGroupOwner = async (req, res) => {
+    try {
+      const currentUserId = req.user.id;
+      const { error, value } = changeGroupOwnerValidation.validate(req.body);
+      if (error) {
+        return res.status(400).json(GroupDto.error(error.details[0].message));
+      }
+      const { id, newOwnerId } = value;
+      const updatedGroup = await this.groupService.changeGroupOwner(
+        id,
+        currentUserId,
+        newOwnerId
+      );
+
+      // Broadcast owner change with ObjectId ownerId
+      const ownerIdStr = updatedGroup?.ownerId?.toString();
+      SocketBus.emitToRoom(id, "group_owner_changed", {
+        roomId: id,
+        ownerId: ownerIdStr,
+      });
+
+      return res
+        .status(200)
+        .json(GroupDto.success(GroupDto.toResponseGroup(updatedGroup)));
+    } catch (error) {
+      return res
+        .status(500)
+        .json(GroupDto.error(error.message || "Failed to change group owner"));
     }
   };
 }

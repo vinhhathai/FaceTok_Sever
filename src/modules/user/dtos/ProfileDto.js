@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const { dtoResponse } = require("../../../shared/helper");
+const { getPublicUserId } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO cho xử lý dữ liệu profile người dùng
@@ -10,22 +11,29 @@ class ProfileDto {
   /**
    * Format dữ liệu response cho profile
    * @param {Object} user - Dữ liệu người dùng
+   * @param {boolean} isOwner - Có phải chủ profile không
    * @returns {Object} Dữ liệu profile đã được format
    */
   static toResponse(user, isOwner = false) {
+    // Determine if personal info should be shown
+    // Always show to owner, otherwise check privacy setting
+    const showPersonalInfo = isOwner || (user.showPersonalInfo !== false);
+    
     return {
-      id: user._id,
+      id: getPublicUserId(user), // UUID for public/security
+      _id: user._id.toString(),  // MongoDB ObjectId for internal systems (message, etc)
       fullName: user.fullName,
-      email: isOwner ? user.email : "",
+      email: showPersonalInfo ? (isOwner ? user.email : "") : null,
       profilePicture: user.profilePicture || "",
       thumbnail: user.thumbnail || "",
-      birthday: user.birthday ? new Date(user.birthday).toISOString().split('T')[0] : null,
+      birthday: showPersonalInfo ? (user.birthday ? new Date(user.birthday).toISOString().split('T')[0] : null) : null,
       bio: user.bio || "",
-      gender: user.gender,
-      createdAt: user.createdAt,
+      gender: showPersonalInfo ? user.gender : null,
+      createdAt: null, // Hide "Joined date" completely as requested
       updatedAt: user.updatedAt,
-      location: user.location || "No location",
-      relationship: user.relationship || "",
+      location: showPersonalInfo ? (user.location || "No location") : null,
+      relationship: showPersonalInfo ? (user.relationship || "") : null,
+      showPersonalInfo: user.showPersonalInfo !== false, // Include privacy setting
       ...(isOwner && { isOwner: true }),
     };
   }

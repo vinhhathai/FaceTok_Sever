@@ -6,6 +6,7 @@ const { FriendDto } = require("../dtos");
 const FriendRequestModel = require("../models/FriendRequestModel");
 const mongoose = require("mongoose");
 const NotificationService = require("../../notification/services/NotificationService");
+const UserRepository = require("../../user/repositories/UserRepository");
 
 /**
  * Service xử lý chức năng quản lý bạn bè
@@ -78,16 +79,23 @@ class FriendService {
         );
       }
 
-      // Validate MongoDB ObjectIds
-      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(targetUserId)) {
+      // Convert UUID to ObjectId if needed
+      const userRepo = new UserRepository();
+      const user = await userRepo.findById(userId);
+      const targetUser = await userRepo.findById(targetUserId);
+      
+      if (!user || !targetUser) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
-          "Invalid user ID format"
+          "One or both users not found"
         );
       }
+      
+      const userObjectId = user._id;
+      const targetUserObjectId = targetUser._id;
 
-      // Check if they are friends
-      const areFriends = await this.friendRepository.checkIfFriends(userId, targetUserId);
+      // Check if they are friends (use ObjectId)
+      const areFriends = await this.friendRepository.checkIfFriends(userObjectId, targetUserObjectId);
       
       if (areFriends) {
         return FriendDto.success(
@@ -98,8 +106,8 @@ class FriendService {
         );
       }
 
-      // Check if there's a pending friend request
-      const pendingRequest = await this.friendRepository.checkFriendRequestExists(userId, targetUserId);
+      // Check if there's a pending friend request (use ObjectId)
+      const pendingRequest = await this.friendRepository.checkFriendRequestExists(userObjectId, targetUserObjectId);
 
       if (pendingRequest) {
         if (pendingRequest.status !== this.friendRepository.STATUS.PENDING) {
@@ -113,8 +121,8 @@ class FriendService {
           );
         }
 
-        // Determine direction of the request
-        if (pendingRequest.sender.toString() === userId) {
+        // Determine direction of the request (compare with ObjectId)
+        if (pendingRequest.sender.toString() === userObjectId.toString()) {
           return FriendDto.success(
             {
               status: "REQUEST_SENT",
@@ -172,7 +180,22 @@ class FriendService {
         );
       }
 
-      const alreadyFriends = await this.friendRepository.checkIfFriends(senderId, recipientId);
+      // Convert UUID to ObjectId if needed
+      const userRepo = new UserRepository();
+      const sender = await userRepo.findById(senderId);
+      const recipient = await userRepo.findById(recipientId);
+      
+      if (!sender || !recipient) {
+        return FriendDto.error(
+          errorCode.VALIDATION_FAILED,
+          "One or both users not found"
+        );
+      }
+      
+      const senderObjectId = sender._id;
+      const recipientObjectId = recipient._id;
+
+      const alreadyFriends = await this.friendRepository.checkIfFriends(senderObjectId, recipientObjectId);
       if (alreadyFriends) {
         return FriendDto.error(
           errorCode.VALIDATION_FAILED,
@@ -180,16 +203,16 @@ class FriendService {
         );
       }
 
-      const existingRequest = await this.friendRepository.checkFriendRequestExists(senderId, recipientId);
+      const existingRequest = await this.friendRepository.checkFriendRequestExists(senderObjectId, recipientObjectId);
       
       if (existingRequest) {
         if (existingRequest.status === this.friendRepository.STATUS.PENDING) {
-          if (existingRequest.sender.toString() === senderId.toString()) {
+          if (existingRequest.sender.toString() === senderObjectId.toString()) {
             return FriendDto.error(
               errorCode.VALIDATION_FAILED,
               "Friend request already sent"
             );
-          } else if (existingRequest.recipient.toString() === senderId) {
+          } else if (existingRequest.recipient.toString() === senderObjectId.toString()) {
             existingRequest.status = this.friendRepository.STATUS.ACCEPTED;
             await existingRequest.save();
             
@@ -216,17 +239,16 @@ class FriendService {
         }
       }
 
-      const newFriendRequest = await this.friendRepository.createFriendRequest(senderId, recipientId);
+      const newFriendRequest = await this.friendRepository.createFriendRequest(senderObjectId, recipientObjectId);
 
       // Gửi notification cho recipient
-      // Lấy thông tin sender để hiển thị tên
-      const sender = await this.friendRepository.userModel.findById(senderId);
+      // sender info already fetched above
       await this.notificationService.createAndSend({
-        user: recipientId,
+        user: recipientObjectId,
         type: "friend_request",
         content: `${sender.fullName} đã gửi lời mời kết bạn cho bạn.`,
         data: { 
-          fromUserId: senderId, 
+          fromUserId: senderObjectId, 
           fromUserName: sender.fullName,
           fromUserAvatar: sender.profilePicture,
           requestId: newFriendRequest._id 

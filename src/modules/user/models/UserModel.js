@@ -5,6 +5,12 @@ const { Schema } = mongoose;
 
 const UserSchema = new Schema(
   {
+    publicId: {
+      type: String,
+      unique: true,
+      sparse: true, // Allow null during migration
+      index: true
+    },
     email: {
       type: String,
       required: true,
@@ -44,7 +50,19 @@ const UserSchema = new Schema(
     },
     isActive: {
       type: Boolean,
-      default: true
+      default: false  // Changed: User inactive until email verified
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false
+    },
+    emailVerificationOTP: {
+      type: String,
+      default: null
+    },
+    emailVerificationExpiry: {
+      type: Date,
+      default: null
     },
     notifications: [{ type: mongoose.Types.ObjectId, ref: "notifications" }],
     posts: [{ type: mongoose.Types.ObjectId, ref: "posts" }],
@@ -75,13 +93,59 @@ const UserSchema = new Schema(
       }
     },
     blockedUsers: [{ type: mongoose.Types.ObjectId, ref: "users" }],
-
+    
+    // Refresh Token
+    refreshToken: {
+      type: String,
+      default: null
+    },
+    refreshTokenExpiry: {
+      type: Date,
+      default: null
+    },
+    
+    // Terms & Privacy Acceptance
+    termsAcceptance: {
+      accepted: {
+        type: Boolean,
+        default: false,
+        required: true
+      },
+      acceptedAt: {
+        type: Date,
+        default: null
+      },
+      version: {
+        type: String,
+        default: null  // Version of terms accepted (e.g., "1.0")
+      },
+      ipAddress: {
+        type: String,
+        default: null  // IP address when accepted
+      }
+    },
+    
+    // Privacy Settings - Control visibility of ALL personal info fields
+    showPersonalInfo: {
+      type: Boolean,
+      default: true  // true = show all info, false = hide all info
+    }
   },
   {
     timestamps: true,
     collection: "users",
   }
 );
+
+// Auto-generate publicId before saving new user
+UserSchema.pre('save', async function(next) {
+  if (this.isNew && !this.publicId) {
+    // Use dynamic import for uuid (ESM module)
+    const { v4: uuidv4 } = await import('uuid');
+    this.publicId = uuidv4();
+  }
+  next();
+});
 
 const UserModel = mongoose.model("users", UserSchema);
 

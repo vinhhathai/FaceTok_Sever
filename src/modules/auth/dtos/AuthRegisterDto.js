@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const { dtoResponse } = require("../../../shared/helper");
+const { getPublicUserId } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO for account registration handling
@@ -9,7 +10,7 @@ class AuthRegisterDto {
 
     static toResponse(user) {
         return {
-            id: user._id,
+            id: getPublicUserId(user),
             email: user.email,
             fullName: user.fullName
         };

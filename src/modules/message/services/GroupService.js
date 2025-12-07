@@ -61,26 +61,32 @@ class GroupService {
 
   async renameGroupByRoomId(roomId, name, currentUserId) {
     try {
+      console.log('[GroupService] renameGroupByRoomId called with:', { roomId, name, currentUserId });
+      
       // Tìm group bằng roomId
       const group = await this.groupRepository.getGroupByRoomId(roomId);
+      
       if (!group) {
-        throw new Error("Group not found");
+        console.log('[GroupService] Group not found for roomId:', roomId);
+        throw new Error("Group not found or this is not a group conversation");
       }
 
-      // Kiểm tra quyền thành viên
-      const isMember = await this.groupRepository.checkGroupMember(
-        group._id,
-        currentUserId
-      );
-      if (!isMember) {
-        throw new Error("You are not a member of this group");
+      console.log('[GroupService] Group found:', { 
+        groupId: group._id, 
+        groupName: group.name,
+        ownerId: group.ownerId 
+      });
+
+      // Kiểm tra quyền owner
+      if (group.ownerId.toString() !== currentUserId.toString()) {
+        throw new Error("Only the group owner can rename the group");
       }
+
       // Rename group
       const updatedGroup = await this.groupRepository.renameGroup(
         group._id,
         name
       );
-      // debug removed
       return updatedGroup;
     } catch (error) {
       throw error;

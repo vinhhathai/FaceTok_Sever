@@ -20,9 +20,11 @@ class GroupRepository {
 
 
   async changeGroupOwner(groupId, newOwnerId) {
-    return await this.groupModel.findByIdAndUpdate(groupId, {
+    const updated = await this.groupModel.findByIdAndUpdate(groupId, {
       ownerId: newOwnerId,
-    });
+    }, { new: true });
+    // populate owner to expose publicId
+    return await this.groupModel.findById(updated._id).populate('ownerId', 'publicId');
   }
 
   async deleteGroup(groupId) {
@@ -33,25 +35,29 @@ class GroupRepository {
 
   async renameGroup(groupId, name) {
     // Repository chỉ cập nhật DB; kiểm tra hợp lệ chuyển lên service
-    return await this.groupModel.findByIdAndUpdate(
+    const updated = await this.groupModel.findByIdAndUpdate(
       groupId,
       { name },
       { new: true }
     );
+    return await this.groupModel.findById(updated._id).populate('ownerId', 'publicId');
   }
 
   async updateGroupAvatar(groupId, avatarUrl) {
-    return await this.groupModel.findByIdAndUpdate(
+    const updated = await this.groupModel.findByIdAndUpdate(
       groupId,
       { avatar: avatarUrl },
       { new: true }
     );
+    return await this.groupModel.findById(updated._id).populate('ownerId', 'publicId');
   }
 
   async createGroup(name, roomId, ownerId) {
     try {
       const group = new this.groupModel({ name, roomId, ownerId });
-      return await group.save();
+      const saved = await group.save();
+      // Populate owner for publicId
+      return await this.groupModel.findById(saved._id).populate('ownerId', 'publicId');
     } catch (error) {
       throw error;
     }
@@ -66,7 +72,7 @@ class GroupRepository {
   }
   async getGroupById(id) {
     try {
-      return await this.groupModel.findById(id).populate("roomId");
+      return await this.groupModel.findById(id).populate("roomId").populate('ownerId', 'publicId');
     } catch (error) {
       throw error;
     }
@@ -76,13 +82,30 @@ class GroupRepository {
     try {
       // Tìm room trước, rồi lấy groupId từ room
       const room = await this.roomModel.findById(roomId);
-      if (!room || !room.groupId) {
+      
+      if (!room) {
+        console.log(`[GroupRepository] Room not found with id: ${roomId}`);
+        return null;
+      }
+      
+      if (!room.groupId) {
+        console.log(`[GroupRepository] Room ${roomId} does not have groupId. Room data:`, {
+          _id: room._id,
+          members: room.members?.length,
+          isGroup: room.isGroup,
+          groupId: room.groupId
+        });
         return null;
       }
 
       // Tìm group bằng groupId từ room
-      return await this.groupModel.findById(room.groupId);
+      const group = await this.groupModel.findById(room.groupId).populate('ownerId', 'publicId');
+      if (!group) {
+        console.log(`[GroupRepository] Group not found with id: ${room.groupId}`);
+      }
+      return group;
     } catch (error) {
+      console.error('[GroupRepository] Error in getGroupByRoomId:', error);
       throw error;
     }
   }

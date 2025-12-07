@@ -1,6 +1,7 @@
 "use strict";
 //----------------------------------------------------------------
 const { dtoResponse } = require("../../../shared/helper");
+const { getPublicUserId } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO for handling user fullname data
@@ -25,7 +26,7 @@ class FullnameDto {
    */
   static toResponse(user) {
     return {
-      id: user._id,
+      id: getPublicUserId(user),
       fullName: user.fullName || "",
       updatedAt: user.updatedAt,
       lastNameUpdateTime: user.lastNameUpdateTime || null

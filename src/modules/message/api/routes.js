@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const { MessageController, RoomController } = require("../controllers/");
-const checkLogin = require("../../../shared/middlewares/checkLogin");
+const { checkLogin, handleMediaUpload } = require("../../../shared/middlewares");
 const GroupController = require("../controllers/GroupController");
 
 // Group API
@@ -35,10 +35,11 @@ router.get("/room/:roomId/messages", checkLogin, MessageController.getMessages);
 // Get rooms of user
 router.get("/rooms", checkLogin, RoomController.getRooms);
 
-// Create message in room
+// Create message in room (with optional media attachments)
 router.post(
   "/room/:roomId/message",
   checkLogin,
+  handleMediaUpload, // Handle media files (up to 5 files, 50MB each)
   MessageController.createMessageInRoom
 );
 

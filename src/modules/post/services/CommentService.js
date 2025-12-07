@@ -1,10 +1,11 @@
-const { CommentRepository, PostRepository } = require('../repositories');
+const { CommentRepository, PostRepository, LikeRepository } = require('../repositories');
 const NotificationService = require('../../notification/services/NotificationService');
 
 class CommentService {
 	constructor() {
 		this.commentRepository = new CommentRepository();
 		this.postRepository = new PostRepository();
+		this.likeRepository = new LikeRepository();
 		this.notificationService = new NotificationService();
 	}
 
@@ -52,12 +53,36 @@ class CommentService {
 		return this.commentRepository.findCommentById(saved._id);
 	}
 
-	async getPostComments(postId, options) {
-		return this.commentRepository.findCommentsByPostId(postId, options);
+	async getPostComments(postId, userId, options) {
+		const comments = await this.commentRepository.findCommentsByPostId(postId, options);
+		
+		// Get liked comment IDs for current user
+		const commentIds = comments.map(c => c._id);
+		const likedCommentIds = await this.likeRepository.findLikedCommentIdsForUser(userId, commentIds);
+		
+		// Add isLiked field to each comment
+		const commentsWithLiked = comments.map(comment => ({
+			...comment,
+			isLiked: likedCommentIds.includes(comment._id.toString())
+		}));
+		
+		return commentsWithLiked;
 	}
 
-	async getCommentReplies(commentId, options) {
-		return this.commentRepository.findRepliesByCommentId(commentId, options);
+	async getCommentReplies(commentId, userId, options) {
+		const replies = await this.commentRepository.findRepliesByCommentId(commentId, options);
+		
+		// Get liked comment IDs for current user
+		const replyIds = replies.map(r => r._id);
+		const likedReplyIds = await this.likeRepository.findLikedCommentIdsForUser(userId, replyIds);
+		
+		// Add isLiked field to each reply
+		const repliesWithLiked = replies.map(reply => ({
+			...reply,
+			isLiked: likedReplyIds.includes(reply._id.toString())
+		}));
+		
+		return repliesWithLiked;
 	}
 
 	// Update comment owned by user (only content)
