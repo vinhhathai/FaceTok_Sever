@@ -18,56 +18,50 @@ class RoomDto {
 
     // Handle group chat
     if (room.groupId) {
-      const ownerObjectId = room.groupId?.ownerId?.toString?.() || null;
       return {
-        id: room._id?.toString?.() || String(room._id || ''),
+        id: room._id,
         isGroup: true,
-        groupId: {
-          id: room.groupId?._id?.toString?.() || String(room.groupId?._id || ''),
-          name: room.groupId?.name || room.groupName || "Group Chat",
-          avatar: room.groupId?.avatar || room.groupAvatar || null,
-          ownerId: ownerObjectId,
-        },
+        groupName: room.groupName || 'Group Chat',
+        groupAvatar: room.groupAvatar || null,
         members: room.members ? room.members.map(member => ({
-          id: (member._id?.toString?.() || String(member._id || '')),
-          fullName: member.fullName || "",
+          id: member._id,
+          fullName: member.fullName || '',
           avatar: member.profilePicture || member.avatar || null,
         })) : [],
-        // Return lastMessage instead of messages so client list can show preview
-        lastMessage: room.lastMessage ? {
-          id: room.lastMessage._id?.toString?.() || String(room.lastMessage._id || ''),
-          content: room.lastMessage.content,
-          senderId: (room.lastMessage.senderId?.toString?.() || String(room.lastMessage.senderId || '')),
-          createdAt: room.lastMessage.createdAt
+        messages: room.messages ? {
+          id: room.messages._id,
+          content: room.messages.content,
+          senderId: room.messages.senderId,
+          createdAt: room.messages.createdAt
         } : null,
-        unreadCount: (room.unreadCount && room.unreadCount.get?.(currentUser?.toString?.() || String(currentUser))) || 0,
+        unreadCount: room.unreadCount && room.unreadCount.get(currentUser.toString()) || 0,
         updatedAt: room.updatedAt
       };
     }
 
     // Handle direct chat
+    // Filter to find the other participant (excluding the current user)
     const otherMember = room.members && room.members.length > 0 
       ? room.members.find(member => 
-          member._id.toString() !== (currentUser?.toString?.() || String(currentUser))
+          member._id.toString() !== currentUser.toString()
         )
       : null;
 
     return {
-      id: room._id?.toString?.() || String(room._id || ''),
+      id: room._id,
       isGroup: false,
       participant: otherMember ? {
-        id: (otherMember._id?.toString?.() || String(otherMember._id || '')),
+        id: otherMember._id,
         fullName: otherMember.fullName || '',
         avatar: otherMember.profilePicture || otherMember.avatar || null,
       } : null,
-      // Return lastMessage instead of messages so client list can show preview
-      lastMessage: room.lastMessage ? {
-        id: room.lastMessage._id?.toString?.() || String(room.lastMessage._id || ''),
-        content: room.lastMessage.content,
-        senderId: (room.lastMessage.senderId?.toString?.() || String(room.lastMessage.senderId || '')),
-        createdAt: room.lastMessage.createdAt
+      messages: room.messages ? {
+        id: room.messages._id,
+        content: room.messages.content,
+        senderId: room.messages.senderId,
+        createdAt: room.messages.createdAt
       } : null,
-      unreadCount: (room.unreadCount && room.unreadCount.get?.(currentUser?.toString?.() || String(currentUser))) || 0,
+      unreadCount: room.unreadCount && room.unreadCount.get(currentUser.toString()) || 0,
       updatedAt: room.updatedAt
     };
   }
@@ -106,4 +100,4 @@ class RoomDto {
   }
 }
 
-module.exports = RoomDto;
+module.exports = RoomDto; 

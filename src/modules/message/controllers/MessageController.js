@@ -1,9 +1,9 @@
 "use strict";
 //----------------------------------------------------------------
 const MessageService = require("../services/MessageService");
-const { MessageDto, RoomDto } = require("../dtos");
+const { MessageDto } = require("../dtos");
 const SocketBus = require("../../../shared/socket/SocketBus");
-const { sendMessageInRoomValidation } = require("../validations");
+const { sendMessageValidation } = require("../validations");
 const {
   VALIDATION_ERRORS,
   MESSAGE_ERRORS,
@@ -125,7 +125,7 @@ class MessageController {
 
         return res.status(200).json(
           MessageDto.success({
-            messages: MessageDto.toResponseList(messages),
+            messages: messages,
           })
         );
       } catch (error) {
@@ -162,19 +162,6 @@ class MessageController {
       const { roomId } = req.params;
       const { content } = req.body;
       const files = req.files; // From multer middleware
-      let mediaData = [];
-
-      // Validate roomId
-      if (!roomId || !mongoose.isValidObjectId(roomId)) {
-        return res
-          .status(400)
-          .json(
-            MessageDto.error(
-              VALIDATION_ERRORS.INVALID_INPUT,
-              "Invalid roomId"
-            )
-          );
-      }
 
       // Validate: must have either content or media
       if (!content && (!files || files.length === 0)) {
@@ -183,39 +170,37 @@ class MessageController {
           .json(
             MessageDto.error(
               VALIDATION_ERRORS.INVALID_INPUT,
-              "Message content or media is required"
+              "Message must have either text content or media attachments"
             )
           );
       }
 
-      // Validate input data with Joi
-      const { error, value } = sendMessageInRoomValidation.validate({ content });
-      if (error) {
+      if (!roomId) {
         return res
           .status(400)
           .json(
             MessageDto.error(
               VALIDATION_ERRORS.INVALID_INPUT,
-              error.details[0].message
+              "Room ID is required"
             )
           );
       }
 
       try {
-        // Process and upload media if present
+        // Upload media files if present
+        let mediaData = [];
         if (files && files.length > 0) {
           try {
             mediaData = await uploadMediaFiles(files);
           } catch (uploadError) {
-            return res
-              .status(500)
-              .json(
-                MessageDto.error(
-                  MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
-                  "Failed to upload media files",
-                  uploadError.message
-                )
-              );
+            console.error('Error uploading media:', uploadError);
+            return res.status(500).json(
+              MessageDto.error(
+                MESSAGE_ERRORS.SEND_MESSAGE_FAILED,
+                "Failed to upload media files",
+                uploadError.message
+              )
+            );
           }
         }
 
@@ -237,19 +222,11 @@ class MessageController {
 
         // Create message data for broadcast
         const messageData = {
-          _id: (message._id?.toString?.() || String(message._id || '')),
-          // Prefer populated sender object for UI
-          senderId: sender
-            ? {
-                _id: (sender._id?.toString?.() || String(sender._id || '')),
-                fullName: sender.fullName,
-                profilePicture: sender.profilePicture,
-                avatar: sender.avatar || null,
-              }
-            : (message.senderId?.toString?.() || String(message.senderId || '')),
+          _id: message._id,
+          senderId: (message.senderId?.toString?.() || String(message.senderId || '')),
           content: message.content,
-          media: Array.isArray(message.media) ? message.media : [],
-          roomId: (message.roomId?.toString?.() || String(message.roomId || '')),
+          media: message.media, // Include media in broadcast
+          roomId: message.roomId,
           createdAt: message.createdAt,
           sender: sender
             ? {
@@ -272,8 +249,8 @@ class MessageController {
 
         return res.status(200).json(
           MessageDto.success({
-            message: MessageDto.toResponse(message),
-            room: RoomDto.toResponseRoom(room, senderId),
+            message: result.message,
+            room: result.room,
           })
         );
       } catch (error) {
@@ -288,28 +265,6 @@ class MessageController {
           }
         }
 
-        // Map business errors to proper HTTP codes
-        const businessErrors = [
-          "Room not found",
-          "User is not a member of this room",
-          "Receiver not found in this room",
-          "You cannot send message to this user because they have blocked you",
-        ];
-        if (businessErrors.includes(error.message)) {
-          const status =
-            error.message === "Room not found" ? 404 :
-            error.message === "User is not a member of this room" ? 403 :
-            error.message === "You cannot send message to this user because they have blocked you" ? 403 :
-            400;
-          return res.status(status).json(
-            MessageDto.error(
-              "BUSINESS_ERROR",
-              error.message
-            )
-          );
-        }
-
-        console.error("Error creating message:", error);
         return res
           .status(500)
           .json(

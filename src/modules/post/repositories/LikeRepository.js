@@ -99,20 +99,16 @@ class LikeRepository {
   async toggleLike(postId, userId) {
     try {
       const existingLike = await LikeModel.findOne({ postId, userId });
+      
       if (existingLike) {
+        // already liked -> unlike
         await LikeModel.findOneAndDelete({ postId, userId });
         return { action: 'unliked', like: null };
-      }
-      try {
+      } else {
+        // not liked -> like
         const newLike = new LikeModel({ postId, userId });
         const savedLike = await newLike.save();
         return { action: 'liked', like: savedLike };
-      } catch (err) {
-        if (String(err?.message || '').includes('E11000')) {
-          // Another like already exists (race condition) → treat as liked
-          return { action: 'liked', like: null };
-        }
-        throw err;
       }
     } catch (error) {
       throw new Error(`Failed to toggle like: ${error.message}`);
@@ -171,17 +167,9 @@ class LikeRepository {
         return { action: 'unliked', like: null };
       } else {
         // not liked -> like
-        try {
-          const newLike = new LikeModel({ commentId, userId });
-          const savedLike = await newLike.save();
-          return { action: 'liked', like: savedLike };
-        } catch (err) {
-          // Handle duplicate key race condition gracefully
-          if (String(err?.message || '').includes('E11000')) {
-            return { action: 'liked', like: null };
-          }
-          throw err;
-        }
+        const newLike = new LikeModel({ commentId, userId });
+        const savedLike = await newLike.save();
+        return { action: 'liked', like: savedLike };
       }
     } catch (error) {
       throw new Error(`Failed to toggle comment like: ${error.message}`);

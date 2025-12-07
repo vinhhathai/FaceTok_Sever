@@ -56,30 +56,14 @@ class CommentService {
 	async getPostComments(postId, userId, options) {
 		const comments = await this.commentRepository.findCommentsByPostId(postId, options);
 		
-		// Collect all IDs including replies to compute liked state comprehensively
-		const allIds = [];
-		for (const c of comments) {
-			if (c?._id) allIds.push(c._id);
-			if (Array.isArray(c.replies)) {
-				for (const r of c.replies) {
-					if (r?._id) allIds.push(r._id);
-				}
-			}
-		}
+		// Get liked comment IDs for current user
+		const commentIds = comments.map(c => c._id);
+		const likedCommentIds = await this.likeRepository.findLikedCommentIdsForUser(userId, commentIds);
 		
-		// Get liked IDs for current user across roots and replies
-		const likedIds = await this.likeRepository.findLikedCommentIdsForUser(userId, allIds);
-		
-		// Add isLiked to roots and replies
+		// Add isLiked field to each comment
 		const commentsWithLiked = comments.map(comment => ({
 			...comment,
-			isLiked: likedIds.includes(comment._id.toString()),
-			replies: Array.isArray(comment.replies)
-				? comment.replies.map(reply => ({
-					...reply,
-					isLiked: likedIds.includes(reply._id.toString()),
-				}))
-				: comment.replies,
+			isLiked: likedCommentIds.includes(comment._id.toString())
 		}));
 		
 		return commentsWithLiked;

@@ -19,7 +19,7 @@ class RoomRepository {
   async inviteToGroup(roomId, userId) {
     return await this.roomModel.findByIdAndUpdate(
       roomId,
-      { $addToSet: { members: userId }, updatedAt: new Date() },
+      { $addToSet: { members: userId } },
       { new: true }
     );
   }
@@ -27,57 +27,55 @@ class RoomRepository {
   async kickOutMember(roomId, userId) {
     return await this.roomModel.findByIdAndUpdate(
       roomId,
-      { $pull: { members: userId }, updatedAt: new Date() },
+      { $pull: { members: userId } },
       { new: true }
     );
   }
 
   async leaveRoom(roomId, userId) {
-    return await this.roomModel.findByIdAndUpdate(
-      roomId,
-      { $pull: { members: userId }, updatedAt: new Date() },
-      { new: true }
-    );
+    return await this.roomModel.findByIdAndUpdate(roomId, {
+      $pull: { members: userId },
+    });
   }
 
   async createGroupChat(userId, groupName) {
-    const newRoom = new this.roomModel({
+    const room = new this.roomModel({
       members: [userId],
-      deleteBy: [],
-      isGroup: true,
+      groupName,
     });
-
-    const savedRoom = await newRoom.save();
-    return savedRoom;
   }
 
   async deleteConversation(roomId, userId) {
     return await this.roomModel.findByIdAndUpdate(
       roomId,
-      { $addToSet: { deleteBy: userId } },
+      { $push: { deleteBy: userId } },
       { new: true }
     );
   }
 
   async createMessage(senderId, roomId, content) {
-    const message = new this.messageModel({ senderId, content, roomId });
+    const message = new this.messageModel({
+      senderId,
+      roomId,
+      content,
+    });
     return await message.save();
   }
 
   async createRoom(userId1, userId2) {
     const room = new this.roomModel({
       members: [userId1, userId2],
-      deleteBy: [],
-      isGroup: false,
     });
     return await room.save();
   }
 
   async createRoomForGroup(members = []) {
-    const room = new this.roomModel({ members, isGroup: true });
+    const room = new this.roomModel({
+      members: [...members],
+    });
     return await room.save();
   }
-
+  // Tìm phòng chat giữa hai người dùng
   async findRoomByMembers(userId1, userId2) {
     return await this.roomModel.findOne({
       members: { $all: [userId1, userId2] },
@@ -89,10 +87,7 @@ class RoomRepository {
     return await this.roomModel
       .findById(roomId)
       .populate("members", "fullName profilePicture")
-      .populate({
-        path: "groupId",
-        select: "name avatar ownerId",
-      });
+      .populate("groupId");
   }
 
   async backupConversation(roomId) {
@@ -109,11 +104,8 @@ class RoomRepository {
       })
       .populate("members", "fullName profilePicture")
       .populate("lastMessage")
-      .populate({
-        path: "groupId",
-        select: "name avatar ownerId",
-      })
-      .sort({ updatedAt: -1 });
+      .populate("groupId", "name avatar ownerId") // Populate group info
+      .sort({ updatedAt: -1 }); // Sắp xếp theo thời gian cập nhật, mới nhất trước
   }
 
   /**
@@ -130,12 +122,22 @@ class RoomRepository {
     );
   }
 
+  /**
+   * Cập nhật groupId cho room
+   * @param {string} roomId - ID phòng chat
+   * @param {string} groupId - ID nhóm
+   * @returns {Promise<Object>} - Room đã cập nhật
+   */
   async updateRoomWithGroupId(roomId, groupId) {
-    return await this.roomModel.findByIdAndUpdate(
-      roomId,
-      { groupId },
-      { new: true }
-    );
+    try {
+      return await this.roomModel.findByIdAndUpdate(
+        roomId,
+        { groupId: groupId },
+        { new: true }
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

@@ -40,11 +40,16 @@ router.get("/admin/verify", checkAdmin, (req, res) => {
 });
 router.get("/admin/users", checkAdmin, AdminController.getAllUsers);
 router.get("/admin/statistics", checkAdmin, AdminController.getUserStatistics);
+// Legacy routes (keep for backward compatibility)
 router.post("/admin/ban/:userId", checkAdmin, AdminController.banUser);
 router.post("/admin/unban/:userId", checkAdmin, AdminController.unbanUser);
-router.delete("/admin/delete/:userId", checkAdmin, AdminController.deleteUser);
-router.post("/admin/send-email", checkAdmin, AdminController.sendEmailToUser);
 router.patch("/admin/update-role/:userId", checkAdmin, AdminController.updateUserRole);
+// New RESTful routes
+router.put("/admin/users/:userId/ban", checkAdmin, AdminController.banUser);
+router.put("/admin/users/:userId/unban", checkAdmin, AdminController.unbanUser);
+router.put("/admin/users/:userId/role", checkAdmin, AdminController.updateUserRole);
+router.delete("/admin/users/:userId", checkAdmin, AdminController.deleteUser);
+router.post("/admin/send-email", checkAdmin, AdminController.sendEmailToUser);
 
 // Announcement Admin Routes
 router.post("/admin/announcements", checkAdmin, uploadImageMiddleware.single('image'), announcementController.createAnnouncement);

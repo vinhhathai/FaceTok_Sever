@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const UserRepository = require("../repositories/UserRepository");
 const { errorCode, errorMessage } = require("../../../shared/common/error");
 const { AdminDto } = require("../dtos");
+const SocketBus = require("../../../shared/socket/SocketBus");
 
 /**
  * Service xử lý các chức năng admin
@@ -204,6 +205,12 @@ class AdminService {
         bannedBy: adminId
       });
 
+      // Force logout user if online
+      SocketBus.emitToUser(userId, "force_logout", {
+        reason: "account_banned",
+        message: "Tài khoản của bạn đã bị khóa bởi quản trị viên"
+      });
+
       return AdminDto.success(
         { user: AdminDto.toUserResponse(updatedUser) },
         "User banned successfully"
@@ -249,6 +256,12 @@ class AdminService {
         isActive: true,
         unbannedAt: new Date(),
         unbannedBy: adminId
+      });
+
+      // Force logout to refresh user data
+      SocketBus.emitToUser(userId, "force_logout", {
+        reason: "account_unbanned",
+        message: "Tài khoản của bạn đã được mở khóa. Vui lòng đăng nhập lại"
       });
 
       return AdminDto.success(
@@ -400,18 +413,17 @@ class AdminService {
         );
       }
 
-      // Enforce ObjectId-only user lookup
-      const isObjectId = /^[a-f\d]{24}$/i.test(String(userId));
-      const isAdminObjectId = /^[a-f\d]{24}$/i.test(String(adminId));
-      if (!isObjectId || !isAdminObjectId) {
-        return AdminDto.error(
-          errorCode.VALIDATION_FAILED,
-          "IDs must be 24-hex ObjectId",
-          { userId, adminId }
-        );
+      // Find user to update - try by publicId first (UUID), then by _id (ObjectId)
+      let user = await this.userRepository.findOne({ publicId: userId });
+      if (!user) {
+        // Try finding by _id for newer users with ObjectId
+        try {
+          user = await this.userRepository.findById(userId);
+        } catch (err) {
+          // Silently fail and return null
+        }
       }
-
-      const user = await this.userRepository.findById(userId);
+      
       if (!user) {
         return AdminDto.error(
           errorCode.DATA_NOT_FOUND,
@@ -420,8 +432,10 @@ class AdminService {
         );
       }
 
-      // Prevent admin changing their own role
-      if (String(user._id) === String(adminId)) {
+      // Check if trying to update own role (admin cannot change their own role)
+      // Compare with both _id and publicId
+      const userIdentifier = user._id.toString() || user.publicId;
+      if (userId === adminId || userIdentifier === adminId || user.publicId === adminId) {
         return AdminDto.error(
           errorCode.FORBIDDEN,
           "Cannot change your own role",
@@ -432,6 +446,12 @@ class AdminService {
       // Update role
       user.role = newRole;
       await user.save();
+
+      // Force logout to refresh user permissions
+      SocketBus.emitToUser(userId, "force_logout", {
+        reason: "role_updated",
+        message: "Quyền của bạn đã được thay đổi. Vui lòng đăng nhập lại"
+      });
 
       // Return updated user info
       return AdminDto.success(

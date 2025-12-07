@@ -1,10 +1,10 @@
 'use strict';
 //----------------------------------------------------------------
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const logger = require('../utils/logger');
 
 /**
- * Content Moderation Service using OpenAI
+ * Content Moderation Service using Google Gemini
  * Kiểm duyệt nội dung text, image để phát hiện:
  * - Hate speech (ngôn từ thù địch)
  * - Violence (bạo lực)
@@ -14,15 +14,14 @@ const logger = require('../utils/logger');
  */
 class ModerationService {
   constructor() {
-    if (!process.env.OPENAI_API_KEY) {
-      logger.warn('OpenAI API key not configured. Content moderation will be disabled.');
+    if (!process.env.GEMINI_API_KEY) {
+      logger.warn('Gemini API key not configured. Content moderation will be disabled.');
       this.enabled = false;
       return;
     }
 
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     this.enabled = true;
 
     // Ngưỡng vi phạm (0-1, càng thấp càng nghiêm)
@@ -54,29 +53,48 @@ class ModerationService {
     }
 
     try {
-      const response = await this.openai.moderations.create({
-        input: text,
-      });
+      const prompt = `Analyze this text for content moderation. Check for:
+- Hate speech (ngôn từ thù địch)
+- Violence (bạo lực)
+- Sexual content (nội dung khiêu dâm)
+- Self-harm (tự gây thương tích)
+- Harassment (quấy rối)
+- Threatening language
 
-      const result = response.results[0];
+Text to analyze: "${text}"
+
+Respond ONLY in JSON format:
+{
+  "flagged": boolean,
+  "categories": {
+    "hate": boolean,
+    "violence": boolean,
+    "sexual": boolean,
+    "self-harm": boolean,
+    "harassment": boolean
+  },
+  "violations": [{"category": "string", "severity": "low|medium|high"}],
+  "reason": "brief explanation in Vietnamese or null if safe"
+}`;
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const responseText = response.text();
       
-      // Kiểm tra các category có vượt ngưỡng không
-      const violations = [];
-      for (const [category, score] of Object.entries(result.category_scores)) {
-        const threshold = this.thresholds[category] || 0.8;
-        if (score >= threshold) {
-          violations.push({
-            category,
-            score: score.toFixed(3),
-            threshold,
-          });
-        }
+      // Parse JSON response
+      let analysis;
+      try {
+        // Remove markdown code blocks if present
+        const jsonText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        analysis = JSON.parse(jsonText);
+      } catch (parseError) {
+        logger.warn('Failed to parse Gemini response, treating as safe', { responseText });
+        return { flagged: false, categories: {}, scores: {}, reason: null };
       }
 
-      const flagged = violations.length > 0;
-      const reason = flagged 
-        ? `Vi phạm nội dung: ${violations.map(v => `${v.category} (${v.score})`).join(', ')}`
-        : null;
+      const violations = analysis.violations || [];
+      const flagged = analysis.flagged || false;
+      const reason = flagged ? analysis.reason : null;
 
       logger.info('Text moderation result:', {
         textLength: text.length,
@@ -86,8 +104,8 @@ class ModerationService {
 
       return {
         flagged,
-        categories: result.categories,
-        scores: result.category_scores,
+        categories: analysis.categories || {},
+        scores: {},
         violations,
         reason,
       };
@@ -97,9 +115,9 @@ class ModerationService {
         stack: error.stack,
       });
       
-      // Handle rate limit - skip moderation and allow content
-      if (error.status === 429 || error.message.includes('429') || error.message.includes('Too Many Requests')) {
-        logger.warn('OpenAI rate limit exceeded - allowing content through');
+      // Handle rate limit or quota exceeded
+      if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate limit')) {
+        logger.warn('Gemini rate limit exceeded - allowing content through');
         return { 
           flagged: false, 
           categories: {}, 
@@ -123,7 +141,7 @@ class ModerationService {
 
   /**
    * Kiểm duyệt hình ảnh qua URL
-   * Sử dụng GPT-4 Vision để phân tích nội dung hình ảnh
+   * Sử dụng Gemini Vision để phân tích nội dung hình ảnh
    * @param {string} imageUrl - URL của hình ảnh
    * @returns {Promise<Object>} { flagged, reason, analysis }
    */
@@ -137,13 +155,23 @@ class ModerationService {
     }
 
     try {
-      // Sử dụng GPT-4 Vision để phân tích ảnh
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini', // Model rẻ hơn cho moderation
-        messages: [
-          {
-            role: 'system',
-            content: `You are a content moderation AI. Analyze this image for:
+      // Fetch image as base64
+      const https = require('https');
+      const http = require('http');
+      const imageData = await new Promise((resolve, reject) => {
+        const protocol = imageUrl.startsWith('https') ? https : http;
+        protocol.get(imageUrl, (res) => {
+          const chunks = [];
+          res.on('data', (chunk) => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        });
+      });
+
+      const base64Image = imageData.toString('base64');
+      const mimeType = imageUrl.includes('.png') ? 'image/png' : 'image/jpeg';
+
+      const prompt = `You are a content moderation AI. Analyze this image for:
 - Hate symbols or hate speech
 - Violence or graphic content
 - Sexual or pornographic content
@@ -152,40 +180,36 @@ class ModerationService {
 - Illegal activities
 - Minor safety concerns
 
-Respond in JSON format:
+Respond ONLY in JSON format:
 {
   "flagged": boolean,
   "categories": ["category1", "category2"],
   "severity": "low|medium|high",
   "reason": "brief explanation in Vietnamese"
-}`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: {
-                  url: imageUrl,
-                },
-              },
-            ],
-          },
-        ],
-        max_tokens: 300,
-        temperature: 0.2, // Thấp để kết quả nhất quán
-      });
+}`;
 
-      const content = response.choices[0]?.message?.content;
+      const result = await this.model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: base64Image,
+            mimeType: mimeType,
+          },
+        },
+      ]);
+
+      const response = await result.response;
+      const content = response.text();
       let analysis;
       
       try {
-        // Parse JSON response
-        analysis = JSON.parse(content);
+        // Remove markdown code blocks if present
+        const jsonText = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        analysis = JSON.parse(jsonText);
       } catch (parseError) {
         // Nếu không parse được, extract thông tin cơ bản
         analysis = {
-          flagged: content.toLowerCase().includes('flagged: true'),
+          flagged: content.toLowerCase().includes('flagged: true') || content.toLowerCase().includes('"flagged": true'),
           categories: [],
           severity: 'low',
           reason: content,

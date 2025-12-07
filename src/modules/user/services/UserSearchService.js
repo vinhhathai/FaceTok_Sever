@@ -40,10 +40,7 @@ class UserSearchService {
         $or: [
           { fullName: { $regex: query, $options: 'i' } }, // Case-insensitive name search
           { email: { $regex: query, $options: 'i' } }     // Case-insensitive email search
-        ],
-        // Chỉ trả về tài khoản đang hoạt động và đã xác thực email
-        isActive: true,
-        isEmailVerified: true,
+        ]
       };
       
       // Exclude current user from search results if provided
@@ -107,4 +104,4 @@ class UserSearchService {
   }
 }
 
-module.exports = UserSearchService;
+module.exports = UserSearchService; 

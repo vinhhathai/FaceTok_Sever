@@ -1,8 +1,7 @@
 "use strict";
+//----------------------------------------------------------------
 const MessageRepository = require("../repositories/MessageRepository");
 const RoomRepository = require("../repositories/RoomRepository");
-const GroupRepository = require("../repositories/GroupRepository");
-const SocketBus = require("../../../shared/socket/SocketBus");
 const {
   errorCode,
   errorMessage,
@@ -21,14 +20,91 @@ class RoomService {
   constructor() {
     this.messageRepository = new MessageRepository();
     this.roomRepository = new RoomRepository();
-    this.groupRepository = new GroupRepository();
   }
 
-  async getUserRooms(userId) {
+  async inviteToGroup(roomId, userId, inviterId) {
     try {
-      // Delegate to repository which handles population and sorting
-      const rooms = await this.roomRepository.getUserRooms(userId);
-      return rooms;
+      const room = await this.roomRepository.findRoomById(roomId);
+      
+
+      // Any group member can invite
+      const isInviterMember = room.members.some(
+        (m) => m._id?.toString?.() === inviterId.toString() || m.toString?.() === inviterId.toString()
+      );
+      if (!isInviterMember) {
+        throw new Error("You are not a member of this group");
+      }
+
+      // Prevent inviting existing member
+      const isAlreadyMember = room.members.some(
+        (m) => m._id?.toString?.() === userId.toString() || m.toString?.() === userId.toString()
+      );
+      if (isAlreadyMember) {
+        return room; // no-op, already a member
+      }
+
+      const updated = await this.roomRepository.inviteToGroup(roomId, userId);
+      return await this.roomRepository.findRoomById(updated._id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async kickOutMember(roomId, userId, kickOutUserId) {
+    try {
+      const room = await this.roomRepository.findRoomById(roomId);
+      // Chỉ áp dụng cho phòng nhóm có groupId và có owner
+      const ownerId = room?.groupId?.ownerId;
+      if (!ownerId) {
+        throw new Error("This room is not a group or group has no owner");
+      }
+      if (ownerId.toString() !== userId.toString()) {
+        throw new Error("You are not the owner of this group");
+      }
+
+      const newRoom = await this.roomRepository.kickOutMember(
+        roomId,
+        kickOutUserId
+      );
+
+      return newRoom;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteConversation(roomId, userId) {
+    try {
+      const room = await this.roomRepository.deleteConversation(roomId, userId);
+      return room;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getOrCreateRoom(senderId, receiverId) {
+    try {
+      // Tìm phòng hoặc tạo mới nếu không tồn tại
+      const room = await this.roomRepository.findRoomByMembers(
+        senderId,
+        receiverId
+      );
+      if (!room) {
+        const newRoom = await this.roomRepository.createRoom(
+          senderId,
+          receiverId
+        );
+        return newRoom;
+      }
+
+      // Kiểm tra xem room có bị xóa bởi sender không
+      if (room.deleteBy && room.deleteBy.includes(senderId)) {
+        // Khôi phục conversation cho sender
+        await this.roomRepository.backupConversation(room._id);
+        // debug removed
+      }
+
+      return room;
     } catch (error) {
       throw error;
     }
@@ -46,99 +122,94 @@ class RoomService {
     }
   }
 
-  async getRoomByUsers(currentUserId, otherUserId) {
+  async getRoomByUsers(userId1, userId2) {
     try {
-      const room = await this.roomRepository.findRoomByMembers(currentUserId, otherUserId);
-      return room || null;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getOrCreateRoom(currentUserId, targetUserId) {
-    try {
-      let room = await this.roomRepository.findRoomByMembers(currentUserId, targetUserId);
-      if (!room) {
-        room = await this.roomRepository.createRoom(currentUserId, targetUserId);
-      }
+      const room = await this.roomRepository.findRoomByMembers(
+        userId1,
+        userId2
+      );
       return room;
     } catch (error) {
       throw error;
     }
   }
 
-  async kickOutMember(roomId, currentUserId, targetUserId) {
+  async getUserRooms(userId) {
+    try {
+      const rooms = await this.roomRepository.getUserRooms(userId);
+
+      return rooms;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async createRoom(userId1, userId2) {
+    try {
+      // Kiểm tra người dùng có tồn tại không
+      if (!userId1 || !userId2) {
+        throw new Error("Both user IDs are required");
+      }
+
+      // Kiểm tra hai ID có giống nhau không
+      if (userId1.toString() === userId2.toString()) {
+        throw new Error("Cannot create a room with yourself");
+      }
+
+      // debug removed
+
+      const room = await this.roomRepository.createRoom(userId1, userId2);
+      return room;
+    } catch (error) {
+      console.error("Error in createRoom service:", error);
+      throw error;
+    }
+  }
+
+  async getRoomById(roomId) {
+    try {
+      if (!roomId) {
+        throw new Error("Room ID is required");
+      }
+
+      const room = await this.roomRepository.findRoomById(roomId);
+      if (!room) {
+        throw new Error("Room not found");
+      }
+      return room;
+    } catch (error) {
+      console.error("Error in getRoomById service:", error);
+      throw error;
+    }
+  }
+
+  async leaveGroup(roomId, userId) {
     try {
       const room = await this.roomRepository.findRoomById(roomId);
-      if (!room || !room.groupId) {
-        throw new Error("This is not a group room or room not found");
+      if (!room) throw new Error("Room not found");
+      // Kiểm tra là thành viên
+      const isMember = room.members.some(
+        (m) => m._id.toString() === userId.toString()
+      );
+      if (!isMember) throw new Error("You are not a member of this group");
+
+      // Ngăn owner tự rời nếu chưa chuyển quyền
+      if (
+        room.groupId &&
+        room.groupId.ownerId?.toString?.() === userId.toString()
+      ) {
+        throw new Error(
+          "Owner cannot leave the group. Transfer ownership first"
+        );
       }
 
-      const group = await this.groupRepository.getGroupById(room.groupId._id || room.groupId);
-      if (!group) throw new Error("Group not found");
-
-      const ownerIdStr = group?.ownerId?.toString?.() || String(group?.ownerId || "");
-      const currentIdStr = currentUserId?.toString?.() || String(currentUserId || "");
-      const isOwner = ownerIdStr && ownerIdStr === currentIdStr;
-      if (!isOwner) {
-        throw new Error("You are not the group owner");
-      }
-
-      const targetIdStr = targetUserId?.toString?.() || String(targetUserId);
-      const isObjectId = /^[a-f\d]{24}$/i.test(targetIdStr);
-      if (!isObjectId) throw new Error("Invalid target user id format");
-
-      const isMember = await this.groupRepository.checkGroupMember(group._id, targetIdStr);
-      if (!isMember) throw new Error("Target user is not a member of this group");
-
-      const result = await this.groupRepository.kickMember(group._id, targetIdStr);
-
-      const actorUser = await this.groupRepository.userModel.findById(currentUserId).lean();
-      const targetUser = await this.groupRepository.userModel.findById(targetIdStr).lean();
-      const content = `${actorUser?.fullName || "Chủ nhóm"} đã xóa ${targetUser?.fullName || "thành viên"} khỏi nhóm`;
-      const systemMessage = await this.messageRepository.createMessage(
-        currentUserId,
-        roomId,
-        content,
-        []
-      );
-      await this.roomRepository.updateRoomLastMessage(roomId, systemMessage._id);
-
-      const populatedRoom = await this.roomRepository.findRoomById(roomId);
-      const sender = populatedRoom.members.find(
-        (member) => (member._id?.toString?.() || member?.toString?.()) === (currentUserId?.toString?.() || String(currentUserId))
-      );
-      const messageData = {
-        _id: (systemMessage._id?.toString?.() || String(systemMessage._id || '')),
-        senderId: sender
-          ? {
-              _id: (sender._id?.toString?.() || String(sender._id || '')),
-              fullName: sender.fullName,
-              profilePicture: sender.profilePicture,
-              avatar: sender.avatar || null,
-            }
-          : (systemMessage.senderId?.toString?.() || String(systemMessage.senderId || '')),
-        content: systemMessage.content,
-        media: [],
-        roomId: (systemMessage.roomId?.toString?.() || String(systemMessage.roomId || '')),
-        createdAt: systemMessage.createdAt,
-        sender: sender
-          ? {
-              id: (sender._id?.toString?.() || String(sender._id || '')),
-              fullName: sender.fullName,
-              profilePicture: sender.profilePicture,
-            }
-          : undefined,
-      };
-      try {
-        SocketBus.emitToRoom(roomId, "message_received", messageData);
-      } catch {}
-
-      return result;
+      await this.roomRepository.leaveRoom(roomId, userId);
+      return await this.roomRepository.findRoomById(roomId);
     } catch (error) {
       throw error;
     }
   }
 }
 
+// Export instance instead of class
 module.exports = new RoomService();

@@ -1,8 +1,8 @@
 "use strict";
+//----------------------------------------------------------------
 const MessageRepository = require("../repositories/MessageRepository");
 const RoomRepository = require("../repositories/RoomRepository");
 const GroupRepository = require("../repositories/GroupRepository");
-const SocketBus = require("../../../shared/socket/SocketBus");
 const {
   errorCode,
   errorMessage,
@@ -29,96 +29,29 @@ class GroupService {
     try {
       const group = await this.groupRepository.getGroupByRoomId(roomId);
       if (!group) throw new Error("Group not found");
-
-      const ownerIdStr = group?.ownerId?.toString?.() || String(group?.ownerId || "");
-      const currentIdStr = currentUserId?.toString?.() || String(currentUserId || "");
-      const isOwner = ownerIdStr && ownerIdStr === currentIdStr;
-      if (!isOwner) {
+      if (group.ownerId.toString() !== currentUserId.toString()) {
         throw new Error("You are not the owner of this group");
       }
-
-      // newOwnerId phải là ObjectId hợp lệ
-      const targetOwnerId = newOwnerId?.toString?.() || String(newOwnerId);
-      const isObjectId = /^[a-f\d]{24}$/i.test(targetOwnerId);
-      if (!isObjectId) {
-        throw new Error("Invalid new owner ID format");
-      }
-      const targetUser = await this.groupRepository.userModel.findById(targetOwnerId);
-      if (!targetUser) {
-        throw new Error("New owner not found");
-      }
-
-      // Optional: đảm bảo new owner là thành viên nhóm
-      const isMember = await this.groupRepository.checkGroupMember(group._id, targetOwnerId);
-      if (!isMember) {
-        throw new Error("New owner must be a current group member");
-      }
-
       const updatedGroup = await this.groupRepository.changeGroupOwner(
         group._id,
-        targetOwnerId
+        newOwnerId
       );
-
-      // Tạo tin nhắn hệ thống thông báo đổi chủ nhóm
-      const actorUser = await this.groupRepository.userModel.findById(currentUserId).lean();
-      const content = `${actorUser?.fullName || "Bạn"} đã chuyển quyền chủ nhóm cho ${targetUser?.fullName || "thành viên"}`;
-      const systemMessage = await this.messageRepository.createMessage(
-        currentUserId,
-        roomId,
-        content,
-        []
-      );
-      await this.roomRepository.updateRoomLastMessage(roomId, systemMessage._id);
-
-      // Phát realtime tin nhắn hệ thống tới phòng
-      const populatedRoom = await this.roomRepository.findRoomById(roomId);
-      const sender = populatedRoom.members.find(
-        (member) => (member._id?.toString?.() || member?.toString?.()) === (currentUserId?.toString?.() || String(currentUserId))
-      );
-      const messageData = {
-        _id: (systemMessage._id?.toString?.() || String(systemMessage._id || '')),
-        senderId: sender
-          ? {
-              _id: (sender._id?.toString?.() || String(sender._id || '')),
-              fullName: sender.fullName,
-              profilePicture: sender.profilePicture,
-              avatar: sender.avatar || null,
-            }
-          : (systemMessage.senderId?.toString?.() || String(systemMessage.senderId || '')),
-        content: systemMessage.content,
-        media: [],
-        roomId: (systemMessage.roomId?.toString?.() || String(systemMessage.roomId || '')),
-        createdAt: systemMessage.createdAt,
-        sender: sender
-          ? {
-              id: (sender._id?.toString?.() || String(sender._id || '')),
-              fullName: sender.fullName,
-              profilePicture: sender.profilePicture,
-            }
-           : undefined,
-       };
-      try {
-        SocketBus.emitToRoom(roomId, "message_received", messageData);
-      } catch {}
-
       return updatedGroup;
     } catch (error) {
       throw error;
     }
   }
  
+
   async dissolveGroupByRoomId(roomId, currentUserId) {
     try {
+      // Tìm group từ roomId
       const group = await this.groupRepository.getGroupByRoomId(roomId);
       if (!group) throw new Error("Group not found");
-
-      const ownerIdStr = group?.ownerId?.toString?.() || String(group?.ownerId || "");
-      const currentIdStr = currentUserId?.toString?.() || String(currentUserId || "");
-      const isOwner = ownerIdStr && ownerIdStr === currentIdStr;
-      if (!isOwner) {
+      if (group.ownerId.toString() !== currentUserId.toString()) {
         throw new Error("You are not the owner of this group");
       }
-
+      // Đánh dấu isDissolved thay vì xóa cứng
       const dissolved = await this.groupRepository.deleteGroup(group._id);
       return dissolved;
     } catch (error) {
@@ -130,6 +63,7 @@ class GroupService {
     try {
       console.log('[GroupService] renameGroupByRoomId called with:', { roomId, name, currentUserId });
       
+      // Tìm group bằng roomId
       const group = await this.groupRepository.getGroupByRoomId(roomId);
       
       if (!group) {

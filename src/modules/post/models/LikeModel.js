@@ -17,9 +17,9 @@ const likeSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Ensure a user can like a post only once
-likeSchema.index({ postId: 1, userId: 1 }, { unique: true, sparse: true });
+likeSchema.index({ postId: 1, userId: 1 }, { unique: true, partialFilterExpression: { postId: { $type: 'objectId' } } });
 // Ensure a user can like a comment only once
-likeSchema.index({ commentId: 1, userId: 1 }, { unique: true, sparse: true });
+likeSchema.index({ commentId: 1, userId: 1 }, { unique: true, partialFilterExpression: { commentId: { $type: 'objectId' } } });
 likeSchema.index({ userId: 1, createdAt: -1 });
 
 // Validation: Either postId or commentId must be present

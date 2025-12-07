@@ -10,38 +10,11 @@ class MessageDto {
   static toResponse(message) {
     if (!message) return null;
 
-    const idStr = (message._id && message._id.toString)
-      ? message._id.toString()
-      : String(message._id || "");
-
-    const roomIdStr = (message.roomId && message.roomId.toString)
-      ? message.roomId.toString()
-      : String(message.roomId || "");
-
-    // Preserve populated sender object when available; otherwise fallback to string
-    let senderVal = null;
-    if (message.senderId && typeof message.senderId === 'object' && message.senderId !== null) {
-      senderVal = {
-        _id: (message.senderId._id && message.senderId._id.toString)
-          ? message.senderId._id.toString()
-          : String(message.senderId._id || ""),
-        fullName: message.senderId.fullName || "",
-        profilePicture: message.senderId.profilePicture || null,
-        avatar: message.senderId.avatar || null,
-      };
-    } else {
-      senderVal = (message.senderId && message.senderId.toString)
-        ? message.senderId.toString()
-        : String(message.senderId || "");
-    }
-
     return {
-      _id: idStr,
-      senderId: senderVal,
+      id: message._id,
+      senderId: message.senderId,
       content: message.content,
-      media: Array.isArray(message.media) ? message.media : [],
-      isRevoked: message.isRevoked === true,
-      roomId: roomIdStr,
+      roomId: message.roomId,
       createdAt: message.createdAt
     };
   }
@@ -79,4 +52,4 @@ class MessageDto {
   }
 }
 
-module.exports = MessageDto;
+module.exports = MessageDto; 

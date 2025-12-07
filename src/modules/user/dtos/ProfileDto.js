@@ -20,7 +20,8 @@ class ProfileDto {
     const showPersonalInfo = isOwner || (user.showPersonalInfo !== false);
     
     return {
-      id: getPublicUserId(user), // Dùng ObjectId trên toàn hệ thống
+      id: getPublicUserId(user), // UUID for public/security
+      _id: user._id.toString(),  // MongoDB ObjectId for internal systems (message, etc)
       fullName: user.fullName,
       email: showPersonalInfo ? (isOwner ? user.email : "") : null,
       profilePicture: user.profilePicture || "",
@@ -60,4 +61,4 @@ class ProfileDto {
   }
 }
 
-module.exports = ProfileDto;
+module.exports = ProfileDto; 

@@ -1,5 +1,9 @@
-// Script to update user to admin role
+// Script to update existing user to admin role
 // Run: node make-admin-script.js <email>
+// 
+// NOTE: This script only updates role of an EXISTING user
+// User must register first through normal signup, then run this script
+// User will login with their existing email/password
 
 const mongoose = require('mongoose');
 require('dotenv').config();

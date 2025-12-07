@@ -1,7 +1,6 @@
 "use strict";
 //----------------------------------------------------------------
 const dtoResponse = require("../../../shared/helper/dtoResponse");
-const { getPublicUserId } = require("../../../shared/utils/securityHelper");
 
 /**
  * DTO for friend management functionality
@@ -14,7 +13,7 @@ class FriendDto {
    */
   static toResponse(friend) {
     return {
-      id: getPublicUserId(friend),
+      id: friend._id || friend.id,
       fullName: friend.fullName || '',
       profilePicture: friend.profilePicture || '',
       bio: friend.bio || ''
@@ -52,4 +51,4 @@ class FriendDto {
   }
 }
 
-module.exports = FriendDto;
+module.exports = FriendDto; 
